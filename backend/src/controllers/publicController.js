@@ -8,7 +8,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const { getSettings, publicSettings } = require("../services/settingsService");
 const { quote } = require("../services/pricingService");
 const { createOrder, publicOrder } = require("../services/orderService");
-const { waLink, orderConfirmMessage } = require("../utils/whatsapp");
+const { whatsappLink, orderWhatsAppMessage } = require("../utils/whatsapp");
 
 function validate(req) {
   const errors = validationResult(req);
@@ -125,12 +125,12 @@ const postOrder = asyncHandler(async (req, res) => {
     idempotencyKey: req.body.idempotencyKey,
   });
   const settings = await getSettings();
-  const message = orderConfirmMessage(order, settings.storeName);
+  const message = orderWhatsAppMessage(order, settings);
   res.status(duplicate ? 200 : 201).json({
     order: publicOrder(order, { includeToken: true, includeCustomer: true }),
     duplicate,
     email,
-    whatsappUrl: waLink(settings.whatsappNumber, message),
+    whatsappUrl: whatsappLink(settings.whatsappNumber, message),
     paymentAccounts: publicSettings(settings).paymentAccounts,
   });
 });
@@ -146,11 +146,14 @@ const lookupOrder = asyncHandler(async (req, res) => {
   const settings = await getSettings();
   const submissions = await PaymentSubmission.find({ order: order._id })
     .select("-screenshotPath")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 });I
   res.json({
     order: publicOrder(order, { includeToken: true, includeCustomer: true, includeHistory: true }),
     payments: submissions,
-    whatsappUrl: waLink(settings.whatsappNumber, orderConfirmMessage(order, settings.storeName)),
+    whatsappUrl: whatsappLink(
+   settings.whatsappNumber,
+   orderWhatsAppMessage(order, settings)
+ ),
     paymentAccounts: publicSettings(settings).paymentAccounts,
   });
 });
