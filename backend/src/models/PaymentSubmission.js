@@ -5,7 +5,7 @@ const paymentSubmissionSchema = new mongoose.Schema(
     order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true, index: true },
     method: { type: String, required: true, trim: true },
     transactionRef: { type: String, required: true, trim: true },
-    screenshotPath: { type: String, required: true },
+    screenshotPath: { type: String, default: "" },
     originalName: { type: String, default: "" },
     mimeType: { type: String, default: "" },
     status: {
@@ -16,6 +16,7 @@ const paymentSubmissionSchema = new mongoose.Schema(
     },
     customerNote: { type: String, default: "" },
     adminNotes: { type: String, default: "" },
+    rejectionReason: { type: String, default: "" },
     reviewedAt: Date,
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
   },

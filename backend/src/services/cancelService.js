@@ -1,5 +1,4 @@
 const Order = require("../models/Order");
-const { restoreStock } = require("./orderService");
 const emailService = require("./emailService");
 const { getSettings } = require("./settingsService");
 const AppError = require("../utils/AppError");
@@ -40,7 +39,6 @@ async function cancelOverdueOrders() {
       { new: true }
     );
     if (!fresh) continue;
-    await restoreStock(fresh);
     cancelled += 1;
     if (!fresh.cancelEmailSentAt) {
       const mail = await emailService.orderCancelled(fresh);
@@ -64,7 +62,6 @@ async function adminCancel(order, reason, admin) {
     note: `Cancelled by ${admin.email}: ${order.cancelReason}`,
   });
   await order.save();
-  await restoreStock(order);
   if (!order.cancelEmailSentAt) {
     const mail = await emailService.orderCancelled(order);
     if (mail.sent) {

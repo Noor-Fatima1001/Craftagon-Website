@@ -24,6 +24,7 @@ router.get("/reports", requireAdmin, a.reports);
 router.get("/audit", requireAdmin, a.auditLogs);
 
 router.get("/products", requireAdmin, a.listProducts);
+router.get("/products/:id", requireAdmin, a.getProduct);
 router.post("/products", requireAdmin, productUpload.array("images", 6), a.saveProduct);
 router.put("/products/:id", requireAdmin, productUpload.array("images", 6), a.saveProduct);
 router.delete("/products/:id", requireAdmin, a.deleteProduct);
@@ -46,11 +47,6 @@ router.put("/settings", requireAdmin, a.saveSettings);
 router.post("/settings/banner-image", requireAdmin, bannerUpload.single("image"), (req, res) => {
   res.json({ url: `/uploads/banners/${req.file.filename}` });
 });
-
-router.get("/coupons", requireAdmin, a.listCoupons);
-router.post("/coupons", requireAdmin, a.saveCoupon);
-router.put("/coupons/:id", requireAdmin, a.saveCoupon);
-router.delete("/coupons/:id", requireAdmin, a.deleteCoupon);
 
 router.post("/jobs/cancel-overdue", requireCronSecret, a.runCancelJob);
 router.post("/jobs/cancel-overdue/run", requireAdmin, a.runCancelJob);

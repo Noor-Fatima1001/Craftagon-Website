@@ -25,20 +25,22 @@ export function CartProvider({ children }) {
   const apiCart = useMemo(
     () => ({
       items,
-      count: items.reduce((s, i) => s + i.quantity, 0),
+      count: items.reduce((s, i) => s + Number(i.quantity || 0), 0),
       add(item) {
         setItems((prev) => {
           const i = prev.findIndex((p) => sameItem(p, item));
           if (i >= 0) {
             const next = [...prev];
-            next[i] = { ...next[i], quantity: next[i].quantity + item.quantity };
+            next[i] = { ...next[i], ...item, quantity: next[i].quantity + item.quantity };
             return next;
           }
           return [...prev, item];
         });
       },
       update(index, quantity) {
-        setItems((prev) => prev.map((it, i) => (i === index ? { ...it, quantity } : it)).filter((it) => it.quantity > 0));
+        setItems((prev) =>
+          prev.map((it, i) => (i === index ? { ...it, quantity } : it)).filter((it) => it.quantity > 0)
+        );
       },
       remove(index) {
         setItems((prev) => prev.filter((_, i) => i !== index));
@@ -55,25 +57,29 @@ export function CartProvider({ children }) {
 
 export function StoreProvider({ children }) {
   const [data, setData] = useState({ store: null, featured: [], bestsellers: [], categories: [] });
-  useEffect(() => {
-    Promise.all([api.store(), api.categories()])
+  function refresh() {
+    return Promise.all([api.store(), api.categories()])
       .then(([s, c]) => setData({ ...s, categories: c.categories }))
       .catch(() => {});
+  }
+  useEffect(() => {
+    refresh();
   }, []);
-  return <StoreCtx.Provider value={data}>{children}</StoreCtx.Provider>;
+  return <StoreCtx.Provider value={{ ...data, refresh }}>{children}</StoreCtx.Provider>;
 }
 
 export function AuthProvider({ children }) {
   const [admin, setAdmin] = useState(null);
+  const [customer, setCustomer] = useState(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    api
-      .adminMe()
-      .then((d) => setAdmin(d.admin))
-      .catch(() => setAdmin(null))
-      .finally(() => setReady(true));
+    Promise.allSettled([api.adminMe(), api.me()]).then(([a, c]) => {
+      if (a.status === "fulfilled") setAdmin(a.value.admin);
+      if (c.status === "fulfilled") setCustomer(c.value.customer);
+      setReady(true);
+    });
   }, []);
-  return <AuthCtx.Provider value={{ admin, setAdmin, ready }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ admin, setAdmin, customer, setCustomer, ready }}>{children}</AuthCtx.Provider>;
 }
 
 export const useCart = () => useContext(CartCtx);

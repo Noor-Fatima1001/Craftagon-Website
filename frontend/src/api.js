@@ -33,19 +33,26 @@ export const api = {
   createOrder: (body) => request("/api/orders", { method: "POST", body }),
   lookup: (qs) => request(`/api/orders/lookup?${qs}`),
   submitPayment: (form) => request("/api/orders/payment", { method: "POST", body: form }),
+  contact: (body) => request("/api/contact", { method: "POST", body }),
+  register: (body) => request("/api/auth/register", { method: "POST", body }),
+  login: (body) => request("/api/auth/login", { method: "POST", body }),
+  logout: () => request("/api/auth/logout", { method: "POST" }),
+  me: () => request("/api/auth/me"),
+  myOrders: () => request("/api/me/orders"),
   adminLogin: (body) => request("/api/admin/auth/login", { method: "POST", body }),
   adminLogout: () => request("/api/admin/auth/logout", { method: "POST" }),
   adminMe: () => request("/api/admin/auth/me"),
   adminPassword: (body) => request("/api/admin/auth/password", { method: "PATCH", body }),
   dashboard: () => request("/api/admin/dashboard"),
   adminProducts: (q = "") => request(`/api/admin/products${q}`),
+  adminProduct: (id) => request(`/api/admin/products/${id}`),
   saveProduct: (id, form) =>
     request(id ? `/api/admin/products/${id}` : "/api/admin/products", {
       method: id ? "PUT" : "POST",
       body: form,
     }),
-  deactivateProduct: (id) => request(`/api/admin/products/${id}`, { method: "DELETE" }),
-  adminCategories: () => request("/api/admin/categories"),
+  deleteProduct: (id) => request(`/api/admin/products/${id}`, { method: "DELETE" }),
+  adminCategories: (q = "") => request(`/api/admin/categories${q}`),
   saveCategory: (id, body) =>
     request(id ? `/api/admin/categories/${id}` : "/api/admin/categories", {
       method: id ? "PUT" : "POST",
@@ -60,10 +67,6 @@ export const api = {
   paymentShot: (id) => `${API}/api/admin/payments/${id}/screenshot`,
   settings: () => request("/api/admin/settings"),
   saveSettings: (body) => request("/api/admin/settings", { method: "PUT", body }),
-  coupons: () => request("/api/admin/coupons"),
-  saveCoupon: (id, body) =>
-    request(id ? `/api/admin/coupons/${id}` : "/api/admin/coupons", { method: id ? "PUT" : "POST", body }),
-  deleteCoupon: (id) => request(`/api/admin/coupons/${id}`, { method: "DELETE" }),
   reports: (qs = "") => request(`/api/admin/reports${qs}`),
   runCancel: () => request("/api/admin/jobs/cancel-overdue/run", { method: "POST" }),
   audit: () => request("/api/admin/audit"),
@@ -77,4 +80,8 @@ export function asset(url) {
   if (!url) return "";
   if (url.startsWith("http")) return url;
   return `${API}${url}`;
+}
+
+export function statusLabel(value) {
+  return String(value || "").replaceAll("_", " ");
 }

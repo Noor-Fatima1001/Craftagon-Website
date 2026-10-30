@@ -39,10 +39,10 @@ const defaults = {
   advance: { type: "percent", amount: 50, minAdvance: 500, productRules: [] },
   paymentAccounts: [
     {
-      method: "Bank Transfer",
-      holderName: "Craftagon (placeholder)",
-      accountNumber: "PK00XXXX0000000000000000",
-      instructions: "Transfer the advance amount and upload the receipt on the order page.",
+      method: "COD",
+      holderName: "Cash on delivery",
+      accountNumber: "Pay remaining / agreed amount in cash to the courier",
+      instructions: "Choose COD if you will pay in cash. Advance still applies unless it is set to zero. Staff confirm COD manually — it is never auto-verified.",
       active: true,
     },
     {
@@ -78,6 +78,8 @@ function publicSettings(doc) {
     phone: doc.phone,
     whatsappNumber: doc.whatsappNumber,
     address: doc.address,
+    about: doc.about || {},
+    help: doc.help || {},
     banners: (doc.banners || []).filter((b) => b.active !== false),
     faqs: doc.faqs || [],
     policies: doc.policies || {},

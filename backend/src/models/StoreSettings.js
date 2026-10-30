@@ -9,6 +9,22 @@ const storeSettingsSchema = new mongoose.Schema(
     phone: { type: String, default: "" },
     whatsappNumber: { type: String, default: "923000000000" },
     address: { type: String, default: "" },
+    about: {
+      title: { type: String, default: "About Craftagon" },
+      body: {
+        type: String,
+        default:
+          "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and gift sets. Every order is prepared after your advance payment is checked by a person — never by an automated screenshot scan.",
+      },
+    },
+    help: {
+      title: { type: String, default: "Help & Support" },
+      body: {
+        type: String,
+        default:
+          "Need help with an order, a print preview, or a payment? Use Track Order with your order number and email, or send us a message on the Contact page. WhatsApp buttons only open a chat — nothing is sent until you press Send.",
+      },
+    },
     banners: [
       {
         title: String,

@@ -53,7 +53,7 @@ async function orderConfirmation(order, settings) {
       "Thank you for your order",
       `<p>Order number: <strong>${order.orderNumber}</strong></p>
        <ul>${items}</ul>
-       <p>Subtotal: PKR ${order.subtotal}<br/>Delivery: PKR ${order.deliveryFee}<br/>Discount: PKR ${order.discount}<br/>Total: PKR ${order.total}</p>
+       <p>Subtotal: PKR ${order.subtotal}<br/>Delivery: PKR ${order.deliveryFee}<br/>Total: PKR ${order.total}</p>
        <p>Advance due now: <strong>PKR ${order.advanceAmount}</strong><br/>Remaining COD: PKR ${order.remainingCod}</p>
        <p>Please transfer the advance using the payment details on your order page, then upload a screenshot. Staff will verify it manually.</p>
        <p>Store WhatsApp (you must press Send yourself): ${settings.whatsappNumber}</p>`

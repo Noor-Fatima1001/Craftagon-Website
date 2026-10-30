@@ -9,6 +9,7 @@ const orderItemSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true },
     customText: { type: String, default: "" },
+    preview: { type: mongoose.Schema.Types.Mixed },
     lineTotal: { type: Number, required: true },
   },
   { _id: false }

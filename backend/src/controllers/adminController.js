@@ -8,7 +8,6 @@ const Product = require("../models/Product");
 const Category = require("../models/Category");
 const Order = require("../models/Order");
 const PaymentSubmission = require("../models/PaymentSubmission");
-const Coupon = require("../models/Coupon");
 const AuditLog = require("../models/AuditLog");
 const env = require("../config/env");
 const AppError = require("../utils/AppError");
@@ -106,10 +105,26 @@ const dashboard = asyncHandler(async (_req, res) => {
 });
 
 const listProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find(req.query.q ? { name: new RegExp(String(req.query.q), "i") } : {})
+  const filter = {};
+  if (req.query.q) filter.name = new RegExp(String(req.query.q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  if (req.query.category) filter.category = req.query.category;
+  if (req.query.active === "true") filter.active = true;
+  if (req.query.active === "false") filter.active = false;
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const total = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
     .populate("category", "name slug")
-    .sort({ updatedAt: -1 });
-  res.json({ products });
+    .sort({ updatedAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+  res.json({ products, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+});
+
+const getProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id).populate("category", "name slug");
+  if (!product) throw new AppError("Product not found", 404);
+  res.json({ product });
 });
 
 const saveProduct = asyncHandler(async (req, res) => {
@@ -125,17 +140,24 @@ const saveProduct = asyncHandler(async (req, res) => {
     category: data.category,
     price: Number(data.price),
     salePrice: data.salePrice === "" || data.salePrice == null ? undefined : Number(data.salePrice),
-    stock: Number(data.stock || 0),
     active: data.active !== false && data.active !== "false",
     featured: data.featured === true || data.featured === "true",
     bestseller: data.bestseller === true || data.bestseller === "true",
     customization: typeof data.customization === "string" ? JSON.parse(data.customization) : data.customization,
     preview: typeof data.preview === "string" ? JSON.parse(data.preview) : data.preview,
   };
+  let existingImages = [];
+  if (data.images) {
+    existingImages = typeof data.images === "string" ? JSON.parse(data.images) : data.images;
+    if (!Array.isArray(existingImages)) existingImages = [];
+  }
   if (req.files?.length) {
-    payload.images = req.files.map((f) => `/uploads/products/${f.filename}`);
+    payload.images = [
+      ...existingImages.filter((u) => typeof u === "string" && u.startsWith("/uploads/")),
+      ...req.files.map((f) => `/uploads/products/${f.filename}`),
+    ];
   } else if (data.images) {
-    payload.images = typeof data.images === "string" ? JSON.parse(data.images) : data.images;
+    payload.images = existingImages;
   }
   let product;
   if (req.params.id) {
@@ -154,14 +176,20 @@ const saveProduct = asyncHandler(async (req, res) => {
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, { active: false }, { new: true });
+  const product = await Product.findByIdAndDelete(req.params.id);
   if (!product) throw new AppError("Product not found", 404);
-  await logAudit({ admin: req.admin, action: "product_deactivate", entity: "Product", entityId: product._id });
-  res.json({ product });
+  await logAudit({ admin: req.admin, action: "product_delete", entity: "Product", entityId: product._id });
+  res.json({ ok: true, id: product._id });
 });
 
-const listCategories = asyncHandler(async (_req, res) => {
-  res.json({ categories: await Category.find().sort({ sortOrder: 1 }) });
+const listCategories = asyncHandler(async (req, res) => {
+  const filter = {};
+  if (req.query.q) {
+    filter.name = new RegExp(String(req.query.q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  }
+  if (req.query.active === "true") filter.active = true;
+  if (req.query.active === "false") filter.active = false;
+  res.json({ categories: await Category.find(filter).sort({ sortOrder: 1, name: 1 }) });
 });
 
 const saveCategory = asyncHandler(async (req, res) => {
@@ -190,7 +218,7 @@ const listOrders = asyncHandler(async (req, res) => {
   if (req.query.status) filter.status = req.query.status;
   if (req.query.paymentStatus) filter.paymentStatus = req.query.paymentStatus;
   if (req.query.q) {
-    const q = String(req.query.q);
+    const q = String(req.query.q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     filter.$or = [
       { orderNumber: new RegExp(q, "i") },
       { "customer.fullName": new RegExp(q, "i") },
@@ -198,8 +226,14 @@ const listOrders = asyncHandler(async (req, res) => {
       { "customer.phone": new RegExp(q, "i") },
     ];
   }
-  const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(200);
-  res.json({ orders });
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const total = await Order.countDocuments(filter);
+  const orders = await Order.find(filter)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+  res.json({ orders, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
 });
 
 const getOrder = asyncHandler(async (req, res) => {
@@ -257,32 +291,78 @@ const updateOrder = asyncHandler(async (req, res) => {
 const listPayments = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
+  if (req.query.method) filter.method = new RegExp(String(req.query.method), "i");
   const payments = await PaymentSubmission.find(filter)
-    .populate("order", "orderNumber total advanceAmount customer paymentStatus status")
+    .populate("order", "orderNumber total advanceAmount remainingCod customer paymentStatus status")
     .sort({ createdAt: -1 })
     .limit(200);
-  res.json({ payments });
+  let list = payments;
+  if (req.query.q) {
+    const q = String(req.query.q).toLowerCase();
+    list = payments.filter((p) => {
+      const hay = [
+        p.order?.orderNumber,
+        p.order?.customer?.fullName,
+        p.order?.customer?.email,
+        p.order?.customer?.phone,
+        p.method,
+        p.transactionRef,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  res.json({ payments: list });
 });
 
 const reviewPayment = asyncHandler(async (req, res) => {
   const payment = await PaymentSubmission.findById(req.params.id);
   if (!payment) throw new AppError("Payment not found", 404);
-  const { decision, adminNotes } = req.body;
+  if (["verified", "rejected"].includes(payment.status)) {
+    throw new AppError("This payment was already reviewed", 400);
+  }
+  const { decision, adminNotes, rejectionReason } = req.body;
   if (!["verified", "rejected"].includes(decision)) throw new AppError("Decision must be verified or rejected", 400);
+  if (decision === "rejected") {
+    const reason = String(rejectionReason || adminNotes || "").trim();
+    if (reason.length < 4) throw new AppError("A rejection reason is required", 400);
+  }
   const order = await Order.findById(payment.order);
   if (!order) throw new AppError("Order not found", 404);
   payment.status = decision;
-  payment.adminNotes = adminNotes || "";
+  payment.adminNotes = adminNotes || rejectionReason || "";
+  payment.rejectionReason = decision === "rejected" ? String(rejectionReason || adminNotes || "").trim() : "";
   payment.reviewedAt = new Date();
   payment.reviewedBy = req.admin._id;
   await payment.save();
-  order.paymentStatus = decision;
   if (decision === "verified") {
+    await PaymentSubmission.updateMany(
+      { order: order._id, _id: { $ne: payment._id }, status: "under_review" },
+      {
+        status: "rejected",
+        rejectionReason: "Superseded by a verified payment",
+        reviewedAt: new Date(),
+        reviewedBy: req.admin._id,
+      }
+    );
+    order.paymentStatus = "verified";
     if (["pending_payment", "payment_submitted"].includes(order.status)) order.status = "confirmed";
-    order.history.push({ status: "confirmed", note: `Payment verified. ${adminNotes || ""}` });
+    order.history.push({ status: order.status, note: `Payment verified. ${adminNotes || ""}` });
   } else {
-    order.status = "pending_payment";
-    order.history.push({ status: "pending_payment", note: `Payment rejected. ${adminNotes || ""}` });
+    const other = await PaymentSubmission.exists({
+      order: order._id,
+      _id: { $ne: payment._id },
+      status: "under_review",
+    });
+    if (!other) {
+      order.paymentStatus = "rejected";
+      if (order.status === "payment_submitted") order.status = "pending_payment";
+    }
+    order.history.push({
+      status: order.status,
+      note: `Payment rejected: ${payment.rejectionReason}`,
+    });
   }
   await order.save();
   const mail = await emailService.paymentResult(order, decision === "verified", adminNotes);
@@ -299,6 +379,7 @@ const reviewPayment = asyncHandler(async (req, res) => {
 const paymentScreenshot = asyncHandler(async (req, res) => {
   const payment = await PaymentSubmission.findById(req.params.id);
   if (!payment) throw new AppError("Payment not found", 404);
+  if (!payment.screenshotPath) throw new AppError("No screenshot for this payment", 404);
   const filePath = path.join(dirs.payments, payment.screenshotPath);
   if (!fs.existsSync(filePath)) throw new AppError("File not found", 404);
   res.sendFile(filePath);
@@ -327,6 +408,8 @@ const saveSettings = asyncHandler(async (req, res) => {
     "paymentAccounts",
     "paymentDeadlineHours",
     "autoCancelEnabled",
+    "about",
+    "help",
   ];
   for (const key of allowed) {
     if (req.body[key] !== undefined) settings[key] = req.body[key];
@@ -340,23 +423,6 @@ const saveSettings = asyncHandler(async (req, res) => {
     details: { keys: Object.keys(req.body) },
   });
   res.json({ settings });
-});
-
-const listCoupons = asyncHandler(async (_req, res) => {
-  res.json({ coupons: await Coupon.find().sort({ createdAt: -1 }) });
-});
-
-const saveCoupon = asyncHandler(async (req, res) => {
-  const payload = { ...req.body, code: String(req.body.code || "").toUpperCase().trim() };
-  let coupon;
-  if (req.params.id) coupon = await Coupon.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
-  else coupon = await Coupon.create(payload);
-  res.json({ coupon });
-});
-
-const deleteCoupon = asyncHandler(async (req, res) => {
-  await Coupon.findByIdAndDelete(req.params.id);
-  res.json({ ok: true });
 });
 
 const reports = asyncHandler(async (req, res) => {
@@ -396,6 +462,7 @@ module.exports = {
   changePassword,
   dashboard,
   listProducts,
+  getProduct,
   saveProduct,
   deleteProduct,
   listCategories,
@@ -409,9 +476,6 @@ module.exports = {
   paymentScreenshot,
   getSettingsAdmin,
   saveSettings,
-  listCoupons,
-  saveCoupon,
-  deleteCoupon,
   reports,
   runCancelJob,
   auditLogs,

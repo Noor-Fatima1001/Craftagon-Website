@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const Admin = require("../models/Admin");
+const Customer = require("../models/Customer");
 const AppError = require("../utils/AppError");
 
 async function requireAdmin(req, _res, next) {
@@ -35,4 +36,23 @@ function requireCronSecret(req, _res, next) {
   next();
 }
 
-module.exports = { requireAdmin, requireAjax, requireCronSecret };
+async function requireCustomer(req, _res, next) {
+  try {
+    const token = req.cookies?.customer_token;
+    if (!token) throw new AppError("Please sign in", 401);
+    const payload = jwt.verify(token, env.jwtSecret);
+    if (payload.role !== "customer") throw new AppError("Please sign in", 401);
+    const customer = await Customer.findById(payload.sub).select("-passwordHash");
+    if (!customer) throw new AppError("Please sign in", 401);
+    req.customer = customer;
+    next();
+  } catch (err) {
+    next(
+      err.name === "JsonWebTokenError" || err.name === "TokenExpiredError"
+        ? new AppError("Please sign in", 401)
+        : err
+    );
+  }
+}
+
+module.exports = { requireAdmin, requireCustomer, requireAjax, requireCronSecret };

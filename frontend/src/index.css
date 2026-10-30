@@ -2,15 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-black hover:bg-slate-50;
   }
   .input {
-    @apply w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+    @apply w-full min-h-[44px] rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-black outline-none focus:border-accent focus:ring-1 focus:ring-accent md:text-sm;
   }
   .label {
     @apply mb-1 block text-sm font-medium text-slate-700;

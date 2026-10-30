@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const env = require("../config/env");
 const Category = require("../models/Category");
 const Product = require("../models/Product");
-const Coupon = require("../models/Coupon");
 const { getSettings } = require("../services/settingsService");
 
 function svgMug(color, label) {
@@ -117,7 +116,7 @@ async function run() {
       bestseller: true,
       description: "Brushed metal ballpoint with laser-style name print on the barrel.",
       make: () => svgPen("#64748b", "Name"),
-      preview: { x: 45, y: 50, fontSize: 18, color: "#0f172a", align: "center", maxWidth: 40 },
+      preview: { x: 45, y: 49.5, fontSize: 16, color: "#0f172a", align: "center", maxWidth: 36, rotation: -1 },
     },
     {
       name: "Gift Set Pen",
@@ -130,7 +129,7 @@ async function run() {
       description: "Presentation-box pen. Personalize with a name up to 18 characters.",
       make: () => svgPen("#0f766e", "Gift"),
       customization: { maxLength: 18 },
-      preview: { x: 45, y: 50, fontSize: 18, color: "#042f2e", align: "center", maxWidth: 38 },
+      preview: { x: 45, y: 49.5, fontSize: 16, color: "#042f2e", align: "center", maxWidth: 34, rotation: -1 },
     },
     {
       name: "Steel Travel Tumbler",
@@ -234,7 +233,6 @@ async function run() {
         images: [image],
         price: p.price,
         salePrice: p.salePrice,
-        stock: p.stock,
         active: true,
         featured: Boolean(p.featured),
         bestseller: Boolean(p.bestseller),
@@ -251,13 +249,7 @@ async function run() {
     );
   }
 
-  await Coupon.findOneAndUpdate(
-    { code: "WELCOME10" },
-    { code: "WELCOME10", type: "percent", value: 10, minOrder: 1500, maxDiscount: 500, usageLimit: 200, active: true },
-    { upsert: true }
-  );
-
-  console.log("Seeded categories, products, coupon WELCOME10, and store settings");
+  console.log("Seeded categories, products, and store settings");
   await mongoose.disconnect();
 }
 

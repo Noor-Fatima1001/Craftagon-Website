@@ -9,7 +9,7 @@ const productSchema = new mongoose.Schema(
     images: [{ type: String }],
     price: { type: Number, required: true, min: 0 },
     salePrice: { type: Number, min: 0 },
-    stock: { type: Number, required: true, min: 0, default: 0 },
+    stock: { type: Number, min: 0, default: 0 },
     active: { type: Boolean, default: true },
     featured: { type: Boolean, default: false },
     bestseller: { type: Boolean, default: false },
@@ -28,6 +28,7 @@ const productSchema = new mongoose.Schema(
       color: { type: String, default: "#1f2937" },
       align: { type: String, enum: ["left", "center", "right"], default: "center" },
       maxWidth: { type: Number, default: 70 },
+      rotation: { type: Number, default: 0 },
     },
   },
   { timestamps: true }

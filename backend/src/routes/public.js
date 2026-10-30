@@ -1,6 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { paymentUpload } = require("../middleware/upload");
+const { requireCustomer } = require("../middleware/auth");
 const c = require("../controllers/publicController");
 
 const router = express.Router();
@@ -20,6 +21,13 @@ const lookupLimit = rateLimit({
   legacyHeaders: false,
 });
 
+const authLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 router.get("/catalog/products", c.listProducts);
 router.get("/catalog/products/:slug", c.getProduct);
 router.get("/catalog/categories", c.listCategories);
@@ -28,5 +36,11 @@ router.post("/checkout/quote", c.quoteValidators, c.postQuote);
 router.post("/orders", orderLimit, c.orderValidators, c.postOrder);
 router.get("/orders/lookup", lookupLimit, c.lookupOrder);
 router.post("/orders/payment", orderLimit, paymentUpload.single("screenshot"), c.submitPayment);
+router.post("/contact", lookupLimit, c.contactValidators, c.postContact);
+router.post("/auth/register", authLimit, c.registerValidators, c.register);
+router.post("/auth/login", authLimit, c.loginValidators, c.login);
+router.post("/auth/logout", c.logout);
+router.get("/auth/me", requireCustomer, c.me);
+router.get("/me/orders", requireCustomer, c.myOrders);
 
 module.exports = router;
