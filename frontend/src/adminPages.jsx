@@ -78,28 +78,60 @@ export function Dashboard() {
 
 export function AdminProducts() {
   const [products, setProducts] = useState([]);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(true);
+  async function load() {
+    try {
+      const d = await api.adminProducts();
+      setProducts(d.products);
+      setErr("");
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
-    api.adminProducts().then((d) => setProducts(d.products));
+    load();
   }, []);
+  async function remove(product) {
+    if (!window.confirm(`Delete "${product.name}"? This action cannot be undone.`)) return;
+    try {
+      await api.deleteProduct(product._id);
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
   return (
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Products</h1>
         <Link className="btn" to="/admin/products/new">Add product</Link>
       </div>
-      <table className="mt-4 w-full text-left text-sm">
-        <thead><tr className="text-slate-500"><th>Name</th><th>Price</th><th>Stock</th><th>Active</th></tr></thead>
-        <tbody>
-          {products.map((p) => (
-            <tr key={p._id} className="border-t">
-              <td className="py-2"><Link className="text-accent" to={`/admin/products/${p._id}`}>{p.name}</Link></td>
-              <td>{money(p.salePrice || p.price)}</td>
-              <td>{p.stock}</td>
-              <td>{p.active ? "Yes" : "No"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {err && <div className="mt-4"><Alert>{err}</Alert></div>}
+      {loading ? <p className="mt-4">Loading products…</p> : (
+        <div className="card mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead><tr className="text-slate-500"><th className="p-3">Name</th><th>Price</th><th>Stock</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p._id} className="border-t">
+                  <td className="p-3">{p.name}</td>
+                  <td>{money(p.salePrice || p.price)}</td>
+                  <td>{p.stock}</td>
+                  <td>{p.active ? "Yes" : "No"}</td>
+                  <td className="space-x-3 py-2">
+                    <Link className="text-accent" to={`/admin/products/${p._id}`}>Edit</Link>
+                    <button className="text-red-600" type="button" onClick={() => remove(p)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+              {!products.length && <tr><td className="p-3 text-slate-500" colSpan="5">No products found.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -128,12 +160,18 @@ export function ProductForm() {
   const [sample, setSample] = useState("Ayesha");
 
   useEffect(() => {
-    api.adminCategories().then((d) => setCats(d.categories));
+    api.adminCategories().then((d) => setCats(d.categories)).catch((e) => setErr(e.message));
     if (id && id !== "new") {
-      api.adminProducts().then((d) => {
-        const p = d.products.find((x) => x._id === id);
-        if (p) setForm({ ...form, ...p, category: p.category?._id || p.category, salePrice: p.salePrice || "" });
-      });
+      api.adminProduct(id).then(({ product: p }) => {
+        setForm((current) => ({
+          ...current,
+          ...p,
+          category: p.category?._id || p.category,
+          salePrice: p.salePrice ?? "",
+          customization: { ...current.customization, ...p.customization },
+          preview: { ...current.preview, ...p.preview },
+        }));
+      }).catch((e) => setErr(e.message));
     }
   }, [id]);
 
@@ -181,7 +219,24 @@ export function ProductForm() {
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={!!form.active} onChange={(e) => set("active", e.target.checked)} /> Active</label>
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} /> Featured</label>
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={!!form.bestseller} onChange={(e) => set("bestseller", e.target.checked)} /> Bestseller</label>
-        <Field label="Replace / add images"><input className="input" type="file" multiple accept="image/*" onChange={(e) => setFiles(e.target.files)} /></Field>
+        <Field label="Add images"><input className="input" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(e) => setFiles([...e.target.files])} /></Field>
+        {!!form.images?.length && (
+          <div className="flex flex-wrap gap-2">
+            {form.images.map((image) => (
+              <div key={image} className="relative">
+                <img className="h-20 w-20 rounded object-cover" src={asset(image)} alt="" />
+                <button
+                  type="button"
+                  className="absolute -right-2 -top-2 rounded-full bg-white px-2 text-red-600 shadow"
+                  aria-label="Remove image"
+                  onClick={() => set("images", form.images.filter((item) => item !== image))}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <Field label="Custom label"><input className="input" value={form.customization.label} onChange={(e) => set("customization", { ...form.customization, label: e.target.value })} /></Field>
         <Field label="Max characters"><input className="input" type="number" value={form.customization.maxLength} onChange={(e) => set("customization", { ...form.customization, maxLength: Number(e.target.value) })} /></Field>
         <div className="grid grid-cols-2 gap-2">
@@ -195,11 +250,6 @@ export function ProductForm() {
         </div>
         {err && <Alert>{err}</Alert>}
         <button className="btn">Save</button>
-        {id && id !== "new" && (
-          <button type="button" className="btn-outline ml-2" onClick={async () => { await api.deactivateProduct(id); nav("/admin/products"); }}>
-            Deactivate
-          </button>
-        )}
       </div>
       <div>
         <Field label="Sample preview text"><input className="input" value={sample} onChange={(e) => setSample(e.target.value)} /></Field>
@@ -213,29 +263,65 @@ export function ProductForm() {
 
 export function Categories() {
   const [list, setList] = useState([]);
-  const [form, setForm] = useState({ name: "", slug: "", description: "" });
+  const emptyForm = { name: "", slug: "", description: "", sortOrder: 0, active: true };
+  const [form, setForm] = useState(emptyForm);
+  const [editing, setEditing] = useState(null);
+  const [err, setErr] = useState("");
+  async function load() {
+    const d = await api.adminCategories();
+    setList(d.categories);
+  }
   useEffect(() => {
-    api.adminCategories().then((d) => setList(d.categories));
+    load().catch((e) => setErr(e.message));
   }, []);
   async function save(e) {
     e.preventDefault();
-    await api.saveCategory(null, form);
-    setForm({ name: "", slug: "", description: "" });
-    api.adminCategories().then((d) => setList(d.categories));
+    try {
+      await api.saveCategory(editing, form);
+      setForm(emptyForm);
+      setEditing(null);
+      setErr("");
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+  async function remove(category) {
+    if (!window.confirm(`Delete "${category.name}"?`)) return;
+    try {
+      await api.deleteCategory(category._id);
+      setErr("");
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
   }
   return (
     <div>
       <h1 className="text-2xl font-bold">Categories</h1>
-      <form onSubmit={save} className="mt-4 flex flex-wrap gap-2">
-        <input className="input max-w-xs" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input className="input max-w-xs" placeholder="Slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-        <button className="btn">Add</button>
+      {err && <div className="mt-4"><Alert>{err}</Alert></div>}
+      <form onSubmit={save} className="card mt-4 grid gap-3 p-4 sm:grid-cols-2">
+        <Field label="Name"><input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+        <Field label="Slug (optional)"><input className="input" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></Field>
+        <Field label="Description"><textarea className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
+        <Field label="Sort order"><input className="input" type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} /></Field>
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Active</label>
+        <div className="flex gap-2">
+          <button className="btn">{editing ? "Update category" : "Add category"}</button>
+          {editing && <button className="btn-outline" type="button" onClick={() => { setEditing(null); setForm(emptyForm); }}>Cancel</button>}
+        </div>
       </form>
       <ul className="mt-6 space-y-2">
         {list.map((c) => (
           <li key={c._id} className="card flex items-center justify-between p-3">
-            <span>{c.name} ({c.slug})</span>
-            <button className="btn-outline" onClick={async () => { await api.deleteCategory(c._id); setList(list.filter((x) => x._id !== c._id)); }}>Delete</button>
+            <span>{c.name} ({c.slug}) {!c.active && "· inactive"}</span>
+            <span className="space-x-3">
+              <button className="text-accent" type="button" onClick={() => {
+                setEditing(c._id);
+                setForm({ ...emptyForm, ...c });
+              }}>Edit</button>
+              <button className="text-red-600" type="button" onClick={() => remove(c)}>Delete</button>
+            </span>
           </li>
         ))}
       </ul>
@@ -247,16 +333,24 @@ export function Orders() {
   const [orders, setOrders] = useState([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
-  function load() {
-    const qs = new URLSearchParams();
-    if (q) qs.set("q", q);
-    if (status) qs.set("status", status);
-    api.adminOrders(`?${qs}`).then((d) => setOrders(d.orders));
+  const [err, setErr] = useState("");
+  async function load() {
+    try {
+      const qs = new URLSearchParams();
+      if (q) qs.set("q", q);
+      if (status) qs.set("status", status);
+      const d = await api.adminOrders(`?${qs}`);
+      setOrders(d.orders);
+      setErr("");
+    } catch (e) {
+      setErr(e.message);
+    }
   }
   useEffect(() => { load(); }, []);
   return (
     <div>
       <h1 className="text-2xl font-bold">Orders</h1>
+      {err && <div className="mt-4"><Alert>{err}</Alert></div>}
       <div className="mt-4 flex flex-wrap gap-2">
         <input className="input max-w-xs" placeholder="Search name, email, phone, order #" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="input max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -266,16 +360,18 @@ export function Orders() {
         <button className="btn" onClick={load}>Filter</button>
       </div>
       <table className="mt-4 w-full text-left text-sm">
-        <thead><tr className="text-slate-500"><th>Order</th><th>Customer</th><th>Payment</th><th>Total</th></tr></thead>
+        <thead><tr className="text-slate-500"><th>Order</th><th>Customer</th><th>Payment</th><th>Total</th><th>Details</th></tr></thead>
         <tbody>
           {orders.map((o) => (
             <tr key={o._id} className="border-t">
-              <td className="py-2"><Link className="text-accent" to={`/admin/orders/${o._id}`}>{o.orderNumber}</Link><div className="text-xs">{o.status}</div></td>
+              <td className="py-2">{o.orderNumber}<div className="text-xs">{o.status}</div></td>
               <td>{o.customer?.fullName}<div className="text-xs">{o.customer?.city}</div></td>
               <td>{o.paymentStatus}</td>
               <td>{money(o.total)}</td>
+              <td><Link className="btn-outline inline-block" to={`/admin/orders/${o._id}`}>Order Details</Link></td>
             </tr>
           ))}
+          {!orders.length && <tr><td className="p-3 text-slate-500" colSpan="5">No orders found.</td></tr>}
         </tbody>
       </table>
     </div>
@@ -289,23 +385,30 @@ export function OrderDetail() {
   const [courier, setCourier] = useState("");
   const [tracking, setTracking] = useState("");
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
   async function load() {
     const d = await api.adminOrder(id);
     setData(d);
     setCourier(d.order.courierName || "");
     setTracking(d.order.trackingNumber || "");
   }
-  useEffect(() => { load(); }, [id]);
-  if (!data) return <p>Loading…</p>;
+  useEffect(() => { load().catch((e) => setErr(e.message)); }, [id]);
+  if (!data) return err ? <Alert>{err}</Alert> : <p>Loading…</p>;
   const o = data.order;
   async function setStatus(status) {
-    const r = await api.updateOrder(id, { status, note, courierName: courier, trackingNumber: tracking });
-    setMsg(`Updated to ${r.order.status}`);
-    load();
+    try {
+      const r = await api.updateOrder(id, { status, note, courierName: courier, trackingNumber: tracking });
+      setMsg(`Updated to ${r.order.status}`);
+      setErr("");
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
   }
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{o.orderNumber}</h1>
+      {err && <Alert>{err}</Alert>}
       <div className="card p-4 text-sm">
         <p>{o.customer.fullName} · {o.customer.phone} · {o.customer.email}</p>
         <p>{o.customer.address}, {o.customer.city}, {o.customer.province}</p>
@@ -314,9 +417,22 @@ export function OrderDetail() {
         {o.cancelledAt && <p>Cancelled: {new Date(o.cancelledAt).toLocaleString()} · {o.cancelReason}</p>}
       </div>
       <div className="card p-4 text-sm">
-        {o.items.map((i, idx) => <div key={idx}>{i.quantity} × {i.name} — “{i.customText}” · {money(i.lineTotal)}</div>)}
-        <p className="mt-2">Subtotal {money(o.subtotal)} · Delivery {money(o.deliveryFee)} · Discount {money(o.discount)} · Total {money(o.total)}</p>
-        <p>Advance {money(o.advanceAmount)} · COD {money(o.remainingCod)}</p>
+        <h2 className="mb-2 font-bold">Items and pricing</h2>
+        {o.items.map((i, idx) => <div key={idx} className="border-b py-2">{i.quantity} × {i.name} · Unit price {money(i.unitPrice)} · Customization: “{i.customText || "—"}” · Line total {money(i.lineTotal)}</div>)}
+        <p className="mt-3">Subtotal {money(o.subtotal)} · Delivery charges {money(o.deliveryFee)} · Discount {money(o.discount)} · Total {money(o.total)}</p>
+        <p>Advance payment {money(o.advanceAmount)} · Remaining balance (COD) {money(o.remainingCod)}</p>
+      </div>
+      <div className="card p-4">
+        <h2 className="font-bold">Payment submissions</h2>
+        {data.payments.map((payment) => (
+          <div key={payment._id} className="mt-2 border-t pt-2 text-sm">
+            <p>{payment.method} · Ref {payment.transactionRef} · {payment.status}</p>
+            <p>Submitted {new Date(payment.createdAt).toLocaleString()}</p>
+            {payment.adminNotes && <p>Admin notes: {payment.adminNotes}</p>}
+            {payment.screenshotPath && <img className="mt-2 max-h-48 rounded" src={api.paymentShot(payment._id)} alt="Payment proof" />}
+          </div>
+        ))}
+        {!data.payments.length && <p className="mt-2 text-sm text-slate-500">No payment submissions.</p>}
       </div>
       <div className="card p-4 space-y-2">
         <Field label="Courier"><input className="input" value={courier} onChange={(e) => setCourier(e.target.value)} /></Field>
@@ -418,17 +534,23 @@ export function SettingsPage() {
   const [settings, setSettings] = useState(null);
   const [email, setEmail] = useState(null);
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
   useEffect(() => {
     api.settings().then((d) => {
       setSettings(d.settings);
       setEmail(d.email);
-    });
+    }).catch((e) => setErr(e.message));
   }, []);
-  if (!settings) return <p>Loading…</p>;
+  if (!settings) return err ? <Alert>{err}</Alert> : <p>Loading…</p>;
   async function save(e) {
     e.preventDefault();
-    await api.saveSettings(settings);
-    setMsg("Settings saved. Existing orders keep their original totals.");
+    try {
+      await api.saveSettings(settings);
+      setErr("");
+      setMsg("Settings saved. Existing orders keep their original totals.");
+    } catch (e) {
+      setErr(e.message);
+    }
   }
   return (
     <form onSubmit={save} className="space-y-6">
@@ -449,9 +571,10 @@ export function SettingsPage() {
       </Field>
       <textarea
         className="input h-24"
-        value={JSON.stringify(settings.delivery?.cityRates || [], null, 2)}
-        onChange={(e) => setSettings({ ...settings, delivery: { ...settings.delivery, cityRates: JSON.parse(e.target.value) } })}
+        value={settings.delivery?.cityRates || ""}
+        onChange={(e) => setSettings({ ...settings, delivery: { ...settings.delivery, cityRates: e.target.value } })}
       />
+      <p className="text-xs text-slate-500">City rates: one per line as city | province | fee. Escape a literal | as \|.</p>
       <h2 className="font-bold">Advance payment</h2>
       <div className="grid gap-2 md:grid-cols-3">
         <select className="input" value={settings.advance?.type} onChange={(e) => setSettings({ ...settings, advance: { ...settings.advance, type: e.target.value } })}>
@@ -464,9 +587,10 @@ export function SettingsPage() {
       <h2 className="font-bold">Payment accounts</h2>
       <textarea
         className="input h-40"
-        value={JSON.stringify(settings.paymentAccounts || [], null, 2)}
-        onChange={(e) => setSettings({ ...settings, paymentAccounts: JSON.parse(e.target.value) })}
+        value={settings.paymentAccounts || ""}
+        onChange={(e) => setSettings({ ...settings, paymentAccounts: e.target.value })}
       />
+      <p className="text-xs text-slate-500">One per line: method | holder | account number | instructions | active (true/false). Use \| for a literal | and \n for a line break.</p>
       <h2 className="font-bold">Deadline</h2>
       <Field label="Hours to pay">
         <input className="input" type="number" value={settings.paymentDeadlineHours} onChange={(e) => setSettings({ ...settings, paymentDeadlineHours: Number(e.target.value) })} />
@@ -476,13 +600,25 @@ export function SettingsPage() {
         Auto-cancel overdue unpaid orders
       </label>
       <h2 className="font-bold">Banners / FAQs / policies</h2>
-      <textarea className="input h-32" value={JSON.stringify(settings.banners || [], null, 2)} onChange={(e) => setSettings({ ...settings, banners: JSON.parse(e.target.value) })} />
-      <textarea className="input h-32" value={JSON.stringify(settings.faqs || [], null, 2)} onChange={(e) => setSettings({ ...settings, faqs: JSON.parse(e.target.value) })} />
-      <textarea className="input h-32" value={JSON.stringify(settings.policies || {}, null, 2)} onChange={(e) => setSettings({ ...settings, policies: JSON.parse(e.target.value) })} />
+      <textarea className="input h-32" value={settings.banners || ""} onChange={(e) => setSettings({ ...settings, banners: e.target.value })} />
+      <p className="text-xs text-slate-500">Banners, one per line: title | subtitle | image | button text | button link | active (true/false). Use \| for a literal | and \n for a line break.</p>
+      <textarea className="input h-32" value={settings.faqs || ""} onChange={(e) => setSettings({ ...settings, faqs: e.target.value })} />
+      <p className="text-xs text-slate-500">FAQs, one per line: question | answer. Use \| for a literal | and \n for a line break.</p>
+      <textarea className="input h-32" value={settings.policies || ""} onChange={(e) => setSettings({ ...settings, policies: e.target.value })} />
+      <p className="text-xs text-slate-500">Policies, one per line: key | text. Use \| for a literal | and \n for a line break.</p>
+      {err && <Alert>{err}</Alert>}
       {msg && <Alert kind="ok">{msg}</Alert>}
       <div className="flex gap-2">
         <button className="btn">Save settings</button>
-        <button type="button" className="btn-outline" onClick={async () => { const r = await api.runCancel(); setMsg(`Cancel job ran, cancelled ${r.cancelled || 0}`); }}>
+        <button type="button" className="btn-outline" onClick={async () => {
+          try {
+            const r = await api.runCancel();
+            setErr("");
+            setMsg(`Cancel job ran, cancelled ${r.cancelled || 0}`);
+          } catch (e) {
+            setErr(e.message);
+          }
+        }}>
           Run overdue cancel job
         </button>
       </div>

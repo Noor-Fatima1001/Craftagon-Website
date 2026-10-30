@@ -13,7 +13,11 @@ const env = require("../config/env");
 const AppError = require("../utils/AppError");
 const asyncHandler = require("../utils/asyncHandler");
 const { logAudit } = require("../services/audit");
-const { getSettings } = require("../services/settingsService");
+const {
+  getSettings,
+  getSettingsDocument,
+  decodeRows,
+} = require("../services/settingsService");
 const { adminCancel, cancelOverdueOrders } = require("../services/cancelService");
 const emailService = require("../services/emailService");
 const { dirs } = require("../middleware/upload");
@@ -129,6 +133,8 @@ const getProduct = asyncHandler(async (req, res) => {
 
 const saveProduct = asyncHandler(async (req, res) => {
   const data = req.body;
+  const categoryExists = await Category.exists({ _id: data.category });
+  if (!categoryExists) throw new AppError("A valid category is required", 400);
   const payload = {
     name: data.name,
     slug: String(data.slug || data.name || "")
@@ -140,6 +146,7 @@ const saveProduct = asyncHandler(async (req, res) => {
     category: data.category,
     price: Number(data.price),
     salePrice: data.salePrice === "" || data.salePrice == null ? undefined : Number(data.salePrice),
+    stock: data.stock == null ? undefined : Number(data.stock),
     active: data.active !== false && data.active !== "false",
     featured: data.featured === true || data.featured === "true",
     bestseller: data.bestseller === true || data.bestseller === "true",
@@ -193,23 +200,51 @@ const listCategories = asyncHandler(async (req, res) => {
 });
 
 const saveCategory = asyncHandler(async (req, res) => {
-  const slug = String(req.body.slug || req.body.name)
+  const name = String(req.body.name || "").trim();
+  if (!name) throw new AppError("Category name is required", 400);
+  const slug = String(req.body.slug || name)
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  const payload = { ...req.body, slug };
+  if (!slug) throw new AppError("Category slug is required", 400);
+  const payload = {
+    name,
+    slug,
+    description: req.body.description || "",
+    sortOrder: Number(req.body.sortOrder) || 0,
+    active: req.body.active !== false && req.body.active !== "false",
+  };
+  if (req.body.image !== undefined) payload.image = req.body.image;
   let category;
   if (req.params.id) {
     category = await Category.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
+    if (!category) throw new AppError("Category not found", 404);
   } else {
     category = await Category.create(payload);
   }
+  await logAudit({
+    admin: req.admin,
+    action: req.params.id ? "category_update" : "category_create",
+    entity: "Category",
+    entityId: category._id,
+  });
   res.json({ category });
 });
 
 const deleteCategory = asyncHandler(async (req, res) => {
-  await Category.findByIdAndDelete(req.params.id);
+  const category = await Category.findById(req.params.id);
+  if (!category) throw new AppError("Category not found", 404);
+  if (await Product.exists({ category: category._id })) {
+    throw new AppError("Reassign or delete this category's products before deleting it", 409);
+  }
+  await Category.deleteOne({ _id: category._id });
+  await logAudit({
+    admin: req.admin,
+    action: "category_delete",
+    entity: "Category",
+    entityId: category._id,
+  });
   res.json({ ok: true });
 });
 
@@ -386,12 +421,12 @@ const paymentScreenshot = asyncHandler(async (req, res) => {
 });
 
 const getSettingsAdmin = asyncHandler(async (_req, res) => {
-  const settings = await getSettings();
+  const settings = await getSettingsDocument();
   res.json({ settings, email: emailService.status() });
 });
 
 const saveSettings = asyncHandler(async (req, res) => {
-  const settings = await getSettings();
+  const settings = await getSettingsDocument();
   const allowed = [
     "storeName",
     "tagline",
@@ -412,7 +447,27 @@ const saveSettings = asyncHandler(async (req, res) => {
     "help",
   ];
   for (const key of allowed) {
-    if (req.body[key] !== undefined) settings[key] = req.body[key];
+    if (req.body[key] !== undefined) {
+      if (key === "delivery") continue;
+      if (key === "banners" || key === "faqs" || key === "paymentAccounts") {
+        decodeRows(req.body[key], key);
+      } else if (key === "policies") {
+        decodeRows(req.body[key], key);
+      }
+      settings[key] = req.body[key];
+    }
+  }
+  if (req.body.delivery !== undefined) {
+    if (!req.body.delivery || typeof req.body.delivery !== "object" || Array.isArray(req.body.delivery)) {
+      throw new AppError("Delivery settings must be an object", 400);
+    }
+    if (req.body.delivery.cityRates !== undefined) {
+      decodeRows(req.body.delivery.cityRates, "cityRates");
+      settings.set("delivery.cityRates", req.body.delivery.cityRates);
+    }
+    if (req.body.delivery.nationwideFlat !== undefined) {
+      settings.set("delivery.nationwideFlat", req.body.delivery.nationwideFlat);
+    }
   }
   await settings.save();
   await logAudit({

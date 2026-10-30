@@ -25,26 +25,13 @@ const storeSettingsSchema = new mongoose.Schema(
           "Need help with an order, a print preview, or a payment? Use Track Order with your order number and email, or send us a message on the Contact page. WhatsApp buttons only open a chat — nothing is sent until you press Send.",
       },
     },
-    banners: [
-      {
-        title: String,
-        subtitle: String,
-        image: String,
-        ctaText: String,
-        ctaLink: String,
-        active: { type: Boolean, default: true },
-      },
-    ],
+    banners: { type: String, default: "" },
     featuredProductIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
-    faqs: [{ question: String, answer: String }],
-    policies: {
-      shipping: { type: String, default: "" },
-      returns: { type: String, default: "" },
-      privacy: { type: String, default: "" },
-    },
+    faqs: { type: String, default: "" },
+    policies: { type: String, default: "" },
     delivery: {
       nationwideFlat: { type: Number, default: 250 },
-      cityRates: [{ city: String, province: String, fee: Number }],
+      cityRates: { type: String, default: "" },
     },
     advance: {
       type: { type: String, enum: ["fixed", "percent"], default: "percent" },
@@ -58,15 +45,7 @@ const storeSettingsSchema = new mongoose.Schema(
         },
       ],
     },
-    paymentAccounts: [
-      {
-        method: String,
-        holderName: String,
-        accountNumber: String,
-        instructions: String,
-        active: { type: Boolean, default: true },
-      },
-    ],
+    paymentAccounts: { type: String, default: "" },
     paymentDeadlineHours: { type: Number, default: 48 },
     autoCancelEnabled: { type: Boolean, default: true },
   },
