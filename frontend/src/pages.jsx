@@ -249,17 +249,24 @@ export function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [text, setText] = useState("");
   const [qty, setQty] = useState(1);
+  const [colorVariantId, setColorVariantId] = useState("");
   const [err, setErr] = useState("");
   useEffect(() => {
     api
       .product(slug)
-      .then((d) => setProduct(d.product))
+      .then((d) => {
+        setProduct(d.product);
+        setColorVariantId(d.product.colorVariants?.[0]?._id || "");
+      })
       .catch((e) => setErr(e.message));
   }, [slug]);
   if (err) return <Alert>{err}</Alert>;
   if (!product) return <p>Loading…</p>;
   const price = product.salePrice && product.salePrice < product.price ? product.salePrice : product.price;
   const max = product.customization?.maxLength || 24;
+  const colorVariants = product.colorVariants || [];
+  const selectedColor = colorVariants.find((variant) => variant._id === colorVariantId);
+  const productImage = selectedColor?.image || product.images?.[0];
   function add() {
     const customText = text.trim();
     if (product.customization?.enabled !== false && product.customization?.required !== false && !customText) {
@@ -270,14 +277,22 @@ export function ProductDetail() {
       setErr(`Text must be at most ${max} characters`);
       return;
     }
+    if (colorVariants.length && !selectedColor) {
+      setErr("Please select a color");
+      return;
+    }
     cart.add({
       productId: product._id,
       name: product.name,
       slug: product.slug,
-      image: product.images?.[0],
+      image: productImage,
       price,
       quantity: qty,
       customText,
+      colorVariantId: selectedColor?._id || "",
+      color: selectedColor
+        ? { name: selectedColor.name, value: selectedColor.value }
+        : null,
       maxLength: max,
       preview: product.preview,
     });
@@ -285,7 +300,7 @@ export function ProductDetail() {
   }
   return (
     <div className="grid gap-10 md:grid-cols-2">
-      <CustomPreview product={product} text={text} />
+      <CustomPreview product={product} text={text} image={productImage} />
       <div>
         <div className="text-sm text-slate-500">{product.category?.name}</div>
         <h1 className="mt-1 text-3xl font-bold">{product.name}</h1>
@@ -296,6 +311,31 @@ export function ProductDetail() {
           )}
         </div>
         <p className="mt-4 text-slate-600">{product.description}</p>
+        {!!colorVariants.length && (
+          <Field label="Color">
+            <div className="mt-2 flex flex-wrap gap-2">
+              {colorVariants.map((variant) => (
+                <button
+                  key={variant._id}
+                  type="button"
+                  title={variant.name}
+                  aria-label={`Select ${variant.name}`}
+                  aria-pressed={variant._id === colorVariantId}
+                  onClick={() => {
+                    setColorVariantId(variant._id);
+                    setErr("");
+                  }}
+                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                    variant._id === colorVariantId ? "border-accent ring-2 ring-accent/30" : "border-slate-200"
+                  }`}
+                >
+                  <span className="h-5 w-5 rounded-full border border-slate-300" style={{ backgroundColor: variant.value }} />
+                  {variant.name}
+                </button>
+              ))}
+            </div>
+          </Field>
+        )}
         <Field label={product.customization?.label || "Custom text"}>
           <input className="input" maxLength={max} value={text} onChange={(e) => setText(e.target.value)} />
           <p className="mt-1 text-xs text-slate-500">
@@ -340,6 +380,12 @@ export function CartPage() {
                 {it.name}
               </Link>
               <p className="text-sm text-slate-500">Custom text: {it.customText || "—"}</p>
+              {it.color && (
+                <p className="flex items-center gap-2 text-sm text-slate-500">
+                  Color: <span className="inline-block h-4 w-4 rounded-full border border-slate-300" style={{ backgroundColor: it.color.value }} />
+                  {it.color.name}
+                </p>
+              )}
               <p className="text-sm">{money(it.price)}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -384,7 +430,13 @@ export function Checkout() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const items = useMemo(
-    () => cart.items.map((i) => ({ productId: i.productId, quantity: i.quantity, customText: i.customText })),
+    () =>
+      cart.items.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        customText: i.customText,
+        ...(i.colorVariantId ? { colorVariantId: i.colorVariantId } : {}),
+      })),
     [cart.items]
   );
 
@@ -479,6 +531,7 @@ export function Checkout() {
           {cart.items.map((i, idx) => (
             <li key={idx}>
               {i.quantity} × {i.name} — “{i.customText}”
+              {i.color && <div className="text-slate-500">Color: {i.color.name}</div>}
             </li>
           ))}
         </ul>
@@ -597,7 +650,14 @@ function OrderView({ order, payments, paymentAccounts, whatsappUrl, token, title
             <div key={idx} className="grid gap-3 sm:grid-cols-[140px_1fr]">
               <CustomPreview product={{ name: i.name, preview: i.preview, images: [i.image] }} text={i.customText} image={i.image} />
               <div className="text-sm">
-                {i.quantity} × {i.name} — “{i.customText}” · {money(i.lineTotal)}
+                {i.quantity} × {i.name} — “{i.customText}”
+                {i.color && (
+                  <div className="flex items-center gap-2 text-slate-500">
+                    Color: <span className="inline-block h-4 w-4 rounded-full border border-slate-300" style={{ backgroundColor: i.color.value }} />
+                    {i.color.name}
+                  </div>
+                )}
+                <div>{money(i.lineTotal)}</div>
               </div>
             </div>
           ))}

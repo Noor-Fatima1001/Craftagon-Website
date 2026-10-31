@@ -7,6 +7,13 @@ const productSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     images: [{ type: String }],
+    colorVariants: [
+      {
+        name: { type: String, required: true, trim: true },
+        value: { type: String, required: true, trim: true },
+        image: { type: String, default: "" },
+      },
+    ],
     price: { type: Number, required: true, min: 0 },
     salePrice: { type: Number, min: 0 },
     stock: { type: Number, min: 0, default: 0 },

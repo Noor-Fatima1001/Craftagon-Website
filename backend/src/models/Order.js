@@ -1,5 +1,14 @@
 const mongoose = require("mongoose");
 
+const orderColorSchema = new mongoose.Schema(
+  {
+    variantId: String,
+    name: String,
+    value: String,
+  },
+  { _id: false }
+);
+
 const orderItemSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
@@ -9,6 +18,7 @@ const orderItemSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true },
     customText: { type: String, default: "" },
+    color: { type: orderColorSchema, default: undefined },
     preview: { type: mongoose.Schema.Types.Mixed },
     lineTotal: { type: Number, required: true },
   },

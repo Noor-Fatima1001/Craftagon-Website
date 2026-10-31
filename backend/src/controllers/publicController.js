@@ -104,6 +104,7 @@ const quoteValidators = [
   body("items").isArray({ min: 1 }).withMessage("Cart is empty"),
   body("items.*.productId").isMongoId(),
   body("items.*.quantity").isInt({ min: 1, max: 50 }),
+  body("items.*.colorVariantId").optional().isMongoId(),
   body("city").optional().isString(),
   body("province").optional().isString(),
 ];
@@ -136,6 +137,7 @@ const orderValidators = [
   body("items").isArray({ min: 1 }),
   body("items.*.productId").isMongoId(),
   body("items.*.quantity").isInt({ min: 1, max: 50 }),
+  body("items.*.colorVariantId").optional().isMongoId(),
   body("customer.fullName").trim().isLength({ min: 3, max: 80 }),
   body("customer.phone").trim().isLength({ min: 10, max: 20 }),
   body("customer.email").isEmail().normalizeEmail(),

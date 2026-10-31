@@ -131,6 +131,10 @@ const getProduct = asyncHandler(async (req, res) => {
   res.json({ product });
 });
 
+const uploadProductImages = asyncHandler(async (req, res) => {
+  res.json({ urls: (req.files || []).map((file) => `/uploads/products/${file.filename}`) });
+});
+
 const saveProduct = asyncHandler(async (req, res) => {
   const data = req.body;
   const categoryExists = await Category.exists({ _id: data.category });
@@ -153,6 +157,13 @@ const saveProduct = asyncHandler(async (req, res) => {
     customization: typeof data.customization === "string" ? JSON.parse(data.customization) : data.customization,
     preview: typeof data.preview === "string" ? JSON.parse(data.preview) : data.preview,
   };
+  if (data.colorVariants !== undefined) {
+    payload.colorVariants =
+      typeof data.colorVariants === "string" ? JSON.parse(data.colorVariants) : data.colorVariants;
+    if (!Array.isArray(payload.colorVariants)) {
+      throw new AppError("Product colors must be a list", 400);
+    }
+  }
   let existingImages = [];
   if (data.images) {
     existingImages = typeof data.images === "string" ? JSON.parse(data.images) : data.images;
@@ -518,6 +529,7 @@ module.exports = {
   dashboard,
   listProducts,
   getProduct,
+  uploadProductImages,
   saveProduct,
   deleteProduct,
   listCategories,

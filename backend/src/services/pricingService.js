@@ -69,16 +69,35 @@ async function quote({ productsById, cartItems, settings, city, province }) {
     if (customText.length > max) {
       throw new AppError(`Custom text for ${product.name} must be at most ${max} characters`, 400);
     }
+    const colorVariantId = String(item.colorVariantId || "").trim();
+    const colorVariant = (product.colorVariants || []).find(
+      (variant) => String(variant._id) === colorVariantId
+    );
+    if ((product.colorVariants || []).length && !colorVariant) {
+      throw new AppError(`Please select a valid color for ${product.name}`, 400);
+    }
+    if (colorVariantId && !colorVariant) {
+      throw new AppError(`The selected color for ${product.name} is unavailable`, 400);
+    }
     const price = unitPrice(product);
     const lineTotal = price * qty;
     lines.push({
       product: product._id,
       name: product.name,
       slug: product.slug,
-      image: product.images?.[0] || "",
+      image: colorVariant?.image || product.images?.[0] || "",
       quantity: qty,
       unitPrice: price,
       customText,
+      ...(colorVariant
+        ? {
+            color: {
+              variantId: String(colorVariant._id),
+              name: colorVariant.name,
+              value: colorVariant.value,
+            },
+          }
+        : {}),
       preview: previewSnapshot(product),
       lineTotal,
     });

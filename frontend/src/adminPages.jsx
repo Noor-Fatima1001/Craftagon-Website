@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, asset, money } from "./api";
+import { api, asset, money, request } from "./api";
 import { useAuth } from "./context";
 import { Alert, CustomPreview, Field } from "./components";
 
@@ -152,6 +152,7 @@ export function ProductForm() {
     featured: false,
     bestseller: false,
     images: [],
+    colorVariants: [],
     customization: { enabled: true, required: true, maxLength: 24, label: "Custom text" },
     preview: { enabled: true, x: 50, y: 55, fontSize: 22, fontFamily: "Georgia, serif", color: "#1f2937", align: "center", maxWidth: 70 },
   });
@@ -189,10 +190,33 @@ export function ProductForm() {
     fd.append("customization", JSON.stringify(form.customization));
     fd.append("preview", JSON.stringify(form.preview));
     fd.append("images", JSON.stringify(form.images || []));
+    fd.append("colorVariants", JSON.stringify(form.colorVariants || []));
     [...files].forEach((f) => fd.append("images", f));
     try {
       await api.saveProduct(id && id !== "new" ? id : null, fd);
       nav("/admin/products");
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
+  function updateColorVariant(index, key, value) {
+    setForm((current) => ({
+      ...current,
+      colorVariants: (current.colorVariants || []).map((variant, i) =>
+        i === index ? { ...variant, [key]: value } : variant
+      ),
+    }));
+  }
+
+  async function uploadColorImage(index, file) {
+    if (!file) return;
+    const data = new FormData();
+    data.append("images", file);
+    try {
+      const result = await request("/api/admin/uploads/product", { method: "POST", body: data });
+      updateColorVariant(index, "image", result.urls[0]);
+      setErr("");
     } catch (e) {
       setErr(e.message);
     }
@@ -237,6 +261,42 @@ export function ProductForm() {
             ))}
           </div>
         )}
+        <div className="space-y-3 rounded-md border border-slate-200 p-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Product colors</h2>
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={() => set("colorVariants", [...(form.colorVariants || []), { name: "", value: "#000000", image: "" }])}
+            >
+              Add color
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">Choose a color image or use one of the product images. Customers will see the matching image when they select a color.</p>
+          {(form.colorVariants || []).map((variant, index) => (
+            <div key={variant._id || `color-${index}`} className="grid gap-2 rounded border border-slate-100 p-3 sm:grid-cols-[1fr_auto_auto]">
+              <Field label="Color name">
+                <input className="input" required value={variant.name} onChange={(e) => updateColorVariant(index, "name", e.target.value)} />
+              </Field>
+              <Field label="Swatch">
+                <input className="h-10 w-14" type="color" value={variant.value || "#000000"} onChange={(e) => updateColorVariant(index, "value", e.target.value)} />
+              </Field>
+              <button type="button" className="self-end text-sm text-red-600" onClick={() => set("colorVariants", form.colorVariants.filter((_, i) => i !== index))}>
+                Remove
+              </button>
+              <Field label="Display image">
+                <select className="input" value={variant.image || ""} onChange={(e) => updateColorVariant(index, "image", e.target.value)}>
+                  <option value="">Use primary product image</option>
+                  {(form.images || []).map((image) => <option key={image} value={image}>Product image {form.images.indexOf(image) + 1}</option>)}
+                </select>
+              </Field>
+              <Field label="Upload color image">
+                <input className="input" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => uploadColorImage(index, e.target.files?.[0])} />
+              </Field>
+              {variant.image && <img className="h-16 w-16 rounded object-cover" src={asset(variant.image)} alt={`${variant.name} product`} />}
+            </div>
+          ))}
+        </div>
         <Field label="Custom label"><input className="input" value={form.customization.label} onChange={(e) => set("customization", { ...form.customization, label: e.target.value })} /></Field>
         <Field label="Max characters"><input className="input" type="number" value={form.customization.maxLength} onChange={(e) => set("customization", { ...form.customization, maxLength: Number(e.target.value) })} /></Field>
         <div className="grid grid-cols-2 gap-2">
@@ -418,7 +478,7 @@ export function OrderDetail() {
       </div>
       <div className="card p-4 text-sm">
         <h2 className="mb-2 font-bold">Items and pricing</h2>
-        {o.items.map((i, idx) => <div key={idx} className="border-b py-2">{i.quantity} × {i.name} · Unit price {money(i.unitPrice)} · Customization: “{i.customText || "—"}” · Line total {money(i.lineTotal)}</div>)}
+        {o.items.map((i, idx) => <div key={idx} className="border-b py-2">{i.quantity} × {i.name} · Unit price {money(i.unitPrice)} · Customization: “{i.customText || "—"}”{i.color ? ` · Color: ${i.color.name} (${i.color.value})` : ""} · Line total {money(i.lineTotal)}</div>)}
         <p className="mt-3">Subtotal {money(o.subtotal)} · Delivery charges {money(o.deliveryFee)} · Discount {money(o.discount)} · Total {money(o.total)}</p>
         <p>Advance payment {money(o.advanceAmount)} · Remaining balance (COD) {money(o.remainingCod)}</p>
       </div>

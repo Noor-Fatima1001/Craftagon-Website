@@ -6,7 +6,11 @@ const StoreCtx = createContext(null);
 const AuthCtx = createContext(null);
 
 function sameItem(a, b) {
-  return a.productId === b.productId && (a.customText || "") === (b.customText || "");
+  return (
+    a.productId === b.productId &&
+    (a.customText || "") === (b.customText || "") &&
+    (a.colorVariantId || "") === (b.colorVariantId || "")
+  );
 }
 
 export function CartProvider({ children }) {

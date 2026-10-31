@@ -43,7 +43,7 @@ async function orderConfirmation(order, settings) {
   const items = order.items
     .map(
       (i) =>
-        `<li>${i.quantity} × ${i.name}${i.customText ? ` (text: ${i.customText})` : ""} — PKR ${i.lineTotal}</li>`
+        `<li>${i.quantity} × ${i.name}${i.customText ? ` (text: ${i.customText})` : ""}${i.color?.name ? ` (color: ${i.color.name})` : ""} — PKR ${i.lineTotal}</li>`
     )
     .join("");
   return sendMail({
