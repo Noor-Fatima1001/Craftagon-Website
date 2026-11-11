@@ -22,20 +22,19 @@ Remaining COD: Rs ${order.remainingCod}
 
 Please note I will transfer using:
 ${accounts}
-
-I will press Send in WhatsApp myself — this link does not send automatically.`;
+`;
 }
 
 function orderConfirmMessage(order, storeName) {
-  return `Hello, this is ${storeName || "Craftagon"} regarding order ${order.orderNumber}. Your order is confirmed. This message is not sent until you press Send.`;
+  return `Hello, this is ${storeName || "Craftagon"} regarding order ${order.orderNumber}. Your order is confirmed.`;
 }
 
 function paymentReminderMessage(order) {
-  return `Hello, a reminder for order ${order.orderNumber}: advance due is Rs ${order.advanceAmount}. Remaining COD is Rs ${order.remainingCod}. This WhatsApp draft is not sent until you press Send.`;
+  return `Hello, a reminder for order ${order.orderNumber}: advance due is Rs ${order.advanceAmount}. Remaining COD is Rs ${order.remainingCod}.`;
 }
 
 function cancelNotifyMessage(order) {
-  return `Hello, order ${order.orderNumber} has been cancelled${order.cancelReason ? `: ${order.cancelReason}` : ""}. This WhatsApp draft is not sent until you press Send.`;
+  return `Hello, order ${order.orderNumber} has been cancelled${order.cancelReason ? `: ${order.cancelReason}` : ""}.`;
 }
 
 module.exports = {

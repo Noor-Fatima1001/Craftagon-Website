@@ -1,8 +1,39 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { api, money, statusLabel } from "./api";
+import {
+  FiArrowRight,
+  FiCheckCircle,
+  FiClock,
+  FiCreditCard,
+  FiEdit3,
+  FiGift,
+  FiLock,
+  FiLogIn,
+  FiLogOut,
+  FiMail,
+  FiMapPin,
+  FiPackage,
+  FiPhone,
+  FiRotateCcw,
+  FiSearch,
+  FiSend,
+  FiShield,
+  FiShoppingBag,
+  FiShoppingCart,
+  FiTrash2,
+  FiTruck,
+  FiUpload,
+  FiUserPlus,
+  FiHeadphones,
+  FiTag,
+  FiTarget,
+  FiEye,
+  FiHeart,
+} from "react-icons/fi";
+import { FaWhatsapp, FaFacebookF, FaInstagram } from "react-icons/fa";
+import { api, asset, money, statusLabel } from "./api";
 import { useAuth, useCart, useStore } from "./context";
-import { Alert, CustomPreview, Field, ProductCard } from "./components";
+import { Alert, CustomPreview, Field, ProductCard, ui } from "./components";
 
 const PROVINCES = [
   "Punjab",
@@ -14,47 +45,200 @@ const PROVINCES = [
   "Azad Jammu & Kashmir",
 ];
 
+const STEPS = [
+  { icon: FiSearch, title: "Choose a product", text: "Browse pens, mugs, tumblers, diaries and keychains, then pick the one you like." },
+  { icon: FiEdit3, title: "Add your text", text: "Type a name or a short message. The product page shows how many characters you can use." },
+  { icon: FiCreditCard, title: "Pay the advance", text: "Send the advance by JazzCash or Easypaisa and upload the proof, or choose COD. Our team confirms every payment by hand." },
+  { icon: FiTruck, title: "We print and deliver", text: "After your payment is confirmed we print your order and send it to your door. The remaining balance is paid on delivery." },
+];
+
+const WHY = [
+  { icon: FiGift, title: "Made for one person", text: "Every item carries the name or message you choose, so the gift feels personal and not generic." },
+  { icon: FiShield, title: "Payments checked by people", text: "We compare each payment proof with the real transfer before printing. Nothing is verified automatically." },
+  { icon: FiTag, title: "Clear pricing", text: "You see the subtotal, delivery fee, advance and remaining COD amount before you place the order." },
+  { icon: FiHeadphones, title: "Easy support", text: "Track your order online anytime, reach out via our contact form, or connect with us instantly on WhatsApp for assistance." },
+];
+
+function PageHeader({ title, subtitle }) {
+  return (
+    <div className="mb-8">
+      <h1 className={ui.pageTitle}>{title}</h1>
+      {subtitle && <p className="mt-2 max-w-2xl text-slate-600">{subtitle}</p>}
+    </div>
+  );
+}
+
+function SectionHead({ title, subtitle, to }) {
+  return (
+    <div className="mb-6 flex items-end justify-between gap-4">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">{title}</h2>
+        {subtitle && <p className="mt-1 text-slate-500">{subtitle}</p>}
+      </div>
+      {to && (
+        <Link to={to} className="hidden items-center gap-1 text-sm font-semibold text-[#030164] hover:underline sm:inline-flex">
+          View all <FiArrowRight />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function Badge({ children, tone = "slate" }) {
+  const tones = {
+    slate: "bg-slate-100 text-slate-700",
+    green: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    primary: "bg-[#030164]/10 text-[#030164]",
+  };
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
+}
+
+function Row({ label, value, strong, accent }) {
+  return (
+    <div className={`flex justify-between ${strong ? "border-t border-slate-200 pt-3 text-base font-bold text-slate-900" : ""} ${accent ? "font-semibold text-[#030164]" : ""}`}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
 export function Home() {
   const { store, featured, bestsellers, categories } = useStore();
   const banner = store?.banners?.[0];
+  const heroImages = [...(featured || []), ...(bestsellers || [])]
+  .filter((p) => p.images?.[0])
+  .slice(0, 3);
   return (
-    <div className="space-y-14">
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-14 md:px-16">
-        <p className="text-sm uppercase tracking-[0.2em] text-accent">Personalized print</p>
-        <h1 className="mt-3 max-w-2xl text-4xl font-bold text-black md:text-5xl">
-          {banner?.title || "Gifts they will keep"}
-        </h1>
-        <p className="mt-4 max-w-xl text-slate-600">
-          {banner?.subtitle || store?.tagline || "Names and short messages printed on pens, mugs, tumblers, diaries and gift sets."}
-        </p>
-        <Link to={banner?.ctaLink || "/products"} className="btn mt-8">
-          {banner?.ctaText || "Shop now"}
-        </Link>
-      </section>
+    <div className="space-y-20 ">
+{/* Hero */}
+<section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-2 shadow-sm md:px-10 md:py-5">
+  <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#030164]/10 blur-3xl" />
+  <div className="relative max-w-3xl">
+    <span className="inline-flex items-center gap-2 rounded-full bg-[#030164]/10 px-4 py-1.5 text-sm font-semibold text-[#030164]">
+      <FiGift /> Personalized print
+    </span>
+    <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-4xl">
+      {banner?.title || "Gifts they will keep"}
+    </h1>
+    <p className="mt-3 max-w-xl text-lg leading-relaxed text-slate-600">
+      {banner?.subtitle || store?.tagline || "Names and short messages printed on pens, mugs, tumblers, diaries and keychains."}
+    </p>
+    <div className="mt-8 flex flex-wrap gap-3">
+      <Link to="/products" className={`${ui.btn} px-7 py-3.5 text-base`}>
+       {banner?.ctaText || "Shop now"} <FiArrowRight />
+     </Link>
+      <Link to="/order-lookup" className={`${ui.btnOutline} px-7 py-3.5 text-base`}>
+        <FiPackage /> Track order
+      </Link>
+    </div>
+    <div className="mt-10 grid gap-4 border-t border-slate-200 pt-6 sm:grid-cols-3">
+      {[
+        { icon: FiEdit3, t: "Your name crafted" },
+        { icon: FiCreditCard, t: "Advance + COD" },
+        { icon: FiTruck, t: "Delivery across Pakistan" },
+      ].map(({ icon: Icon, t }) => (
+        <div key={t} className="flex items-center gap-3 text-sm font-medium text-slate-700">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg text-[#030164] shadow-sm ring-1 ring-slate-200">
+            <Icon />
+          </span>
+          {t}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
       <section>
-        <h2 className="mb-6 text-2xl font-bold">Shop by category</h2>
+        <SectionHead title="Shop by category" subtitle="Find the right item for every person and occasion." to="/products" />
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {categories?.map((c) => (
-            <Link key={c._id} to={`/products?category=${c.slug}`} className="card p-4 text-center hover:border-accent">
-              <div className="font-semibold">{c.name}</div>
+            <Link key={c._id} to={`/products?category=${c.slug}`} className={`${ui.card} group p-5 text-center transition hover:-translate-y-0.5 hover:border-[#030164]/40 hover:shadow-md`}>
+              <div className="font-semibold text-slate-800 group-hover:text-[#030164]">{c.name}</div>
+              <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
+                Shop now <FiArrowRight />
+              </div>
             </Link>
           ))}
         </div>
       </section>
+
+      {/* Featured */}
+      {!!featured?.length && (
+        <section>
+          <SectionHead title="Featured" subtitle="Hand-picked favourites from our collection." to="/products" />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* How it works */}
       <section>
-        <h2 className="mb-6 text-2xl font-bold">Featured</h2>
+        <div className="mb-10 text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">How it works</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-slate-500">From choosing a product to opening the parcel, ordering takes four simple steps.</p>
+        </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featured?.map((p) => (
-            <ProductCard key={p._id} product={p} />
+          {STEPS.map(({ icon: Icon, title, text }, i) => (
+            <div key={title} className={`${ui.card} relative p-6`}>
+              <span className="absolute right-5 top-4 text-4xl font-extrabold text-[#030164]">{i + 1}</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#030164]/10 text-xl text-[#030164]">
+                <Icon />
+              </span>
+              <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{text}</p>
+            </div>
           ))}
         </div>
       </section>
-      <section>
-        <h2 className="mb-6 text-2xl font-bold">Bestsellers</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {bestsellers?.map((p) => (
-            <ProductCard key={p._id} product={p} />
+
+      {/* Bestsellers */}
+      {!!bestsellers?.length && (
+        <section>
+          <SectionHead title="Bestsellers" subtitle="What most customers are ordering." to="/products" />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {bestsellers.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Why us */}
+      <section className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200 md:p-12">
+        <div className="mb-10 max-w-2xl">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Why customers choose us</h2>
+          <p className="mt-2 text-slate-500">We keep ordering simple, honest and easy to follow, from the first click to delivery.</p>
+        </div>
+        <div className="grid gap-8 sm:grid-cols-2">
+          {WHY.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#030164] text-xl text-white">
+                <Icon />
+              </span>
+              <div>
+                <h3 className="font-semibold text-slate-900">{title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">{text}</p>
+              </div>
+            </div>
           ))}
+        </div>
+      </section>
+
+
+      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-12 text-center shadow-sm md:px-12">
+        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Ready to make a gift personal?</h2>
+        <p className="mx-auto mt-3 max-w-xl text-slate-600">Pick a product, add the name or message, and we will take care of the rest.</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link to="/products" className={ui.btn}>
+            Start shopping <FiArrowRight />
+          </Link>
+          <Link to="/contact" className={ui.btnOutline}>
+            <FiMail /> Contact us
+          </Link>
         </div>
       </section>
     </div>
@@ -63,13 +247,109 @@ export function Home() {
 
 export function About() {
   const { store } = useStore();
+
+  const VALUES = [
+    { icon: FiHeart, title: "Made with care", text: "Every name and message is checked and printed carefully, so your gift looks the way you imagined." },
+    { icon: FiShield, title: "Honest process", text: "We confirm every advance payment by hand and show clear pricing before you order." },
+    { icon: FiGift, title: "Personal by design", text: "From pens to dairies, each item is made for one person, not for everyone." },
+  ];
+
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-3xl font-bold">{store?.about?.title || "About Us"}</h1>
-      <p className="mt-4 whitespace-pre-line text-slate-600">
-        {store?.about?.body ||
-          "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and gift sets. We confirm advance payments by hand before we print."}
-      </p>
+    <div className="space-y-16">
+      {/* Intro */}
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-10 shadow-sm md:px-12 md:py-6">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#030164]/10 blur-3xl" />
+        <div className="relative max-w-3xl">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#030164]/10 px-4 py-1 text-sm font-semibold text-[#030164]">
+            <FiGift /> Personalized Gifts
+          </span>
+          <h1 className="mt-5 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-4xl">
+            {store?.about?.title || "About Craftagon"}
+          </h1>
+          <div className="mt-4 h-1 w-14 rounded-full bg-[#030164]" />
+          <p className="mt-6 whitespace-pre-line text-lg leading-relaxed text-slate-600">
+            {store?.about?.body ||
+              "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and keychains. We confirm advance payments before we print."}
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/products" className={`${ui.btn} px-7 py-3.5 text-base`}>
+              Shop now <FiArrowRight />
+            </Link>
+            <Link to="/contact" className={`${ui.btnOutline} px-7 py-3.5 text-base`}>
+              <FiMail /> Contact us
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Vision */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <div className={`${ui.card} p-6 md:p-8`}>
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#030164] text-xl text-white">
+            <FiTarget />
+          </span>
+          <h2 className="mt-5 text-xl font-bold text-slate-900">Our mission</h2>
+          <p className="mt-2 leading-relaxed text-slate-600">
+            {store?.about?.mission ||
+              "To make personalized gifting simple, affordable and trustworthy for everyone in Pakistan, from the first click to delivery."}
+          </p>
+        </div>
+        <div className={`${ui.card} p-6 md:p-8`}>
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#030164] text-xl text-white">
+            <FiEye />
+          </span>
+          <h2 className="mt-5 text-xl font-bold text-slate-900">Our vision</h2>
+          <p className="mt-2 leading-relaxed text-slate-600">
+            {store?.about?.vision ||
+              "To become the most trusted name for custom printed gifts, where every item feels personal and every order is handled with care."}
+          </p>
+        </div>
+      </section>
+
+      {/* What we do */}
+      <section>
+        <div className="mb-8 max-w-2xl">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">What we do</h2>
+          <p className="mt-2 text-slate-500">We print your name or message on everyday products and deliver them to your door.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {["Pens", "Mugs", "Tumblers", "Diaries", "Keychains"].map((item) => (
+            <div key={item} className={`${ui.card} p-5 text-center font-semibold text-slate-800`}>
+              {item}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200 md:p-12">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">What we stand for</h2>
+        <div className="mt-8 grid gap-8 md:grid-cols-3">
+          {VALUES.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#030164]/10 text-xl text-[#030164]">
+                <Icon />
+              </span>
+              <div>
+                <h3 className="font-semibold text-slate-900">{title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+    {/* CTA */}
+<section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-12 text-center shadow-sm md:px-12">
+  <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Ready to make a gift personal?</h2>
+  <p className="mx-auto mt-3 max-w-xl text-slate-600">Pick a product, add the name or message, and we will take care of the rest.</p>
+  <div className="mt-6 flex justify-center">
+    <Link to="/products" className={ui.btn}>
+      Start shopping <FiArrowRight />
+    </Link>
+  </div>
+</section>
     </div>
   );
 }
@@ -77,15 +357,24 @@ export function About() {
 export function Help() {
   const { store } = useStore();
   return (
-    <div className="max-w-3xl space-y-6">
-      <h1 className="text-3xl font-bold">{store?.help?.title || "Help & Support"}</h1>
-      <p className="whitespace-pre-line text-slate-600">{store?.help?.body}</p>
-      <div className="card space-y-2 p-4 text-sm">
-        <p>Track an order with the order number and the email used at checkout.</p>
-        <p>JazzCash and Easypaisa transfers need a screenshot and a transaction ID. COD is confirmed by staff, never automatically.</p>
-        <p>WhatsApp buttons only open a chat. Nothing is sent until you press Send.</p>
-        <Link className="btn mt-2" to="/contact">
-          Contact us
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader title={store?.help?.title || "Help & Support"} />
+      <p className="whitespace-pre-line text-slate-600">Need assistance with your order or payment? Simply enter your order number and email on the Track Order page, or reach out to us directly via Contact Us.</p>
+      <div className={`${ui.card} space-y-4 p-6 text-sm text-slate-600`}>
+        <p className="flex gap-3">
+          <FaWhatsapp className="mt-0.5 shrink-0 text-lg text-[#030164]" />
+          Track your order online or contact us for assistance.  
+        </p>
+        <p className="flex gap-3">
+          <FiPackage className="mt-0.5 shrink-0 text-lg text-[#030164]" />
+          Track an order with the order number and the email used at checkout.
+           </p>
+        <p className="flex gap-3">
+          <FiCreditCard className="mt-0.5 shrink-0 text-lg text-[#030164]" />
+          JazzCash and Easypaisa transfers need a screenshot and a transaction ID. COD is confirmed by staff, never automatically.
+        </p>
+        <Link className={ui.btn} to="/contact">
+          <FiMail /> Contact us
         </Link>
       </div>
     </div>
@@ -94,17 +383,35 @@ export function Help() {
 
 export function Contact() {
   const { store } = useStore();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", message: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", subject: "", message: "" });
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const waNumber = (store?.whatsapp || store?.whatsappNumber || store?.phone || "")
+    .replace(/\D/g, "")
+    .replace(/^0/, "92");
+  const waUrl = waNumber
+    ? `https://wa.me/${waNumber}?text=${encodeURIComponent("Hello Craftagon, I have a question.")}`
+    : "";
+
+  const socials = [
+    { icon: FaFacebookF, label: "Facebook", url: store?.socialLinks?.facebook || store?.facebook },
+    { icon: FaInstagram, label: "Instagram", url: store?.socialLinks?.instagram || store?.instagram },
+  ].filter((s) => s.url);
+
   async function send(e) {
     e.preventDefault();
     setBusy(true);
     setErr("");
     setMsg("");
     try {
-      const r = await api.contact(form);
+      const r = await api.contact({
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        message: form.subject ? `Subject: ${form.subject}\n\n${form.message}` : form.message,
+      });
       setMsg(r.message);
     } catch (e) {
       setErr(e.message);
@@ -112,30 +419,95 @@ export function Contact() {
       setBusy(false);
     }
   }
+
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <div>
-        <h1 className="text-3xl font-bold">Contact Us</h1>
-        <p className="mt-2 text-slate-600">{store?.email}</p>
-        <p className="text-slate-600">{store?.phone}</p>
-        <p className="text-slate-600">{store?.address}</p>
-        <form onSubmit={send} className="mt-6 space-y-3">
-          <Field label="Name">
-            <input className="input" required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
-          </Field>
-          <Field label="Email">
-            <input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          </Field>
-          <Field label="Phone">
-            <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          </Field>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader title="Contact Us" subtitle="Questions about an order or a custom design? Send us a message or chat with us on WhatsApp." />
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+        <div className="space-y-6">
+          {waUrl && (
+            <div className={`${ui.card} p-6`}>
+              <h2 className="text-lg font-bold text-slate-900">Prefer a quick chat?</h2>
+              <p className="mt-1 text-sm text-slate-600">Message us on WhatsApp and we will reply as soon as we can.</p>
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#25D366] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-95"
+              >
+                <FaWhatsapp className="text-lg" /> Chat on WhatsApp
+              </a>
+            </div>
+          )}
+
+          <div className={`${ui.card} space-y-5 p-6 text-slate-600`}>
+            {[
+              { icon: FiMail, label: "Email", v: store?.email },
+              { icon: FiPhone, label: "Phone", v: store?.phone },
+              { icon: FiMapPin, label: "Address", v: store?.address },
+            ]
+              .filter((x) => x.v)
+              .map(({ icon: Icon, label, v }) => (
+                <div key={label} className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#030164]/10 text-[#030164]">
+                    <Icon />
+                  </span>
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</div>
+                    <p className="break-words text-slate-700">{v}</p>
+                  </div>
+                </div>
+              ))}
+
+            {!!socials.length && (
+              <div className="border-t border-slate-100 pt-5">
+                <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Follow us</div>
+                <div className="flex gap-3">
+                  {socials.map(({ icon: Icon, label, url }) => (
+                    <a
+                      key={label}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={label}
+                      title={label}
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#030164]/10 text-[#030164] transition hover:bg-[#030164] hover:text-white"
+                    >
+                      <Icon />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: form */}
+        <form onSubmit={send} className={`${ui.card} space-y-4 p-6 md:p-8`}>
+          <h2 className="text-xl font-bold text-slate-900">Send us a message</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Name">
+              <input className={ui.input} required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+            </Field>
+            <Field label="Email">
+              <input className={ui.input} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </Field>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Phone (optional)">
+              <input className={ui.input} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            </Field>
+            <Field label="Subject">
+              <input className={ui.input} required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+            </Field>
+          </div>
           <Field label="Message">
-            <textarea className="input min-h-[120px]" required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+            <textarea className={`${ui.input} min-h-[140px]`} required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
           </Field>
           {err && <Alert>{err}</Alert>}
           {msg && <Alert kind="ok">{msg}</Alert>}
-          <button className="btn" disabled={busy}>
-            {busy ? "Sending…" : "Send message"}
+          <button className={`${ui.btn} w-full sm:w-auto`} disabled={busy}>
+            <FiSend /> {busy ? "Sending…" : "Send message"}
           </button>
         </form>
       </div>
@@ -185,21 +557,29 @@ export function Products() {
     setParams({});
   }
 
+  const categoryName = categories?.find((c) => c.slug === category)?.name;
+
   return (
     <div>
-      <h1 className="text-3xl font-bold">Shop</h1>
-      <div className="mt-6 flex flex-wrap gap-3">
-        <input
-          className="input max-w-xs"
-          placeholder="Search"
-          value={qInput}
-          onChange={(e) => setQInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && set("q", qInput)}
-        />
-        <button className="btn-outline" type="button" onClick={() => set("q", qInput)}>
-          Search
+      <nav className="mb-4 text-sm text-slate-500">
+        <Link to="/" className="hover:text-[#030164]">Home</Link> › <span className="text-slate-700">{categoryName || "Shop"}</span>
+      </nav>
+      <PageHeader title={categoryName || "Shop"} subtitle="Pick a product, add your text, and we print it for you." />
+      <div className={`${ui.card} flex flex-wrap items-center gap-3 p-4`}>
+        <div className="relative w-full sm:w-auto sm:min-w-[240px]">
+          <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            className={`${ui.input} pl-9`}
+            placeholder="Search products"
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && set("q", qInput)}
+          />
+        </div>
+        <button className={ui.btn} type="button" onClick={() => set("q", qInput)}>
+          <FiSearch /> Search
         </button>
-        <select className="input max-w-xs" value={category} onChange={(e) => set("category", e.target.value)}>
+        <select className={`${ui.input} w-full sm:w-auto`} value={category} onChange={(e) => set("category", e.target.value)}>
           <option value="">All categories</option>
           {categories?.map((c) => (
             <option key={c._id} value={c.slug}>
@@ -207,32 +587,37 @@ export function Products() {
             </option>
           ))}
         </select>
-        <select className="input max-w-xs" value={sort} onChange={(e) => set("sort", e.target.value)}>
+        <select className={`${ui.input} w-full sm:w-auto`} value={sort} onChange={(e) => set("sort", e.target.value)}>
           <option value="newest">Newest</option>
           <option value="price_asc">Price: low to high</option>
           <option value="price_desc">Price: high to low</option>
           <option value="name">Name</option>
         </select>
-        <button className="btn-outline" type="button" onClick={reset}>
-          Reset Filters
+        <button className={ui.btnOutline} type="button" onClick={reset}>
+          <FiRotateCcw /> Reset Filters
         </button>
+        <span className="ml-auto text-sm font-medium text-slate-500">{meta.total} products</span>
       </div>
       {err && (
         <div className="mt-4">
           <Alert>{err}</Alert>
         </div>
       )}
-      <p className="mt-4 text-sm text-slate-500">{meta.total} products</p>
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((p) => (
           <ProductCard key={p._id} product={p} />
         ))}
       </div>
-      {!products.length && !err && <p className="mt-8 text-slate-500">No products match these filters.</p>}
+      {!products.length && !err && (
+        <div className={`${ui.card} mt-8 flex flex-col items-center gap-2 p-12 text-center text-slate-500`}>
+          <FiSearch className="text-3xl text-slate-300" />
+          No products match these filters.
+        </div>
+      )}
       {meta.pages > 1 && (
-        <div className="mt-8 flex flex-wrap gap-2">
+        <div className="mt-10 flex flex-wrap justify-center gap-2">
           {Array.from({ length: meta.pages }, (_, i) => i + 1).map((n) => (
-            <button key={n} type="button" className={n === meta.page ? "btn" : "btn-outline"} onClick={() => set("page", String(n))}>
+            <button key={n} type="button" className={`${n === meta.page ? ui.btn : ui.btnOutline} min-w-[2.75rem] !px-3`} onClick={() => set("page", String(n))}>
               {n}
             </button>
           ))}
@@ -261,7 +646,7 @@ export function ProductDetail() {
       .catch((e) => setErr(e.message));
   }, [slug]);
   if (err) return <Alert>{err}</Alert>;
-  if (!product) return <p>Loading…</p>;
+  if (!product) return <p className="py-20 text-center text-slate-500">Loading…</p>;
   const price = product.salePrice && product.salePrice < product.price ? product.salePrice : product.price;
   const max = product.customization?.maxLength || 24;
   const colorVariants = product.colorVariants || [];
@@ -300,59 +685,70 @@ export function ProductDetail() {
   }
   return (
     <div className="grid gap-10 md:grid-cols-2">
-      <CustomPreview product={product} text={text} image={productImage} />
-      <div>
-        <div className="text-sm text-slate-500">{product.category?.name}</div>
-        <h1 className="mt-1 text-3xl font-bold">{product.name}</h1>
-        <div className="mt-4 flex items-center gap-3">
-          <span className="text-2xl font-bold text-accent">{money(price)}</span>
+      <div className={`${ui.card} h-fit overflow-hidden p-3 md:sticky md:top-28`}>
+        <CustomPreview product={product} image={productImage} />
+      </div>
+      <div className={`${ui.card} h-fit p-6 md:p-8`}>
+        {product.category?.name && <Badge tone="primary">{product.category.name}</Badge>}
+        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">{product.name}</h1>
+        <div className="mt-4 flex items-baseline gap-3">
+          <span className="text-3xl font-bold text-[#030164]">{money(price)}</span>
           {product.salePrice && product.salePrice < product.price && (
-            <span className="text-slate-400 line-through">{money(product.price)}</span>
+            <span className="text-lg text-slate-400 line-through">{money(product.price)}</span>
           )}
         </div>
-        <p className="mt-4 text-slate-600">{product.description}</p>
-        {!!colorVariants.length && (
-          <Field label="Color">
-            <div className="mt-2 flex flex-wrap gap-2">
-              {colorVariants.map((variant) => (
-                <button
-                  key={variant._id}
-                  type="button"
-                  title={variant.name}
-                  aria-label={`Select ${variant.name}`}
-                  aria-pressed={variant._id === colorVariantId}
-                  onClick={() => {
-                    setColorVariantId(variant._id);
-                    setErr("");
-                  }}
-                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
-                    variant._id === colorVariantId ? "border-accent ring-2 ring-accent/30" : "border-slate-200"
-                  }`}
-                >
-                  <span className="h-5 w-5 rounded-full border border-slate-300" style={{ backgroundColor: variant.value }} />
-                  {variant.name}
-                </button>
-              ))}
-            </div>
+        <p className="mt-4 leading-relaxed text-slate-600">{product.description}</p>
+        <div className="my-6 border-t border-slate-100" />
+        <div className="space-y-5">
+          {!!colorVariants.length && (
+            <Field label="Color">
+              <div className="mt-2 flex flex-wrap gap-2">
+                {colorVariants.map((variant) => (
+                  <button
+                    key={variant._id}
+                    type="button"
+                    title={variant.name}
+                    aria-label={`Select ${variant.name}`}
+                    aria-pressed={variant._id === colorVariantId}
+                    onClick={() => {
+                      setColorVariantId(variant._id);
+                      setErr("");
+                    }}
+                    className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                      variant._id === colorVariantId
+                        ? "border-[#030164] bg-[#030164]/5 text-[#030164] ring-2 ring-[#030164]/25"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <span className="h-5 w-5 rounded-full border border-slate-300" style={{ backgroundColor: variant.value }} />
+                    {variant.name}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          )}
+          <Field label={product.customization?.label || "Custom text"}>
+            <input className={ui.input} maxLength={max} value={text} onChange={(e) => setText(e.target.value)} />
+            <p className="mt-1.5 text-xs text-slate-500">
+              {text.length}/{max} characters · this text will be printed on your product
+            </p>
           </Field>
-        )}
-        <Field label={product.customization?.label || "Custom text"}>
-          <input className="input" maxLength={max} value={text} onChange={(e) => setText(e.target.value)} />
-          <p className="mt-1 text-xs text-slate-500">
-            {text.length}/{max} · the name appears on the product photo as you type
-          </p>
-        </Field>
-        <Field label="Quantity">
-          <input className="input max-w-24" type="number" min="1" value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))} />
-        </Field>
+          <Field label="Quantity">
+            <input className={`${ui.input} max-w-28`} type="number" min="1" value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))} />
+          </Field>
+        </div>
         {err && (
-          <div className="mt-3">
+          <div className="mt-4">
             <Alert>{err}</Alert>
           </div>
         )}
-        <button className="btn mt-4" onClick={add}>
-          Add to cart
+        <button className={`${ui.btn} mt-6 w-full py-3.5 text-base`} onClick={add}>
+          <FiShoppingCart /> Add to cart
         </button>
+        <div className="mt-5 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+          <span className="flex items-center gap-2"><FiShield className="text-[#030164]" /> Payment confirmed by our team</span>
+          <span className="flex items-center gap-2"><FiTruck className="text-[#030164]" /> Delivery across Pakistan</span>
+        </div>
       </div>
     </div>
   );
@@ -362,21 +758,22 @@ export function CartPage() {
   const cart = useCart();
   return (
     <div>
-      <h1 className="text-3xl font-bold">Cart</h1>
+      <PageHeader title="Cart" />
       {!cart.items.length && (
-        <p className="mt-6">
-          Your cart is empty.{" "}
-          <Link className="text-accent" to="/products">
-            Continue shopping
+        <div className={`${ui.card} flex flex-col items-center gap-3 p-12 text-center`}>
+          <FiShoppingBag className="text-4xl text-slate-300" />
+          <p className="text-slate-600">Your cart is empty.</p>
+          <Link className={ui.btn} to="/products">
+            Continue shopping <FiArrowRight />
           </Link>
-        </p>
+        </div>
       )}
-      <div className="mt-6 space-y-4">
+      <div className="space-y-4">
         {cart.items.map((it, i) => (
-          <div key={`${it.productId}-${it.customText}-${i}`} className="card grid gap-4 p-4 md:grid-cols-[160px_1fr_auto]">
-            <CustomPreview product={{ name: it.name, preview: it.preview, images: [it.image] }} text={it.customText} image={it.image} />
-            <div>
-              <Link to={`/products/${it.slug}`} className="font-semibold">
+          <div key={`${it.productId}-${it.customText}-${i}`} className={`${ui.card} grid items-center gap-5 p-4 md:grid-cols-[160px_1fr_auto]`}>
+            <CustomPreview product={{ name: it.name, preview: it.preview, images: [it.image] }} image={it.image} />
+            <div className="space-y-1">
+              <Link to={`/products/${it.slug}`} className="text-lg font-semibold text-slate-900 hover:text-[#030164]">
                 {it.name}
               </Link>
               <p className="text-sm text-slate-500">Custom text: {it.customText || "—"}</p>
@@ -386,27 +783,29 @@ export function CartPage() {
                   {it.color.name}
                 </p>
               )}
-              <p className="text-sm">{money(it.price)}</p>
+              <p className="font-semibold text-[#030164]">{money(it.price)}</p>
             </div>
             <div className="flex items-center gap-2">
               <input
-                className="input w-20"
+                className={`${ui.input}`}
                 type="number"
                 min="1"
                 value={it.quantity}
                 onChange={(e) => cart.update(i, Number(e.target.value))}
               />
-              <button className="btn-outline" onClick={() => cart.remove(i)}>
-                Remove
+              <button className={`${ui.btnOutline} !px-3`} onClick={() => cart.remove(i)} aria-label="Remove item" title="Remove">
+                <FiTrash2 />
               </button>
             </div>
           </div>
         ))}
       </div>
       {!!cart.items.length && (
-        <Link to="/checkout" className="btn mt-8">
-          Checkout
-        </Link>
+        <div className="mt-8 flex justify-end">
+          <Link to="/checkout" className={`${ui.btn} px-8 py-3.5 text-base`}>
+            Checkout <FiArrowRight />
+          </Link>
+        </div>
       )}
     </div>
   );
@@ -414,7 +813,7 @@ export function CartPage() {
 
 export function Checkout() {
   const cart = useCart();
-  const { customer } = useAuth();
+ const { customer } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({
     fullName: "",
@@ -490,90 +889,166 @@ export function Checkout() {
     }
   }
 
-  if (!cart.items.length) return <p>Your cart is empty.</p>;
+  if (!cart.items.length) return <p className="py-20 text-center text-slate-500">Your cart is empty.</p>;
 
   return (
-    <form onSubmit={place} className="grid gap-8 lg:grid-cols-2">
-      <div className="space-y-3">
-        <h1 className="text-3xl font-bold">Checkout</h1>
-        <Field label="Full name">
-          <input className="input" required value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />
-        </Field>
-        <Field label="Mobile / WhatsApp">
-          <input className="input" required value={form.phone} onChange={(e) => set("phone", e.target.value)} />
-        </Field>
+    <form onSubmit={place} className="grid items-start gap-8 lg:grid-cols-[1.3fr_1fr]">
+      <div className={`${ui.card} space-y-4 p-6 md:p-8`}>
+        <h1 className={ui.pageTitle}>Checkout</h1>
+        <p className="text-sm text-slate-500">Tell us where to deliver your order.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Full name">
+            <input className={ui.input} required value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />
+          </Field>
+          <Field label="Mobile / WhatsApp">
+            <input className={ui.input} required value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+          </Field>
+        </div>
         <Field label="Email">
-          <input className="input" type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
+          <input className={ui.input} type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
         </Field>
-        <Field label="Province">
-          <select className="input" value={form.province} onChange={(e) => set("province", e.target.value)}>
-            {PROVINCES.map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="City">
-          <input className="input" required value={form.city} onChange={(e) => set("city", e.target.value)} />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Province">
+            <select className={ui.input} value={form.province} onChange={(e) => set("province", e.target.value)}>
+              {PROVINCES.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="City">
+            <input className={ui.input} required value={form.city} onChange={(e) => set("city", e.target.value)} />
+          </Field>
+        </div>
         <Field label="Complete address">
-          <textarea className="input" required value={form.address} onChange={(e) => set("address", e.target.value)} />
+          <textarea className={ui.input} required value={form.address} onChange={(e) => set("address", e.target.value)} />
         </Field>
         <Field label="Nearby landmark">
-          <input className="input" value={form.landmark} onChange={(e) => set("landmark", e.target.value)} />
+          <input className={ui.input} value={form.landmark} onChange={(e) => set("landmark", e.target.value)} />
         </Field>
         <Field label="Order notes (optional)">
-          <textarea className="input" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
+          <textarea className={ui.input} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
         </Field>
       </div>
-      <div className="card h-fit p-5">
-        <h2 className="font-bold">Order summary</h2>
-        <ul className="mt-3 space-y-2 text-sm">
+      <div className={`${ui.card} h-fit p-6 lg:sticky lg:top-28`}>
+        <h2 className="text-lg font-bold text-slate-900">Order summary</h2>
+        <ul className="mt-4 divide-y divide-slate-100 text-sm">
           {cart.items.map((i, idx) => (
-            <li key={idx}>
+            <li key={idx} className="py-3 text-slate-700">
               {i.quantity} × {i.name} — “{i.customText}”
               {i.color && <div className="text-slate-500">Color: {i.color.name}</div>}
             </li>
           ))}
         </ul>
         {quote && (
-          <div className="mt-4 space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{money(quote.subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Delivery</span>
-              <span>{money(quote.deliveryFee)}</span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Total</span>
-              <span>{money(quote.total)}</span>
-            </div>
-            <div className="flex justify-between text-accent">
-              <span>Advance due</span>
-              <span>{money(quote.advanceAmount)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Remaining COD</span>
-              <span>{money(quote.remainingCod)}</span>
-            </div>
+          <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-2 text-sm text-slate-600">
+            <Row label="Subtotal" value={money(quote.subtotal)} />
+            <Row label="Delivery" value={money(quote.deliveryFee)} />
+            <Row label="Total" value={money(quote.total)} strong />
+            <Row label="Advance due" value={money(quote.advanceAmount)} accent />
+            <Row label="Remaining COD" value={money(quote.remainingCod)} />
           </div>
         )}
-        <p className="mt-3 text-xs text-slate-500">Totals are calculated on the server when you place the order.</p>
+        <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+          <FiLock className="shrink-0" /> Final totals and shipping calculations will be updated securely upon placing your order.
+        </p>
         {err && (
           <div className="mt-3">
             <Alert>{err}</Alert>
           </div>
         )}
-        <button className="btn mt-4 w-full" disabled={busy}>
-          {busy ? "Placing order…" : "Place order"}
+        <button className={`${ui.btn} mt-5 w-full py-3.5 text-base`} disabled={busy}>
+          <FiCheckCircle /> {busy ? "Placing order…" : "Place order"}
         </button>
       </div>
     </form>
   );
 }
 
-function OrderView({ order, payments, paymentAccounts, whatsappUrl, token, title = "Order" }) {
+function OrderView({ order, whatsappUrl, title = "Order", showPayment = false }) {
+  return (
+    <div className="space-y-6">
+      <div className={`${ui.card} p-6 md:p-8`}>
+        <h1 className={ui.pageTitle}>{title}</h1>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-slate-600">
+            Order <strong className="text-slate-900">{order.orderNumber}</strong>
+          </span>
+          <Badge tone="amber">{statusLabel(order.status)}</Badge>
+          <Badge tone={order.paymentStatus === "verified" ? "green" : "slate"}>payment {statusLabel(order.paymentStatus)}</Badge>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl bg-[#030164]/5 p-4">
+            <div className="text-xs font-medium text-slate-500">Advance due</div>
+            <div className="text-2xl font-bold text-[#030164]">{money(order.advanceAmount)}</div>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-4">
+            <div className="text-xs font-medium text-slate-500">Remaining balance</div>
+            <div className="text-2xl font-bold text-slate-900">{money(order.remainingCod)}</div>
+          </div>
+        </div>
+        {showPayment && order.paymentDeadlineAt && order.paymentStatus !== "verified" && (
+          <p className="mt-4 flex gap-2 text-sm text-slate-500">
+            <FiClock className="mt-0.5 shrink-0" />
+            <span>
+              Pay before {new Date(order.paymentDeadlineAt).toLocaleString()}. Unpaid orders may be cancelled after the deadline. Verified or under-review payments are not auto-cancelled.
+            </span>
+          </p>
+        )}
+        <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mb-1 flex items-center gap-2 font-semibold text-slate-900">
+            <FiTruck /> Shipping
+          </div>
+          {order.courierName || order.trackingNumber ? (
+            <p>
+              {order.courierName || "Courier entered by store"} {order.trackingNumber ? `· ${order.trackingNumber}` : ""}
+            </p>
+          ) : (
+            <p>Your order is currently being prepared with care. Tracking details will be updated here as soon as your package is dispatched.</p>
+          )}
+        </div>
+        {whatsappUrl && (
+          <a
+            className="mt-5 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <FaWhatsapp className="text-lg" /> Chat on WhatsApp
+          </a>
+        )}
+      </div>
+      <div className={`${ui.card} p-6 md:p-8`}>
+        <h2 className="text-lg font-bold text-slate-900">Items</h2>
+        <div className="mt-4 divide-y divide-slate-100">
+          {order.items.map((i, idx) => (
+            <div key={idx} className="grid gap-4 py-4 first:pt-0 sm:grid-cols-[140px_1fr]">
+              <CustomPreview product={{ name: i.name, preview: i.preview, images: [i.image] }} image={i.image} />
+              <div className="space-y-1 text-sm text-slate-700">
+                {i.quantity} × {i.name} — “{i.customText}”
+                {i.color && (
+                  <div className="flex items-center gap-2 text-slate-500">
+                    Color: <span className="inline-block h-4 w-4 rounded-full border border-slate-300" style={{ backgroundColor: i.color.value }} />
+                    {i.color.name}
+                  </div>
+                )}
+                <div className="font-semibold text-slate-900">{money(i.lineTotal)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="flex flex-wrap justify-between gap-2">
+            <span>Subtotal {money(order.subtotal)}</span>
+            <span>Delivery {money(order.deliveryFee)}</span>
+            <strong className="text-slate-900">Total {money(order.total)}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaymentSection({ order, payments, paymentAccounts, token }) {
   const [method, setMethod] = useState(paymentAccounts?.[0]?.method || "");
   const [ref, setRef] = useState("");
   const [note, setNote] = useState("");
@@ -610,118 +1085,69 @@ function OrderView({ order, payments, paymentAccounts, whatsappUrl, token, title
   }
 
   return (
-    <div className="space-y-6">
-      <div className="card p-6">
-        <h1 className="text-3xl font-bold">{title}</h1>
-        <p className="mt-2 text-slate-600">
-          Order <strong>{order.orderNumber}</strong> · {statusLabel(order.status)} · payment {statusLabel(order.paymentStatus)}
-        </p>
-        <p className="mt-2 text-sm">
-          Advance due: <strong>{money(order.advanceAmount)}</strong> · Remaining balance: {money(order.remainingCod)}
-        </p>
-        {order.paymentDeadlineAt && order.paymentStatus !== "verified" && (
-          <p className="text-sm text-slate-500">
-            Pay before {new Date(order.paymentDeadlineAt).toLocaleString()}. Unpaid orders may be cancelled after the deadline. Verified or under-review payments are not auto-cancelled.
-          </p>
-        )}
-        <div className="mt-4 rounded-md bg-slate-50 p-3 text-sm">
-          <div className="font-semibold">Shipping</div>
-          {order.courierName || order.trackingNumber ? (
-            <p>
-              {order.courierName || "Courier entered by store"} {order.trackingNumber ? `· ${order.trackingNumber}` : ""}
-            </p>
-          ) : (
-            <p>No courier details yet. This store does not have an automatic courier integration — tracking numbers appear here only after staff enter them.</p>
-          )}
-        </div>
-        {whatsappUrl && (
-          <>
-            <a className="btn mt-4" href={whatsappUrl} target="_blank" rel="noreferrer">
-              Open WhatsApp with order details
-            </a>
-            <p className="mt-2 text-xs text-slate-500">WhatsApp will not send this message until you press Send.</p>
-          </>
-        )}
-      </div>
-      <div className="card p-6">
-        <h2 className="font-bold">Items</h2>
-        <div className="mt-3 space-y-4">
-          {order.items.map((i, idx) => (
-            <div key={idx} className="grid gap-3 sm:grid-cols-[140px_1fr]">
-              <CustomPreview product={{ name: i.name, preview: i.preview, images: [i.image] }} text={i.customText} image={i.image} />
-              <div className="text-sm">
-                {i.quantity} × {i.name} — “{i.customText}”
-                {i.color && (
-                  <div className="flex items-center gap-2 text-slate-500">
-                    Color: <span className="inline-block h-4 w-4 rounded-full border border-slate-300" style={{ backgroundColor: i.color.value }} />
-                    {i.color.name}
-                  </div>
-                )}
-                <div>{money(i.lineTotal)}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 text-sm">
-          Subtotal {money(order.subtotal)} · Delivery {money(order.deliveryFee)} · Total {money(order.total)}
-        </div>
-      </div>
-      <div className="card p-6">
-        <h2 className="font-bold">Pay the advance</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Transfer {money(order.advanceAmount)} using JazzCash or Easypaisa, or choose COD. Staff compare proof with the actual transfer before marking it verified.
-        </p>
-        <div className="mt-4 space-y-3">
-          {paymentAccounts?.map((a) => (
-            <div key={a.method} className="rounded-md bg-slate-50 p-3 text-sm">
-              <div className="font-semibold">{a.method}</div>
-              <div>{a.holderName}</div>
-              <div>{a.accountNumber}</div>
-              <div className="text-slate-600">{a.instructions}</div>
-            </div>
-          ))}
-        </div>
-        {order.paymentStatus !== "verified" && order.status !== "cancelled" && (
-          <form onSubmit={submit} className="mt-6 space-y-3">
-            <Field label="Payment method">
-              <select className="input" value={method} onChange={(e) => setMethod(e.target.value)}>
-                {paymentAccounts?.map((a) => (
-                  <option key={a.method}>{a.method}</option>
-                ))}
-              </select>
-            </Field>
-            {!isCod && (
-              <Field label="Transaction / reference number">
-                <input className="input" required value={ref} onChange={(e) => setRef(e.target.value)} />
-              </Field>
-            )}
-            {!isCod && (
-              <Field label="Screenshot (JPEG, PNG or WebP, max 5MB)">
-                <input className="input" type="file" accept="image/jpeg,image/png,image/webp" required onChange={(e) => setFile(e.target.files?.[0])} />
-              </Field>
-            )}
-            <Field label="Note (optional)">
-              <input className="input" value={note} onChange={(e) => setNote(e.target.value)} />
-            </Field>
-            {err && <Alert>{err}</Alert>}
-            {msg && <Alert kind="ok">{msg}</Alert>}
-            <button className="btn" disabled={busy}>
-              {busy ? "Submitting…" : isCod ? "Submit COD request" : "Submit payment proof"}
-            </button>
-          </form>
-        )}
-        {payments?.length > 0 && (
-          <div className="mt-4 text-sm">
-            <div className="font-semibold">Submitted payments</div>
-            {payments.map((p) => (
-              <div key={p._id}>
-                {p.method} · {p.transactionRef} · {statusLabel(p.status)}
-                {p.rejectionReason ? ` · ${p.rejectionReason}` : ""}
-              </div>
-            ))}
+    <div className={`${ui.card} p-6 md:p-8`}>
+      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <FiCreditCard className="text-[#030164]" /> Pay the advance
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        Transfer PKR {order.advanceAmount} via JazzCash or Easypaisa, or select Cash on Delivery. Our team will verify your payment receipt shortly.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {paymentAccounts?.map((a) => (
+          <div key={a.method} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+            <div className="font-semibold text-slate-900">{a.method}</div>
+            <div>{a.holderName}</div>
+            <div className="font-mono">{a.accountNumber}</div>
+            <div className="mt-1 text-slate-600">{a.instructions}</div>
           </div>
-        )}
+        ))}
       </div>
+      {order.paymentStatus !== "verified" && order.status !== "cancelled" && (
+        <form onSubmit={submit} className="mt-6 space-y-4 border-t border-slate-100 pt-6">
+          <Field label="Payment method">
+            <select className={ui.input} value={method} onChange={(e) => setMethod(e.target.value)}>
+              {paymentAccounts?.map((a) => (
+                <option key={a.method}>{a.method}</option>
+              ))}
+            </select>
+          </Field>
+          {!isCod && (
+            <Field label="Transaction / reference number">
+              <input className={ui.input} required value={ref} onChange={(e) => setRef(e.target.value)} />
+            </Field>
+          )}
+          {!isCod && (
+            <Field label="Screenshot (JPEG, PNG or WebP, max 5MB)">
+              <input
+                className={`${ui.input} file:mr-3 file:rounded-md file:border-0 file:bg-[#030164]/10 file:px-3 file:py-1 file:text-sm file:font-medium file:text-[#030164]`}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required
+                onChange={(e) => setFile(e.target.files?.[0])}
+              />
+            </Field>
+          )}
+          <Field label="Note (optional)">
+            <input className={ui.input} value={note} onChange={(e) => setNote(e.target.value)} />
+          </Field>
+          {err && <Alert>{err}</Alert>}
+          {msg && <Alert kind="ok">{msg}</Alert>}
+          <button className={ui.btn} disabled={busy}>
+            {isCod ? <FiCheckCircle /> : <FiUpload />} {busy ? "Submitting…" : isCod ? "Submit COD request" : "Submit payment proof"}
+          </button>
+        </form>
+      )}
+      {payments?.length > 0 && (
+        <div className="mt-6 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mb-2 font-semibold text-slate-900">Submitted payments</div>
+          {payments.map((p) => (
+            <div key={p._id} className="py-0.5">
+              {p.method} · {p.transactionRef} · {statusLabel(p.status)}
+              {p.rejectionReason ? ` · ${p.rejectionReason}` : ""}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -739,8 +1165,13 @@ export function ThankYou() {
       .catch((e) => setErr(e.message));
   }, [orderNumber, token]);
   if (err) return <Alert>{err}</Alert>;
-  if (!data) return <p>Loading…</p>;
-  return <OrderView {...data} token={token} title="Thank you" />;
+  if (!data) return <p className="py-20 text-center text-slate-500">Loading…</p>;
+  return (
+    <div className="mx-auto max-w-8xl space-y-6">
+      <OrderView {...data} title="Thank you" showPayment />
+      <PaymentSection {...data} token={token} />
+    </div>
+  );
 }
 
 export function OrderLookup() {
@@ -759,38 +1190,41 @@ export function OrderLookup() {
     }
   }
   return (
-    <div className="max-w-xl">
-      <h1 className="text-3xl font-bold">Track Order</h1>
-      <p className="mt-2 text-sm text-slate-600">Enter the order number and the email used at checkout.</p>
-      <form onSubmit={go} className="mt-4 space-y-3">
-        <Field label="Order number">
-          <input className="input" value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} />
-        </Field>
-        <Field label="Email">
-          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </Field>
-        {err && <Alert>{err}</Alert>}
-        <button className="btn">Look up</button>
-      </form>
+    <div className="mx-auto max-w-6xl">
+      <div className={`${ui.card} p-6 md:p-8`}>
+        <h1 className={ui.pageTitle}>Track Order</h1>
+        <p className="mt-2 text-sm text-slate-600">Enter the order number and the email used at checkout.</p>
+        <form onSubmit={go} className="mt-5 space-y-4">
+          <Field label="Order number">
+            <input className={ui.input} value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} />
+          </Field>
+          <Field label="Email">
+            <input className={ui.input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Field>
+          {err && <Alert>{err}</Alert>}
+          <button className={ui.btn}>
+            <FiSearch /> Look up
+          </button>
+        </form>
+      </div>
       {data && (
         <div className="mt-8">
-          <OrderView {...data} token={data.order.lookupToken} title="Your order" />
+          <OrderView {...data} title="Your order" />
         </div>
       )}
     </div>
   );
 }
-
 export function Faq() {
   const { store } = useStore();
   return (
-    <div>
-      <h1 className="text-3xl font-bold">FAQ</h1>
-      <div className="mt-6 space-y-4">
+    <div className="mx-auto max-w-5xl">
+      <PageHeader title="FAQ" subtitle="Quick answers to common questions." />
+      <div className="space-y-3">
         {store?.faqs?.map((f, i) => (
-          <div key={i} className="card p-4">
-            <div className="font-semibold">{f.question}</div>
-            <p className="mt-1 text-sm text-slate-600">{f.answer}</p>
+          <div key={i} className={`${ui.card} p-5`}>
+            <div className="font-semibold text-slate-900">{f.question}</div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.answer}</p>
           </div>
         ))}
       </div>
@@ -801,14 +1235,22 @@ export function Faq() {
 export function Policies() {
   const { store } = useStore();
   return (
-    <div className="prose max-w-3xl">
-      <h1 className="text-3xl font-bold">Policies</h1>
-      <h2 className="mt-6 text-xl font-semibold">Shipping</h2>
-      <p>{store?.policies?.shipping}</p>
-      <h2 className="mt-6 text-xl font-semibold">Returns</h2>
-      <p>{store?.policies?.returns}</p>
-      <h2 className="mt-6 text-xl font-semibold">Privacy</h2>
-      <p>{store?.policies?.privacy}</p>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader title="Policies" />
+      <div className="space-y-4">
+        {[
+          { icon: FiTruck, t: "Shipping", b: store?.policies?.shipping },
+          { icon: FiRotateCcw, t: "Returns", b: store?.policies?.returns },
+          { icon: FiShield, t: "Privacy", b: store?.policies?.privacy },
+        ].map(({ icon: Icon, t, b }) => (
+          <div key={t} className={`${ui.card} p-6`}>
+            <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
+              <Icon className="text-[#030164]" /> {t}
+            </h2>
+            <p className="mt-3 whitespace-pre-line leading-relaxed text-slate-600">{b}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -834,29 +1276,34 @@ export function LoginPage() {
     }
   }
   return (
-    <div className="mx-auto max-w-md card p-6">
-      <h1 className="text-2xl font-bold">{mode === "login" ? "Login" : "Create account"}</h1>
-      <form onSubmit={submit} className="mt-4 space-y-3">
+    <div className={`${ui.card} mx-auto max-w-xl p-6 md:p-8`}>
+      <h1 className="text-2xl font-extrabold text-slate-900">{mode === "login" ? "Welcome back" : "Create account"}</h1>
+      <p className="mt-1 text-sm text-slate-500">
+        {mode === "login" ? "Sign in to see your orders." : "Register to track your orders easily."}
+      </p>
+      <form onSubmit={submit} className="mt-6 space-y-4">
         {mode === "register" && (
           <>
             <Field label="Full name">
-              <input className="input" required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+              <input className={ui.input} required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
             </Field>
             <Field label="Phone">
-              <input className="input" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <input className={ui.input} required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </Field>
           </>
         )}
         <Field label="Email">
-          <input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input className={ui.input} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </Field>
         <Field label="Password">
-          <input className="input" type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <input className={ui.input} type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
         </Field>
         {err && <Alert>{err}</Alert>}
-        <button className="btn w-full">{mode === "login" ? "Sign in" : "Register"}</button>
+        <button className={`${ui.btn} w-full py-3`}>
+          {mode === "login" ? <FiLogIn /> : <FiUserPlus />} {mode === "login" ? "Sign in" : "Register"}
+        </button>
       </form>
-      <button className="mt-4 text-sm text-accent" type="button" onClick={() => setMode(mode === "login" ? "register" : "login")}>
+      <button className="mt-5 w-full text-center text-sm font-medium text-[#030164] hover:underline" type="button" onClick={() => setMode(mode === "login" ? "register" : "login")}>
         {mode === "login" ? "Need an account? Register" : "Have an account? Login"}
       </button>
     </div>
@@ -884,18 +1331,23 @@ export function AccountPage() {
     setCustomer(null);
     nav("/");
   }
-  if (!customer) return <p>Loading…</p>;
+  if (!customer) return <p className="py-20 text-center text-slate-500">Loading…</p>;
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold">My Account</h1>
-          <p className="text-slate-600">
-            {customer.fullName} · {customer.email}
-          </p>
+    <div className="mx-auto max-w-4xl">
+      <div className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-6`}>
+        <div className="flex items-center gap-4">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#030164] text-xl font-bold text-white">
+            {(customer.fullName || "?").charAt(0).toUpperCase()}
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">My Account</h1>
+            <p className="text-sm text-slate-600">
+              {customer.fullName} · {customer.email}
+            </p>
+          </div>
         </div>
-        <button className="btn-outline" onClick={logout}>
-          Log out
+        <button className={ui.btnOutline} onClick={logout}>
+          <FiLogOut /> Log out
         </button>
       </div>
       {err && (
@@ -903,22 +1355,31 @@ export function AccountPage() {
           <Alert>{err}</Alert>
         </div>
       )}
-      <h2 className="mt-8 font-bold">Your orders</h2>
-      <div className="mt-3 space-y-3">
+      <h2 className="mb-3 mt-10 text-xl font-bold text-slate-900">Your orders</h2>
+      <div className="space-y-3">
         {orders.map((o) => (
-          <div key={o.id} className="card p-4 text-sm">
-            <div className="font-semibold">
-              #{o.orderNumber} · {statusLabel(o.status)} · payment {statusLabel(o.paymentStatus)}
+          <div key={o.id} className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-5 text-sm transition hover:border-[#030164]/40 hover:shadow-md`}>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
+                #{o.orderNumber}
+                <Badge tone="amber">{statusLabel(o.status)}</Badge>
+                <Badge tone={o.paymentStatus === "verified" ? "green" : "slate"}>payment {statusLabel(o.paymentStatus)}</Badge>
+              </div>
+              <div className="text-slate-600">
+                {money(o.total)} · advance {money(o.advanceAmount)} · remaining {money(o.remainingCod)}
+              </div>
             </div>
-            <div>
-              {money(o.total)} · advance {money(o.advanceAmount)} · remaining {money(o.remainingCod)}
-            </div>
-            <Link className="text-accent" to="/order-lookup">
-              Track with order number {o.orderNumber} and your email
+            <Link className="inline-flex items-center gap-1 font-medium text-[#030164] hover:underline" to="/order-lookup">
+              Track with order number {o.orderNumber} and your email <FiArrowRight />
             </Link>
           </div>
         ))}
-        {!orders.length && <p className="text-slate-500">No orders on this account yet.</p>}
+        {!orders.length && (
+          <div className={`${ui.card} flex flex-col items-center gap-2 p-10 text-center text-slate-500`}>
+            <FiPackage className="text-3xl text-slate-300" />
+            No orders on this account yet.
+          </div>
+        )}
       </div>
     </div>
   );

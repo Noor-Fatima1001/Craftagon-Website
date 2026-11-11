@@ -30,7 +30,7 @@ async function run() {
     { name: 'Tumblers', slug: 'tumblers', sortOrder: 3, description: 'Insulated tumblers with custom text.' },
     { name: 'Diaries', slug: 'diaries', sortOrder: 4, description: 'Hardcover diaries with foil or print names.' },
     { name: 'Notebooks', slug: 'notebooks', sortOrder: 5, description: 'Softcover notebooks for teams and students.' },
-    { name: 'Gifts', slug: 'gifts', sortOrder: 6, description: 'Ready gift sets and extras.' },
+    { name: 'Gifts', slug: 'gifts', sortOrder: 6, description: 'Ready keychains and extras.' },
   ];
   const categoryDocs = {};
   for (const c of cats) {

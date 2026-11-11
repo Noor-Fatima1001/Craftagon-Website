@@ -23,7 +23,7 @@ function getTransport() {
   });
 }
 
-// Escape dynamic values before inserting them into HTML.
+
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, (char) => {
     const entities = {
@@ -102,8 +102,6 @@ function wrap(title, body) {
         text-align: center;
       ">
         <p>Thank you for choosing Craftagon!</p>
-        <p>This is an automated email from Craftagon.
-        Please keep it for your records.</p>
       </div>
     </div>
   `;

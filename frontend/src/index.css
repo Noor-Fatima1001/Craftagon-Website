@@ -7,20 +7,50 @@ body {
   overflow-x: hidden;
 }
 
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+}
+
 @layer components {
-  .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50;
+  .page-title {
+    @apply text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl;
   }
+
+  /* Buttons */
+  .btn,
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-150 hover:brightness-110 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .btn-outline {
-    @apply inline-flex min-h-[44px] items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-black hover:bg-slate-50;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition duration-150 hover:border-accent hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
-  .input {
-    @apply w-full min-h-[44px] rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-black outline-none focus:border-accent focus:ring-1 focus:ring-accent md:text-sm;
+
+  .btn-light {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-md transition duration-150 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
-  .label {
-    @apply mb-1 block text-sm font-medium text-slate-700;
+
+  .btn-whatsapp {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition duration-150 hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
+
+  /* Cards */
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+  
+  .card-hover {
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md;
+  }
+
+  /* Form Elements */
+  .input {
+    @apply w-full min-h-[44px] rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/15 md:text-sm;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
   }
 }

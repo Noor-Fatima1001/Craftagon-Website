@@ -38,8 +38,8 @@ export default function Cart() {
           {items.map((item) => {
             const qItem = quote?.items?.find((q) => q.productId === item.productId && q.customizationText === item.customizationText);
             return (
-              <div key={`${item.productId}-${item.customizationText}`} className="card grid gap-4 p-4 md:grid-cols-4">
-                <PreviewCanvas product={{ ...item, images: [item.image], name: item.name }} text={item.customizationText} />
+              <div key={`${item.productId}-${item.customizationText}`} className="card grid gap-4 md:grid-cols-4">
+                <PreviewCanvas product={{ ...item, images: [item.image], name: item.name }}/>
                 <div className="md:col-span-3">
                   <p className="font-semibold">{item.name}</p>
                   <p className="text-sm text-slate-500">Custom text: {item.customizationText || '—'}</p>

@@ -1,8 +1,11 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AdminShell, Guard, Layout } from "./components";
 import {
+  About,
   CartPage,
   Checkout,
+  Contact,
   Faq,
   Home,
   OrderLookup,
@@ -10,6 +13,9 @@ import {
   ProductDetail,
   Products,
   ThankYou,
+  Help,
+  LoginPage,
+  AccountPage,
 } from "./pages";
 import {
   AdminLogin,
@@ -26,9 +32,20 @@ import {
   SettingsPage,
 } from "./adminPages";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
@@ -40,6 +57,11 @@ export default function App() {
           <Route path="/order-lookup" element={<OrderLookup />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/policies" element={<Policies />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/account" element={<AccountPage />} />
         </Route>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route

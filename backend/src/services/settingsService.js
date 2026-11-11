@@ -103,7 +103,7 @@ function decodeRows(text, section) {
 const defaults = {
   storeName: "Craftagon",
   tagline: "Personalized gifts, printed with care",
-  email: "hello@example.com",
+  email: "noor525439@gmail.com",
   whatsappNumber: env.storeWhatsapp,
   banners: [
     {
@@ -118,15 +118,11 @@ const defaults = {
   faqs: [
     {
       question: "How does customization work?",
-      answer: "Enter a name or short text on the product page. You will see a live preview before adding it to your cart.",
+      answer: "Enter a name or short text on the product page and add it to your cart.",
     },
     {
       question: "How do I pay?",
       answer: "Place your order, transfer the advance amount using the bank, Easypaisa, or JazzCash details shown, then upload your payment screenshot.",
-    },
-    {
-      question: "Does this site send WhatsApp messages automatically?",
-      answer: "No. WhatsApp buttons open a chat with a pre-filled message. You press Send yourself.",
     },
   ],
   policies: {
@@ -141,7 +137,7 @@ const defaults = {
       method: "COD",
       holderName: "Cash on delivery",
       accountNumber: "Pay remaining / agreed amount in cash to the courier",
-      instructions: "Choose COD if you will pay in cash. Advance still applies unless it is set to zero. Staff confirm COD manually — it is never auto-verified.",
+      instructions: "Choose COD if you will pay in cash. Advance still applies unless it is set to zero. Staff confirm COD manually.",
       active: true,
     },
     {

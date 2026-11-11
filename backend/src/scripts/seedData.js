@@ -74,7 +74,7 @@ async function run() {
     { name: "Tumblers", slug: "tumblers", description: "Travel tumblers with a personal line", sortOrder: 3 },
     { name: "Diaries", slug: "diaries", description: "Dated diaries with a name on the cover", sortOrder: 4 },
     { name: "Notebooks", slug: "notebooks", description: "Everyday notebooks, personalized", sortOrder: 5 },
-    { name: "Gifts", slug: "gifts", description: "Ready gift sets with custom text", sortOrder: 6 },
+    { name: "Gifts", slug: "gifts", description: "Ready keychains with custom text", sortOrder: 6 },
   ];
 
   const catDocs = {};

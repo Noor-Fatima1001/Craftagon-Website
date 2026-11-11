@@ -88,12 +88,15 @@ const listCategories = asyncHandler(async (_req, res) => {
 
 const getStore = asyncHandler(async (_req, res) => {
   const settings = await getSettings();
+  
   const featured = await Product.find({
     active: true,
     $or: [{ featured: true }, { _id: { $in: settings.featuredProductIds || [] } }],
   })
-    .limit(8)
-    .populate("category", "name slug");
+    .limit(8).populate("category", "name slug");
+if (!featured.length) {
+  featured = await Product.find({ active: true }).sort({ createdAt: -1 }).limit(8).populate("category", "name slug");
+}
   const bestsellers = await Product.find({ active: true, bestseller: true })
     .limit(8)
     .populate("category", "name slug");

@@ -13,7 +13,8 @@ async function submitPayment({ order, method, transactionRef, screenshotPath, am
   if (order.paymentStatus === 'verified') {
     const err = new Error('Advance payment is already verified');
     err.status = 400;
-    throw err;
+    throw err;      const d = mode === "login" ? await api.login(form) : await api.register(form);
+    
   }
   const submission = await PaymentSubmission.create({
     order: order._id,

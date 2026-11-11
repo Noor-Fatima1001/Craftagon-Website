@@ -5,7 +5,7 @@ const storeSettingsSchema = new mongoose.Schema(
     key: { type: String, default: "default", unique: true },
     storeName: { type: String, default: "Craftagon" },
     tagline: { type: String, default: "Personalized gifts, printed with care" },
-    email: { type: String, default: "hello@example.com" },
+    email: { type: String, default: "noor525439@gmail.com" },
     phone: { type: String, default: "" },
     whatsappNumber: { type: String, default: "923000000000" },
     address: { type: String, default: "" },
@@ -14,7 +14,7 @@ const storeSettingsSchema = new mongoose.Schema(
       body: {
         type: String,
         default:
-          "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and gift sets. Every order is prepared after your advance payment is checked by a person — never by an automated screenshot scan.",
+          "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and keychains. We confirm advance payments before we print.",
       },
     },
     help: {
@@ -22,7 +22,7 @@ const storeSettingsSchema = new mongoose.Schema(
       body: {
         type: String,
         default:
-          "Need help with an order, a print preview, or a payment? Use Track Order with your order number and email, or send us a message on the Contact page. WhatsApp buttons only open a chat — nothing is sent until you press Send.",
+          "Need help with an order or a payment? Use Track Order with your order number and email, or send us a message on the Contact page. WhatsApp buttons only open a chat — nothing is sent until you press Send.",
       },
     },
     banners: { type: String, default: "" },
