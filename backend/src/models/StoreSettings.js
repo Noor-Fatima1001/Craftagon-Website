@@ -6,6 +6,7 @@ const storeSettingsSchema = new mongoose.Schema(
     storeName: { type: String, default: "Craftagon" },
     tagline: { type: String, default: "Personalized gifts, printed with care" },
     email: { type: String, default: "noor525439@gmail.com" },
+    orderNotificationEmail: { type: String, default: "" },
     phone: { type: String, default: "" },
     whatsappNumber: { type: String, default: "923000000000" },
     address: { type: String, default: "" },

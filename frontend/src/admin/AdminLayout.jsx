@@ -23,37 +23,61 @@ export default function AdminLayout() {
     api.get('/api/auth/me').then(setMe).catch(() => navigate('/admin/login'));
   }, [navigate]);
 
-  if (!me && !error) return <p className="p-8">Checking session…</p>;
+  if (!me && !error) return <p className="p-8 text-sm text-slate-500">Checking session…</p>;
 
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
-      <aside className="border-b bg-white md:min-h-screen md:w-56 md:border-b-0 md:border-r">
-        <p className="px-4 py-4 font-display text-xl">Craftagon Admin</p>
-        <nav className="flex flex-wrap md:flex-col">
+      <aside className="flex flex-col bg-slate-900 text-slate-300 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto">
+        <div className="flex items-center justify-between px-5 py-4 md:py-6">
+          <p className="font-display text-xl tracking-tight text-white">Craftagon <span className="text-slate-400">Admin</span></p>
+          <button
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-300 transition-colors hover:bg-white/10 md:hidden"
+            onClick={async () => {
+              await api.post('/api/auth/logout', {});
+              navigate('/admin/login');
+            }}
+          >
+            Log out
+          </button>
+        </div>
+        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:overflow-visible md:pb-0">
           {links.map(([to, label]) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/admin'}
-              className={({ isActive }) => `px-4 py-2 text-sm ${isActive ? 'text-accent font-semibold' : 'text-slate-600'}`}
+              className={({ isActive }) =>
+                `whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
+                  isActive ? 'bg-white/10 font-semibold text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                }`
+              }
             >
               {label}
             </NavLink>
           ))}
         </nav>
-        <button
-          className="m-4 text-sm text-red-600"
-          onClick={async () => {
-            await api.post('/api/auth/logout', {});
-            navigate('/admin/login');
-          }}
-        >
-          Log out
-        </button>
-        {me?.smtpConfigured === false && <p className="px-4 pb-4 text-xs text-amber-700">SMTP is not configured. Emails will not send.</p>}
+        <div className="hidden px-3 pb-5 pt-6 md:mt-auto md:block">
+          {me?.smtpConfigured === false && (
+            <p className="mb-3 rounded-lg bg-amber-400/10 px-3 py-2 text-xs text-amber-300">SMTP is not configured. Emails will not send.</p>
+          )}
+          <button
+            className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-300 transition-colors hover:bg-white/10"
+            onClick={async () => {
+              await api.post('/api/auth/logout', {});
+              navigate('/admin/login');
+            }}
+          >
+            Log out
+          </button>
+        </div>
+        {me?.smtpConfigured === false && (
+          <p className="mx-4 mb-3 rounded-lg bg-amber-400/10 px-3 py-2 text-xs text-amber-300 md:hidden">SMTP is not configured. Emails will not send.</p>
+        )}
       </aside>
-      <div className="flex-1 p-4 md:p-8">
-        <Outlet />
+      <div className="min-w-0 flex-1 p-4 md:p-8">
+        <div className="mx-auto max-w-7xl">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

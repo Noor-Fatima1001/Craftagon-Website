@@ -85,8 +85,7 @@ export default function AdminProducts() {
         </select>
         <div className="grid grid-cols-3 gap-2">
           <input className="input" type="number" placeholder="Price" value={form.price} onChange={(e) => set('price', e.target.value)} />
-          <input className="input" type="number" placeholder="Sale price" value={form.salePrice} onChange={(e) => set('salePrice', e.target.value)} />
-          <input className="input" type="number" placeholder="Stock" value={form.stock} onChange={(e) => set('stock', e.target.value)} />
+          <input className="input" type="number" placeholder="Sale price" value={form.salePrice} onChange={(e) => set('salePrice', e.target.value)} />        
         </div>
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Active</label>
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} /> Featured</label>
@@ -99,13 +98,6 @@ export default function AdminProducts() {
         <div className="grid grid-cols-2 gap-2">
           <input className="input" type="number" value={form.customization.minLength} onChange={(e) => set('customization.minLength', Number(e.target.value))} />
           <input className="input" type="number" value={form.customization.maxLength} onChange={(e) => set('customization.maxLength', Number(e.target.value))} />
-        </div>
-        <p className="text-sm font-medium">Preview overlay</p>
-        <div className="grid grid-cols-2 gap-2">
-          <input className="input" type="number" placeholder="X %" value={form.preview.textX} onChange={(e) => set('preview.textX', Number(e.target.value))} />
-          <input className="input" type="number" placeholder="Y %" value={form.preview.textY} onChange={(e) => set('preview.textY', Number(e.target.value))} />
-          <input className="input" type="number" placeholder="Font size" value={form.preview.fontSize} onChange={(e) => set('preview.fontSize', Number(e.target.value))} />
-          <input className="input" type="color" value={form.preview.color} onChange={(e) => set('preview.color', e.target.value)} />
         </div>
         <input className="input" value={form.preview.fontFamily} onChange={(e) => set('preview.fontFamily', e.target.value)} />
         <button className="btn-primary">{editing ? 'Update' : 'Create'}</button>

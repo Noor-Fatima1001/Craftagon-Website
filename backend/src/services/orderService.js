@@ -100,6 +100,12 @@ async function createOrder({ cartItems, customer, idempotencyKey }) {
   if (!created) throw lastErr || new AppError("Could not create order number", 500);
 
   const mail = await emailService.orderConfirmation(created, settings);
+  if (settings.orderNotificationEmail) {
+    const notification = await emailService.orderNotification(created, settings.orderNotificationEmail);
+    if (!notification.sent) {
+      console.error(`Order notification email failed for ${created.orderNumber}: ${notification.reason}`);
+    }
+  }
   return { order: created, duplicate: false, email: mail };
 }
 

@@ -35,8 +35,14 @@ function wrap(title, body) {
   return `<div style="font-family:Arial,sans-serif;color:#111;line-height:1.5">
     <h2>${title}</h2>
     ${body}
-    <p style="color:#666;font-size:13px">This is an automated message from Craftagon. WhatsApp messages are never sent automatically.</p>
   </div>`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => {
+    const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return entities[char];
+  });
 }
 
 async function orderConfirmation(order, settings) {
@@ -56,8 +62,66 @@ async function orderConfirmation(order, settings) {
        <p>Subtotal: PKR ${order.subtotal}<br/>Delivery: PKR ${order.deliveryFee}<br/>Total: PKR ${order.total}</p>
        <p>Advance due now: <strong>PKR ${order.advanceAmount}</strong><br/>Remaining COD: PKR ${order.remainingCod}</p>
        <p>Please transfer the advance using the payment details on your order page, then upload a screenshot. Staff will verify it manually.</p>
-       <p>Store WhatsApp (you must press Send yourself): ${settings.whatsappNumber}</p>`
+       <p>Contact on WhatsApp for any query : ${settings.whatsappNumber}</p>`
     ),
+  });
+}
+
+async function orderNotification(order, to) {
+  const customer = order.customer || {};
+  const rows = (order.items || [])
+    .map(
+      (item) => `<tr>
+        <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.name)}${item.customText ? `<br/>Personalization: ${escapeHtml(item.customText)}` : ""}${item.color?.name ? `<br/>Color: ${escapeHtml(item.color.name)}` : ""}</td>
+        <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.quantity)}</td>
+        <td style="padding:8px;border-bottom:1px solid #ddd">PKR ${escapeHtml(item.unitPrice)}</td>
+        <td style="padding:8px;border-bottom:1px solid #ddd">PKR ${escapeHtml(item.lineTotal)}</td>
+      </tr>`
+    )
+    .join("");
+  const value = (item) => escapeHtml(item || "—");
+
+  return sendMail({
+    to,
+    subject: `New order ${order.orderNumber} — Craftagon`,
+    html: wrap(
+      `New order ${escapeHtml(order.orderNumber)}`,
+      `<h3>Order details</h3>
+       <p>Placed: ${value(order.createdAt ? new Date(order.createdAt).toLocaleString() : "")}<br/>
+       Status: ${value(order.status)}<br/>
+       Payment status: ${value(order.paymentStatus)}<br/>
+       Payment deadline: ${value(order.paymentDeadlineAt ? new Date(order.paymentDeadlineAt).toLocaleString() : "")}</p>
+       <h3>Customer</h3>
+       <p>Name: ${value(customer.fullName)}<br/>
+       Email: ${value(customer.email)}<br/>
+       Phone: ${value(customer.phone)}<br/>
+       Address: ${value(customer.address)}<br/>
+       City: ${value(customer.city)}<br/>
+       Province: ${value(customer.province)}<br/>
+       Landmark: ${value(customer.landmark)}<br/>
+       Notes: ${value(customer.notes)}</p>
+       <h3>Items</h3>
+       <table style="border-collapse:collapse;width:100%;text-align:left">
+         <thead><tr><th style="padding:8px">Product</th><th style="padding:8px">Qty</th><th style="padding:8px">Unit price</th><th style="padding:8px">Line total</th></tr></thead>
+         <tbody>${rows}</tbody>
+       </table>
+       <h3>Totals</h3>
+       <p>Subtotal: PKR ${escapeHtml(order.subtotal)}<br/>
+       Discount: PKR ${escapeHtml(order.discount || 0)}<br/>
+       Coupon: ${value(order.couponCode)}<br/>
+       Delivery: PKR ${escapeHtml(order.deliveryFee)}<br/>
+       <strong>Total: PKR ${escapeHtml(order.total)}</strong><br/>
+       Advance due: PKR ${escapeHtml(order.advanceAmount)}<br/>
+       Remaining COD: PKR ${escapeHtml(order.remainingCod)}</p>`
+    ),
+  });
+}
+
+async function testOrderNotification(to) {
+  return sendMail({
+    to,
+    subject: "Craftagon order notification test",
+    html: wrap("Order notification test", "<p>Your order notification email is configured correctly.</p>"),
   });
 }
 
@@ -105,6 +169,8 @@ module.exports = {
   status,
   sendMail,
   orderConfirmation,
+  orderNotification,
+  testOrderNotification,
   paymentResult,
   orderCancelled,
   orderDispatched,

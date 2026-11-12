@@ -1,5 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
+const { body } = require("express-validator");
 const { requireAdmin, requireCronSecret } = require("../middleware/auth");
 const { productUpload, bannerUpload } = require("../middleware/upload");
 const a = require("../controllers/adminController");
@@ -44,7 +45,17 @@ router.get("/payments/:id/screenshot", requireAdmin, a.paymentScreenshot);
 router.patch("/payments/:id", requireAdmin, a.reviewPayment);
 
 router.get("/settings", requireAdmin, a.getSettingsAdmin);
-router.put("/settings", requireAdmin, a.saveSettings);
+router.put(
+  "/settings",
+  requireAdmin,
+  body("orderNotificationEmail")
+    .trim()
+    .optional({ values: "falsy" })
+    .isEmail()
+    .withMessage("Enter a valid order notification email address"),
+  a.saveSettings
+);
+router.post("/settings/test-order-email", requireAdmin, a.testOrderEmail);
 router.post("/settings/banner-image", requireAdmin, bannerUpload.single("image"), (req, res) => {
   res.json({ url: `/uploads/banners/${req.file.filename}` });
 });

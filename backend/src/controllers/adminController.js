@@ -437,11 +437,13 @@ const getSettingsAdmin = asyncHandler(async (_req, res) => {
 });
 
 const saveSettings = asyncHandler(async (req, res) => {
+  validate(req);
   const settings = await getSettingsDocument();
   const allowed = [
     "storeName",
     "tagline",
     "email",
+    "orderNotificationEmail",
     "phone",
     "whatsappNumber",
     "address",
@@ -460,6 +462,13 @@ const saveSettings = asyncHandler(async (req, res) => {
   for (const key of allowed) {
     if (req.body[key] !== undefined) {
       if (key === "delivery") continue;
+      if (key === "orderNotificationEmail") {
+        if (typeof req.body[key] !== "string") {
+          throw new AppError("Order notification email must be a valid email address", 400);
+        }
+        settings[key] = req.body[key].trim();
+        continue;
+      }
       if (key === "banners" || key === "faqs" || key === "paymentAccounts") {
         decodeRows(req.body[key], key);
       } else if (key === "policies") {
@@ -489,6 +498,16 @@ const saveSettings = asyncHandler(async (req, res) => {
     details: { keys: Object.keys(req.body) },
   });
   res.json({ settings });
+});
+
+const testOrderEmail = asyncHandler(async (req, res) => {
+  const settings = await getSettingsDocument();
+  if (!settings.orderNotificationEmail) {
+    throw new AppError("Save an order notification email address before sending a test email", 400);
+  }
+  const result = await emailService.testOrderNotification(settings.orderNotificationEmail);
+  if (!result.sent) throw new AppError(result.reason || "Test email could not be sent", 503);
+  res.json({ message: "Test email sent" });
 });
 
 const reports = asyncHandler(async (req, res) => {
@@ -543,6 +562,7 @@ module.exports = {
   paymentScreenshot,
   getSettingsAdmin,
   saveSettings,
+  testOrderEmail,
   reports,
   runCancelJob,
   auditLogs,
