@@ -81,48 +81,46 @@ async function orderNotification(order, to) {
     .join("");
   const value = (item) => escapeHtml(item || "—");
 
-  return sendMail({
-    to,
-    subject: `New order ${order.orderNumber} — Craftagon`,
-    html: wrap(
-      `New order ${escapeHtml(order.orderNumber)}`,
-      `<h3>Order details</h3>
-       <p>Placed: ${value(order.createdAt ? new Date(order.createdAt).toLocaleString() : "")}<br/>
-       Status: ${value(order.status)}<br/>
-       Payment status: ${value(order.paymentStatus)}<br/>
-       Payment deadline: ${value(order.paymentDeadlineAt ? new Date(order.paymentDeadlineAt).toLocaleString() : "")}</p>
-       <h3>Customer</h3>
-       <p>Name: ${value(customer.fullName)}<br/>
-       Email: ${value(customer.email)}<br/>
-       Phone: ${value(customer.phone)}<br/>
-       Address: ${value(customer.address)}<br/>
-       City: ${value(customer.city)}<br/>
-       Province: ${value(customer.province)}<br/>
-       Landmark: ${value(customer.landmark)}<br/>
-       Notes: ${value(customer.notes)}</p>
-       <h3>Items</h3>
-       <table style="border-collapse:collapse;width:100%;text-align:left">
-         <thead><tr><th style="padding:8px">Product</th><th style="padding:8px">Qty</th><th style="padding:8px">Unit price</th><th style="padding:8px">Line total</th></tr></thead>
-         <tbody>${rows}</tbody>
-       </table>
-       <h3>Totals</h3>
-       <p>Subtotal: PKR ${escapeHtml(order.subtotal)}<br/>
-       Discount: PKR ${escapeHtml(order.discount || 0)}<br/>
-       Coupon: ${value(order.couponCode)}<br/>
+ return sendMail({
+  to,
+  subject: `New order ${order.orderNumber} — Craftagon`,
+  html: wrap(
+    `New order ${escapeHtml(order.orderNumber)}`,
+    `<h3>Order Details</h3>
+     <p>
+       <strong>Placed:</strong> ${value(order.createdAt ? new Date(order.createdAt).toLocaleString() : "")}<br/>
+       <strong>Status:</strong> ${value(order.status)} <strong>
+     </p>
+     
+     <h3>Customer</h3>
+     <p>
+       <strong>Name:</strong> ${value(customer.fullName)}<br/>
+       <strong>Phone:</strong> ${value(customer.phone)}<br/>
+       <strong>Address:</strong> ${value(customer.address)}, ${value(customer.city)} (${value(customer.province)})
+     </p>
+     
+     <h3>Items</h3>
+     <table style="border-collapse:collapse;width:100%;text-align:left">
+       <thead>
+         <tr style="border-bottom:1px solid #ddd">
+           <th style="padding:8px">Product</th>
+           <th style="padding:8px">Qty</th>
+           <th style="padding:8px">Total</th>
+         </tr>
+       </thead>
+       <tbody>${rows}</tbody>
+     </table>
+     
+     <h3>Totals</h3>
+     <p>
+       Subtotal: PKR ${escapeHtml(order.subtotal)}<br/>
        Delivery: PKR ${escapeHtml(order.deliveryFee)}<br/>
        <strong>Total: PKR ${escapeHtml(order.total)}</strong><br/>
-       Advance due: PKR ${escapeHtml(order.advanceAmount)}<br/>
-       Remaining COD: PKR ${escapeHtml(order.remainingCod)}</p>`
-    ),
-  });
-}
-
-async function testOrderNotification(to) {
-  return sendMail({
-    to,
-    subject: "Craftagon order notification test",
-    html: wrap("Order notification test", "<p>Your order notification email is configured correctly.</p>"),
-  });
+       Advance Due: PKR ${escapeHtml(order.advanceAmount)}<br/>
+       Remaining COD: PKR ${escapeHtml(order.remainingCod)}
+     </p>`
+  ),
+});
 }
 
 async function paymentResult(order, verified, note) {
@@ -133,9 +131,16 @@ async function paymentResult(order, verified, note) {
       : `Payment could not be verified for ${order.orderNumber}`,
     html: wrap(
       verified ? "Advance payment verified" : "Payment not verified",
-      `<p>Order <strong>${order.orderNumber}</strong></p>
-       <p>${verified ? "We have verified your advance payment. Your order will be prepared." : "We could not verify this payment. Please check the details and submit again if needed."}</p>
-       ${note ? `<p>Note: ${note}</p>` : ""}`
+      `<p>Hi ${order.customer.fullName || "there"},</p>
+       <p>This is an update regarding your order <strong>${order.orderNumber}</strong>.</p>
+       <p>${
+         verified
+           ? "Good news! We have successfully verified your advance payment. Your order is now confirmed and our team will start preparing it shortly. We will notify you again once it is dispatched."
+           : "Unfortunately, we could not verify the payment you submitted. This can happen if the transaction reference or screenshot is unclear, or if the amount received does not match the advance amount. Please check your payment details and submit them again so we can proceed with your order."
+       }</p>
+       ${note ? `<p><strong>Note from our team:</strong> ${note}</p>` : ""}
+       <p>If you have any questions, feel free to reply to this email or contact us on WhatsApp.</p>
+       <p>Thank you for shopping with us.</p>`
     ),
   });
 }
@@ -146,8 +151,11 @@ async function orderCancelled(order) {
     subject: `Order ${order.orderNumber} cancelled`,
     html: wrap(
       "Order cancelled",
-      `<p>Order <strong>${order.orderNumber}</strong> was cancelled.</p>
-       <p>Reason: ${order.cancelReason || "Not specified"}</p>`
+      `<p>Hi ${order.customer.fullName || "there"},</p>
+       <p>We are writing to let you know that your order <strong>${order.orderNumber}</strong> has been cancelled.</p>
+       <p><strong>Reason:</strong> ${order.cancelReason || "Not specified"}</p>
+       <p>If you already made an advance payment or you think this cancellation is a mistake, please contact us and we will be happy to help you.</p>
+       <p>You are always welcome to place a new order anytime. We hope to serve you again soon.</p>`
     ),
   });
 }
@@ -158,8 +166,13 @@ async function orderDispatched(order) {
     subject: `Order ${order.orderNumber} dispatched`,
     html: wrap(
       "Your order is on the way",
-      `<p>Order <strong>${order.orderNumber}</strong> has been dispatched.</p>
-       <p>Courier: ${order.courierName || "—"}<br/>Tracking: ${order.trackingNumber || "—"}</p>`
+      `<p>Hi ${order.customer.fullName || "there"},</p>
+       <p>Great news! Your order <strong>${order.orderNumber}</strong> has been dispatched and is on its way to you.</p>
+       <p><strong>Courier:</strong> ${order.courierName || "—"}<br/>
+       <strong>Tracking number:</strong> ${order.trackingNumber || "—"}</p>
+       <p>You can use the tracking number above to follow your parcel with the courier. Delivery usually takes a few working days, depending on your city.</p>
+       <p>Please keep your phone available so the courier can reach you. If there is any remaining balance (COD), kindly keep it ready at the time of delivery.</p>
+       <p>Thank you for your order!</p>`
     ),
   });
 }

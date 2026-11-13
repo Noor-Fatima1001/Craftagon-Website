@@ -1,11 +1,35 @@
 const API = import.meta.env.VITE_API_URL || "";
 
+// ---- Global loading tracker ----
+let activeRequests = 0;
+const loadingListeners = new Set();
+
+function notifyLoading() {
+  loadingListeners.forEach((fn) => fn(activeRequests > 0));
+}
+
+export function subscribeLoading(fn) {
+  loadingListeners.add(fn);
+  return () => loadingListeners.delete(fn);
+}
+
+// ---- Retry settings (sirf GET, cold start ke liye ~30 sec tak) ----
+const MAX_RETRIES = 10;
+const RETRY_DELAY_MS = 3000;
+const RETRY_STATUSES = [502, 503, 504];
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function request(path, options = {}) {
   const headers = { "X-Requested-With": "XMLHttpRequest", ...(options.headers || {}) };
   if (options.body && !(options.body instanceof FormData) && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
   }
-  const res = await fetch(`${API}${path}`, {
+
+  const method = (options.method || "GET").toUpperCase();
+  // Retry sirf GET par, taake POST (order/payment) duplicate na ho
+  const retries = method === "GET" ? MAX_RETRIES : 0;
+
+  const fetchOptions = {
     credentials: "include",
     ...options,
     headers,
@@ -13,15 +37,42 @@ export async function request(path, options = {}) {
       options.body && !(options.body instanceof FormData) && typeof options.body !== "string"
         ? JSON.stringify(options.body)
         : options.body,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data.error || "Request failed");
-    err.status = res.status;
-    err.data = data;
-    throw err;
+  };
+
+  activeRequests++;
+  notifyLoading();
+  try {
+       let res;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        res = await fetch(`${API}${path}`, fetchOptions);
+      } catch (networkError) {
+        if (attempt >= retries) {
+          throw new Error("");
+        }
+        await sleep(RETRY_DELAY_MS);
+        continue;
+      }
+      if (RETRY_STATUSES.includes(res.status) && attempt < retries) {
+        await sleep(RETRY_DELAY_MS);
+        continue;
+      }
+      break;
+    }
+
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || "Request failed");
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return data;
+  } finally {
+    activeRequests--;
+    notifyLoading();
   }
-  return data;
 }
 
 export const api = {

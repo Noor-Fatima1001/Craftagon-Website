@@ -3,7 +3,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        accent: "#2563EB",
+        accent: "#030164",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

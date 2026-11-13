@@ -67,7 +67,7 @@ async function createOrder({ cartItems, customer, idempotencyKey }) {
     try {
       const hours = settings.paymentDeadlineHours || 48;
       created = await Order.create({
-        orderNumber: await nextOrderNumber(),
+        orderNumber: `CRFTGN-${await nextOrderNumber()}`,
         lookupToken: lookupToken(),
         idempotencyKey: idempotencyKey || undefined,
         customer,

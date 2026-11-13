@@ -60,9 +60,9 @@ function Loading({ text = "Loading…" }) {
   return <p className="py-10 text-center text-sm text-slate-500">{text}</p>;
 }
 
-const thClass = "px-4 py-3 text-left";
-const tdClass = "px-4 py-3.5";
-const theadClass = "border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500";
+const thClass = "px-6 py-3 text-left";
+const tdClass = "px-6 py-3.5";
+const theadClass = " border-slate-200 bg-accent text-white text-sm font-semibold uppercase text-slate-500";
 const checkboxClass = "h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent";
 const checkLabelClass = "flex items-center gap-2.5 text-sm font-medium text-slate-700";
 const linkBtn = "rounded-lg px-2.5 py-1 text-sm font-medium text-accent transition-colors hover:bg-slate-100";
@@ -73,7 +73,62 @@ function prettyLabel(k) {
   return k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 }
 
-/* ---------------- Pages ---------------- */
+export function Pagination({ page, pages, onChange }) {
+  if (pages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+      {/* Mobile view simple text */}
+      <div className="flex flex-1 justify-between sm:hidden">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+          className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <button
+          type="button"
+          disabled={page >= pages}
+          onClick={() => onChange(page + 1)}
+          className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm text-slate-700">
+            Showing page <span className="font-semibold text-slate-900">{page}</span> of <span className="font-semibold text-slate-900">{pages}</span>
+          </p>
+        </div>
+        <div>
+          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => onChange(page - 1)}
+              className="relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              disabled={page >= pages}
+              onClick={() => onChange(page + 1)}
+              className="relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function AdminLogin() {
   const { setAdmin } = useAuth();
@@ -147,7 +202,7 @@ export function Dashboard() {
                   <td className={`${tdClass} font-medium`}><Link className="text-accent hover:underline" to={`/admin/orders/${o._id}`}>{o.orderNumber}</Link></td>
                   <td className={`${tdClass} text-slate-700`}>{o.customer?.fullName}</td>
                   <td className={tdClass}>
-                    <div className="flex flex-wrap gap-1.5"><Badge value={o.status} /><Badge value={o.paymentStatus} /></div>
+                    <div className="flex flex-wrap gap-1.5"><Badge value={o.status} /></div>
                   </td>
                   <td className={`${tdClass} text-right font-semibold tabular-nums text-slate-900`}>{money(o.total)}</td>
                 </tr>
@@ -164,25 +219,42 @@ export function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
-  async function load() {
-    try {
-      const d = await api.adminProducts();
-      setProducts(d.products);
-      setErr("");
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setLoading(false);
-    }
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [q, setQ] = useState("");
+const [category, setCategory] = useState("");
+const [active, setActive] = useState("");
+const [cats, setCats] = useState([]);
+
+async function load(p = 1, f = { q, category, active }) {
+  try {
+    const qs = new URLSearchParams();
+    if (f.q) qs.set("q", f.q);
+    if (f.category) qs.set("category", f.category);
+    if (f.active) qs.set("active", f.active);
+    qs.set("page", p);
+    qs.set("limit", 10);
+    const d = await api.adminProducts(`?${qs}`);
+    setProducts(d.products);
+    setPage(d.page);
+    setPages(d.pages);
+    setErr("");
+  } catch (e) {
+    setErr(e.message);
+  } finally {
+    setLoading(false);
   }
-  useEffect(() => {
-    load();
-  }, []);
+}
+
+useEffect(() => {
+  load();
+  api.adminCategories().then((d) => setCats(d.categories)).catch(() => {});
+}, []);
   async function remove(product) {
     if (!window.confirm(`Delete "${product.name}"? This action cannot be undone.`)) return;
     try {
       await api.deleteProduct(product._id);
-      await load();
+     await load(products.length === 1 && page > 1 ? page - 1 : page);
     } catch (e) {
       setErr(e.message);
     }
@@ -191,10 +263,39 @@ export function AdminProducts() {
     <div className="space-y-6">
       <PageHeader
         title="Products"
-        subtitle="Manage your catalog, pricing and stock."
+        subtitle="Manage your catalog, pricing."
         action={<Link className="btn" to="/admin/products/new">Add product</Link>}
       />
       {err && <Alert>{err}</Alert>}
+      <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+  <input
+    className="input w-full sm:max-w-sm"
+    placeholder="Search product name"
+    value={q}
+    onChange={(e) => setQ(e.target.value)}
+    onKeyDown={(e) => e.key === "Enter" && load(1)}
+  />
+  <select className="input w-full sm:max-w-xs" value={category} onChange={(e) => setCategory(e.target.value)}>
+    <option value="">All categories</option>
+    {cats.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+  </select>
+  <select className="input w-full sm:max-w-xs" value={active} onChange={(e) => setActive(e.target.value)}>
+    <option value="">All status</option>
+    <option value="true">Active</option>
+    <option value="false">Inactive</option>
+  </select>
+  <button type="button" className="btn px-4" onClick={() => load(1)}>Filter</button>
+  <button
+    type="button"
+    className="btn-outline"
+    onClick={() => {
+      setQ(""); setCategory(""); setActive("");
+      load(1, { q: "", category: "", active: "" });
+    }}
+  >
+    Reset
+  </button>
+</div>
       {loading ? <Loading text="Loading products…" /> : (
         <div className="card overflow-hidden p-0">
           <div className="overflow-x-auto">
@@ -203,7 +304,6 @@ export function AdminProducts() {
                 <tr>
                   <th className={thClass}>Name</th>
                   <th className={`${thClass} text-right`}>Price</th>
-                  <th className={`${thClass} text-right`}>Stock</th>
                   <th className={thClass}>Active</th>
                   <th className={`${thClass} text-right`}>Actions</th>
                 </tr>
@@ -213,13 +313,12 @@ export function AdminProducts() {
                   <tr key={p._id} className="transition-colors hover:bg-slate-50/80">
                     <td className={`${tdClass} font-medium text-slate-900`}>{p.name}</td>
                     <td className={`${tdClass} text-right font-semibold tabular-nums text-slate-900`}>{money(p.salePrice || p.price)}</td>
-                    <td className={`${tdClass} text-right tabular-nums text-slate-600`}>{p.stock}</td>
                     <td className={tdClass}>
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${p.active ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20" : "bg-slate-100 text-slate-600 ring-slate-500/20"}`}>
                         {p.active ? "Yes" : "No"}
                       </span>
                     </td>
-                    <td className={`${tdClass} text-right`}>
+                    <td className={`${tdClass} text-left`}>
                       <div className="flex justify-end gap-1">
                         <Link className={linkBtn} to={`/admin/products/${p._id}`}>Edit</Link>
                         <button className={dangerBtn} type="button" onClick={() => remove(p)}>Delete</button>
@@ -233,6 +332,7 @@ export function AdminProducts() {
               </tbody>
             </table>
           </div>
+          <Pagination page={page} pages={pages} onChange={load} />
         </div>
       )}
     </div>
@@ -250,7 +350,6 @@ export function ProductForm() {
     category: "",
     price: "",
     salePrice: "",
-    stock: 0,
     active: true,
     featured: false,
     bestseller: false,
@@ -286,7 +385,7 @@ export function ProductForm() {
   async function save(e) {
     e.preventDefault();
     const fd = new FormData();
-    ["name", "slug", "description", "category", "price", "salePrice", "stock"].forEach((k) => fd.append(k, form[k] ?? ""));
+    ["name", "slug", "description", "category", "price", "salePrice"].forEach((k) => fd.append(k, form[k] ?? ""));
     fd.append("active", form.active);
     fd.append("featured", form.featured);
     fd.append("bestseller", form.bestseller);
@@ -425,10 +524,16 @@ export function Categories() {
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
   const [err, setErr] = useState("");
-  async function load() {
-    const d = await api.adminCategories();
-    setList(d.categories);
-  }
+  const [q, setQ] = useState("");
+const [active, setActive] = useState("");
+async function load(f = { q, active }) {
+  const qs = new URLSearchParams();
+  if (f.q) qs.set("q", f.q);
+  if (f.active) qs.set("active", f.active);
+  const s = qs.toString();
+  const d = await api.adminCategories(s ? `?${s}` : "");
+  setList(d.categories);
+}
   useEffect(() => {
     load().catch((e) => setErr(e.message));
   }, []);
@@ -467,6 +572,31 @@ export function Categories() {
           {editing && <button className="btn-outline" type="button" onClick={() => { setEditing(null); setForm(emptyForm); }}>Cancel</button>}
         </div>
       </form>
+      <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+  <input
+    className="input w-full sm:max-w-sm"
+    placeholder="Search category name"
+    value={q}
+    onChange={(e) => setQ(e.target.value)}
+    onKeyDown={(e) => e.key === "Enter" && load().catch((er) => setErr(er.message))}
+  />
+  <select className="input w-full sm:max-w-sm" value={active} onChange={(e) => setActive(e.target.value)}>
+    <option value="">All status</option>
+    <option value="true">Active</option>
+    <option value="false">Inactive</option>
+  </select>
+  <button type="button" className="btn px-10" onClick={() => load().catch((er) => setErr(er.message))}>Filter</button>
+  <button
+    type="button"
+    className="btn-outline px-10"
+    onClick={() => {
+      setQ(""); setActive("");
+      load({ q: "", active: "" }).catch((er) => setErr(er.message));
+    }}
+  >
+    Reset
+  </button>
+</div>
       <ul className="space-y-3">
         {list.map((c) => (
           <li key={c._id} className="card flex flex-wrap items-center justify-between gap-2 px-4 py-3">
@@ -493,34 +623,44 @@ export function Orders() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
-  async function load() {
-    try {
-      const qs = new URLSearchParams();
-      if (q) qs.set("q", q);
-      if (status) qs.set("status", status);
-      const d = await api.adminOrders(`?${qs}`);
-      setOrders(d.orders);
-      setErr("");
-    } catch (e) {
-      setErr(e.message);
-    }
+ const [page, setPage] = useState(1);
+const [pages, setPages] = useState(1);
+const [total, setTotal] = useState(0);
+
+async function load(p = 1) {
+  try {
+    const qs = new URLSearchParams();
+    if (q) qs.set("q", q);
+    if (status) qs.set("status", status);
+    qs.set("page", p);
+    qs.set("limit", 10);
+    const d = await api.adminOrders(`?${qs}`);
+    setOrders(d.orders);
+    setPage(d.page);
+    setPages(d.pages);
+    setTotal(d.total);
+    setErr("");
+  } catch (e) {
+    setErr(e.message);
   }
+}
+useEffect(() => { load(1); }, []);
   useEffect(() => { load(); }, []);
   return (
     <div className="space-y-6">
       <PageHeader
         title="Orders"
         subtitle="Manage and track all customer orders."
-        action={<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{orders.length} {orders.length === 1 ? "order" : "orders"}</span>}
+        action={<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{total} {total === 1 ? "order" : "orders"}</span>}
       />
       {err && <Alert>{err}</Alert>}
       <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-        <input className="input w-full sm:max-w-xs" placeholder="Search name, email, phone, order #" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select className="input w-full sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <input className="input w-full sm:max-w-sm" placeholder="Search name, email, phone, order #" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select className="input w-full sm:max-w-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
           {["pending_payment", "payment_submitted", "confirmed", "processing", "dispatched", "delivered", "cancelled"].map((s) => <option key={s}>{s}</option>)}
         </select>
-        <button className="btn" onClick={load}>Filter</button>
+        <button className="btn px-10" onClick={load}>Filter</button>
       </div>
       <div className="card overflow-hidden p-0">
         <div className="overflow-x-auto">
@@ -556,6 +696,7 @@ export function Orders() {
             </tbody>
           </table>
         </div>
+        <Pagination page={page} pages={pages} onChange={load} />
       </div>
     </div>
   );
@@ -616,7 +757,7 @@ export function OrderDetail() {
           ))}
         </div>
         <div className="space-y-1.5 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
-          <p>Subtotal {money(o.subtotal)} · Delivery charges {money(o.deliveryFee)} · Discount {money(o.discount)} · <span className="font-semibold text-slate-900">Total {money(o.total)}</span></p>
+          <p>Subtotal {money(o.subtotal)} · Delivery charges {money(o.deliveryFee)} · <span className="font-semibold text-slate-900">Total {money(o.total)}</span></p>
           <p>Advance payment {money(o.advanceAmount)} · Remaining balance (COD) {money(o.remainingCod)}</p>
         </div>
       </Section>
@@ -670,22 +811,42 @@ export function Payments() {
   const [payments, setPayments] = useState([]);
   const [notes, setNotes] = useState({});
   const [msg, setMsg] = useState("");
-  useEffect(() => {
-    api.adminPayments().then((d) => setPayments(d.payments));
-  }, []);
-  async function decide(id, decision) {
-    const r = await api.reviewPayment(id, { decision, adminNotes: notes[id] || "" });
-    setMsg(`Marked ${decision}. Email: ${r.email.sent ? "sent" : r.email.reason}`);
-    api.adminPayments().then((d) => setPayments(d.payments));
+  const [err, setErr] = useState("");
+
+  async function loadPayments() {
+    try {
+      const d = await api.adminPayments();
+      setPayments(d.payments);
+    } catch (e) {
+      setErr(e.message);
+    }
   }
+
+  useEffect(() => {
+    loadPayments();
+  }, []);
+
+  async function decide(id, decision) {
+    try {
+      const r = await api.reviewPayment(id, { decision, adminNotes: notes[id] || "" });
+      setErr("");
+      setMsg(`Marked ${decision}. Email: ${r.email?.sent ? "sent" : r.email?.reason || "not sent"}`);
+      await loadPayments();
+    } catch (e) {
+      setMsg("");
+      setErr(e.message);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Payment verification" />
       <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
         Compare the screenshot and reference with the money actually received. Do not verify from the screenshot alone.
       </div>
+      {err && <Alert>{err}</Alert>}
       {msg && <Alert kind="ok">{msg}</Alert>}
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-3">
         {payments.map((p) => (
           <div key={p._id} className="card space-y-3 p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -751,7 +912,6 @@ export function SettingsPage() {
   const [email, setEmail] = useState(null);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
-  const [testingOrderEmail, setTestingOrderEmail] = useState(false);
   useEffect(() => {
     api.settings().then((d) => {
       setSettings(d.settings);
@@ -771,19 +931,7 @@ export function SettingsPage() {
       setErr(e.message);
     }
   }
-  async function sendTestOrderEmail() {
-    setTestingOrderEmail(true);
-    setErr("");
-    setMsg("");
-    try {
-      await api.testOrderEmail();
-      setMsg("Test order notification email sent.");
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setTestingOrderEmail(false);
-    }
-  }
+
   return (
     <form onSubmit={save} className="space-y-6">
       <PageHeader title="Store settings" subtitle="Configure your store, delivery, payments and content." />
@@ -819,19 +967,6 @@ export function SettingsPage() {
         {settings.orderNotificationEmail?.trim() !== savedOrderNotificationEmail && (
           <p className={helpText}>Save settings before sending a test email.</p>
         )}
-        <button
-          type="button"
-          className="btn-outline"
-          onClick={sendTestOrderEmail}
-          disabled={
-            !settings.orderNotificationEmail?.trim() ||
-            settings.orderNotificationEmail.trim() !== savedOrderNotificationEmail ||
-            !email?.configured ||
-            testingOrderEmail
-          }
-        >
-          {testingOrderEmail ? "Sending test email…" : "Send test email"}
-        </button>
       </Section>
 
       <Section title="Delivery">
@@ -907,8 +1042,15 @@ export function SettingsPage() {
 
 export function Reports() {
   const [data, setData] = useState(null);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   useEffect(() => { api.reports().then(setData); }, []);
   if (!data) return <Loading />;
+
+  const pages = Math.ceil(data.byDay.length / limit) || 1;
+  const rows = data.byDay.slice((page - 1) * limit, page * limit);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Sales report" subtitle="Daily orders and sales summary." />
@@ -924,7 +1066,7 @@ export function Reports() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {data.byDay.map((d) => (
+              {rows.map((d) => (
                 <tr key={d._id} className="transition-colors hover:bg-slate-50/80">
                   <td className={`${tdClass} font-medium text-slate-900`}>{d._id}</td>
                   <td className={`${tdClass} text-right tabular-nums`}>{d.orders}</td>
@@ -935,6 +1077,7 @@ export function Reports() {
             </tbody>
           </table>
         </div>
+        <Pagination page={page} pages={pages} onChange={setPage} />
       </div>
     </div>
   );

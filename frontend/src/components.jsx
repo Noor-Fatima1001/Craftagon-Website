@@ -18,7 +18,7 @@ import {
   FiCreditCard,
 } from "react-icons/fi";
 import { useCart, useStore, useAuth } from "./context";
-import { api, asset, money } from "./api";
+import { api, asset, money, subscribeLoading } from "./api";
 
 /* Primary color: #030164 */
 const ANNOUNCEMENT = "Add a name or message on pens, mugs, tumblers & keychains. Delivered across Pakistan.";
@@ -63,6 +63,16 @@ export function TopBar() {
   return (
     <div className="bg-[#030164] px-4 py-2.5 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
       {ANNOUNCEMENT}
+    </div>
+  );
+}
+export function GlobalLoader() {
+  const [loading, setLoading] = useState(false);
+  useEffect(() => subscribeLoading(setLoading), []);
+  if (!loading) return null;
+  return (
+    <div className="fixed inset-x-0 top-0 z-[100] h-1 overflow-hidden bg-slate-200">
+      <div className="h-full w-1/3 animate-pulse bg-[#030164]" />
     </div>
   );
 }
@@ -325,6 +335,7 @@ export function Layout() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900">
       <TopBar />
+        <GlobalLoader />
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
         <Outlet />
@@ -449,6 +460,7 @@ export function AdminShell() {
   );
   return (
     <div className="flex min-h-screen bg-slate-100">
+       <GlobalLoader />
       <aside className="hidden w-64 shrink-0 bg-[#030164] p-5 text-white md:block">{menu}</aside>
       <div className="flex-1 overflow-x-hidden">
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
