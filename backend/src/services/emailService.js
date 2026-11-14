@@ -183,7 +183,6 @@ module.exports = {
   sendMail,
   orderConfirmation,
   orderNotification,
-  testOrderNotification,
   paymentResult,
   orderCancelled,
   orderDispatched,

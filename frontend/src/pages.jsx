@@ -76,7 +76,7 @@ function SectionHead({ title, subtitle, to }) {
         {subtitle && <p className="mt-1 text-slate-500">{subtitle}</p>}
       </div>
       {to && (
-        <Link to={to} className="hidden items-center gap-1 text-sm font-semibold text-[#030164] hover:underline sm:inline-flex">
+        <Link to={to} className="hidden items-center gap-1 text-sm font-semibold text-gray-950 hover:underline sm:inline-flex">
           View all <FiArrowRight />
         </Link>
       )}
@@ -89,14 +89,14 @@ function Badge({ children, tone = "slate" }) {
     slate: "bg-slate-100 text-slate-700",
     green: "bg-emerald-50 text-emerald-700",
     amber: "bg-amber-50 text-amber-700",
-    primary: "bg-[#030164]/10 text-[#030164]",
+    primary: "bg-gray-950/10 text-gray-950",
   };
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
 }
 
 function Row({ label, value, strong, accent }) {
   return (
-    <div className={`flex justify-between ${strong ? "border-t border-slate-200 pt-3 text-base font-bold text-slate-900" : ""} ${accent ? "font-semibold text-[#030164]" : ""}`}>
+    <div className={`flex justify-between ${strong ? "border-t border-slate-200 pt-3 text-base font-bold text-slate-900" : ""} ${accent ? "font-semibold text-gray-950" : ""}`}>
       <span>{label}</span>
       <span>{value}</span>
     </div>
@@ -112,10 +112,10 @@ export function Home() {
   return (
     <div className="space-y-20 ">
 {/* Hero */}
-<section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-2 shadow-sm md:px-10 md:py-5">
-  <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#030164]/10 blur-3xl" />
+<section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-gray-950/10 px-6 py-2 shadow-sm md:px-10 md:py-5">
+  <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-gray-950/10 blur-3xl" />
   <div className="relative max-w-3xl">
-    <span className="inline-flex items-center gap-2 rounded-full bg-[#030164]/10 px-4 py-1.5 text-sm font-semibold text-[#030164]">
+    <span className="inline-flex items-center gap-2 rounded-full bg-gray-950/10 px-4 py-1.5 text-sm font-semibold text-gray-950">
       <FiGift /> Personalized print
     </span>
     <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-4xl">
@@ -139,7 +139,7 @@ export function Home() {
         { icon: FiTruck, t: "Delivery across Pakistan" },
       ].map(({ icon: Icon, t }) => (
         <div key={t} className="flex items-center gap-3 text-sm font-medium text-slate-700">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg text-[#030164] shadow-sm ring-1 ring-slate-200">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg text-gray-950 shadow-sm ring-1 ring-slate-200">
             <Icon />
           </span>
           {t}
@@ -153,8 +153,8 @@ export function Home() {
         <SectionHead title="Shop by category" subtitle="Find the right item for every person and occasion." to="/products" />
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {categories?.map((c) => (
-            <Link key={c._id} to={`/products?category=${c.slug}`} className={`${ui.card} group p-5 text-center transition hover:-translate-y-0.5 hover:border-[#030164]/40 hover:shadow-md`}>
-              <div className="font-semibold text-slate-800 group-hover:text-[#030164]">{c.name}</div>
+            <Link key={c._id} to={`/products?category=${c.slug}`} className={`${ui.card} group p-5 text-center transition hover:-translate-y-0.5 hover:border-gray-950/40 hover:shadow-md`}>
+              <div className="font-semibold text-slate-800 group-hover:text-gray-950">{c.name}</div>
               <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
                 Shop now <FiArrowRight />
               </div>
@@ -184,8 +184,8 @@ export function Home() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map(({ icon: Icon, title, text }, i) => (
             <div key={title} className={`${ui.card} relative p-6`}>
-              <span className="absolute right-5 top-4 text-4xl font-extrabold text-[#030164]">{i + 1}</span>
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#030164]/10 text-xl text-[#030164]">
+              <span className="absolute right-5 top-4 text-4xl font-extrabold text-gray-950">{i + 1}</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-950/10 text-xl text-gray-950">
                 <Icon />
               </span>
               <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
@@ -216,7 +216,7 @@ export function Home() {
         <div className="grid gap-8 sm:grid-cols-2">
           {WHY.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#030164] text-xl text-white">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-950 text-xl text-white">
                 <Icon />
               </span>
               <div>
@@ -229,7 +229,7 @@ export function Home() {
       </section>
 
 
-      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-12 text-center shadow-sm md:px-12">
+      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-gray-950/10 px-6 py-12 text-center shadow-sm md:px-12">
         <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Ready to make a gift personal?</h2>
         <p className="mx-auto mt-3 max-w-xl text-slate-600">Pick a product, add the name or message, and we will take care of the rest.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -257,16 +257,16 @@ export function About() {
   return (
     <div className="space-y-16">
       {/* Intro */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-10 shadow-sm md:px-12 md:py-6">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#030164]/10 blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-gray-950/10 px-6 py-10 shadow-sm md:px-12 md:py-6">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-gray-950/10 blur-3xl" />
         <div className="relative max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#030164]/10 px-4 py-1 text-sm font-semibold text-[#030164]">
+          <span className="inline-flex items-center gap-2 rounded-full bg-gray-950/10 px-4 py-1 text-sm font-semibold text-gray-950">
             <FiGift /> Personalized Gifts
           </span>
           <h1 className="mt-5 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-4xl">
             {store?.about?.title || "About Craftagon"}
           </h1>
-          <div className="mt-4 h-1 w-14 rounded-full bg-[#030164]" />
+          <div className="mt-4 h-1 w-14 rounded-full bg-gray-950" />
           <p className="mt-6 whitespace-pre-line text-lg leading-relaxed text-slate-600">
             {store?.about?.body ||
               "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and keychains. We confirm advance payments before we print."}
@@ -285,7 +285,7 @@ export function About() {
       {/* Mission & Vision */}
       <section className="grid gap-6 md:grid-cols-2">
         <div className={`${ui.card} p-6 md:p-8`}>
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#030164] text-xl text-white">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-950 text-xl text-white">
             <FiTarget />
           </span>
           <h2 className="mt-5 text-xl font-bold text-slate-900">Our mission</h2>
@@ -295,7 +295,7 @@ export function About() {
           </p>
         </div>
         <div className={`${ui.card} p-6 md:p-8`}>
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#030164] text-xl text-white">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-950 text-xl text-white">
             <FiEye />
           </span>
           <h2 className="mt-5 text-xl font-bold text-slate-900">Our vision</h2>
@@ -327,7 +327,7 @@ export function About() {
         <div className="mt-8 grid gap-8 md:grid-cols-3">
           {VALUES.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#030164]/10 text-xl text-[#030164]">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-950/10 text-xl text-gray-950">
                 <Icon />
               </span>
               <div>
@@ -341,7 +341,7 @@ export function About() {
 
       {/* CTA */}
     {/* CTA */}
-<section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#030164]/10 px-6 py-12 text-center shadow-sm md:px-12">
+<section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-gray-950/10 px-6 py-12 text-center shadow-sm md:px-12">
   <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Ready to make a gift personal?</h2>
   <p className="mx-auto mt-3 max-w-xl text-slate-600">Pick a product, add the name or message, and we will take care of the rest.</p>
   <div className="mt-6 flex justify-center">
@@ -362,15 +362,15 @@ export function Help() {
       <p className="whitespace-pre-line text-slate-600">Need assistance with your order or payment? Simply enter your order number and email on the Track Order page, or reach out to us directly via Contact Us.</p>
       <div className={`${ui.card} space-y-4 p-6 text-sm text-slate-600`}>
         <p className="flex gap-3">
-          <FaWhatsapp className="mt-0.5 shrink-0 text-lg text-[#030164]" />
+          <FaWhatsapp className="mt-0.5 shrink-0 text-lg text-gray-950" />
           Track your order online or contact us for assistance.  
         </p>
         <p className="flex gap-3">
-          <FiPackage className="mt-0.5 shrink-0 text-lg text-[#030164]" />
+          <FiPackage className="mt-0.5 shrink-0 text-lg text-gray-950" />
           Track an order with the order number and the email used at checkout.
            </p>
         <p className="flex gap-3">
-          <FiCreditCard className="mt-0.5 shrink-0 text-lg text-[#030164]" />
+          <FiCreditCard className="mt-0.5 shrink-0 text-lg text-gray-950" />
           JazzCash and Easypaisa transfers need a screenshot and a transaction ID. COD is confirmed by staff, never automatically.
         </p>
         <Link className={ui.btn} to="/contact">
@@ -449,7 +449,7 @@ export function Contact() {
               .filter((x) => x.v)
               .map(({ icon: Icon, label, v }) => (
                 <div key={label} className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#030164]/10 text-[#030164]">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-950/10 text-gray-950">
                     <Icon />
                   </span>
                   <div>
@@ -471,7 +471,7 @@ export function Contact() {
                       rel="noreferrer"
                       aria-label={label}
                       title={label}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#030164]/10 text-[#030164] transition hover:bg-[#030164] hover:text-white"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-950/10 text-gray-950 transition hover:bg-gray-950 hover:text-white"
                     >
                       <Icon />
                     </a>
@@ -521,6 +521,7 @@ export function Products() {
   const [products, setProducts] = useState([]);
   const [meta, setMeta] = useState({ page: 1, pages: 1, total: 0 });
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(true);
   const [qInput, setQInput] = useState(params.get("q") || "");
   const q = params.get("q") || "";
   const category = params.get("category") || "";
@@ -535,13 +536,15 @@ export function Products() {
     if (sort) qs.set("sort", sort);
     qs.set("page", String(page));
     qs.set("limit", "12");
-    api
-      .products(`?${qs}`)
-      .then((d) => {
-        setProducts(d.products);
-        setMeta({ page: d.page, pages: d.pages, total: d.total });
-      })
-      .catch((e) => setErr(e.message));
+    setLoading(true);
+api
+  .products(`?${qs}`)
+  .then((d) => {
+    setProducts(d.products);
+    setMeta({ page: d.page, pages: d.pages, total: d.total });
+  })
+  .catch((e) => setErr(e.message))
+  .finally(() => setLoading(false));
   }, [q, category, sort, page]);
 
   function set(k, v) {
@@ -562,7 +565,7 @@ export function Products() {
   return (
     <div>
       <nav className="mb-4 text-sm text-slate-500">
-        <Link to="/" className="hover:text-[#030164]">Home</Link> › <span className="text-slate-700">{categoryName || "Shop"}</span>
+        <Link to="/" className="hover:text-gray-950">Home</Link> › <span className="text-slate-700">{categoryName || "Shop"}</span>
       </nav>
       <PageHeader title={categoryName || "Shop"} subtitle="Pick a product, add your text, and we print it for you." />
       <div className={`${ui.card} flex flex-wrap items-center gap-3 p-4`}>
@@ -603,12 +606,16 @@ export function Products() {
           <Alert>{err}</Alert>
         </div>
       )}
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((p) => (
-          <ProductCard key={p._id} product={p} />
-        ))}
-      </div>
-      {!products.length && !err && (
+      {loading ? (
+  <PageLoader text="Loading products…" />
+) : (
+  <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {products.map((p) => (
+      <ProductCard key={p._id} product={p} />
+    ))}
+  </div>
+)}
+     {!loading && !products.length && !err && (
         <div className={`${ui.card} mt-8 flex flex-col items-center gap-2 p-12 text-center text-slate-500`}>
           <FiSearch className="text-3xl text-slate-300" />
           No products match these filters.
@@ -646,7 +653,7 @@ export function ProductDetail() {
       .catch((e) => setErr(e.message));
   }, [slug]);
   if (err) return <Alert>{err}</Alert>;
-  if (!product) return <p className="py-20 text-center text-slate-500">Loading…</p>;
+ if (!product) return <PageLoader />;
   const price = product.salePrice && product.salePrice < product.price ? product.salePrice : product.price;
   const max = product.customization?.maxLength || 24;
   const colorVariants = product.colorVariants || [];
@@ -692,7 +699,7 @@ export function ProductDetail() {
         {product.category?.name && <Badge tone="primary">{product.category.name}</Badge>}
         <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">{product.name}</h1>
         <div className="mt-4 flex items-baseline gap-3">
-          <span className="text-3xl font-bold text-[#030164]">{money(price)}</span>
+          <span className="text-3xl font-bold text-gray-950">{money(price)}</span>
           {product.salePrice && product.salePrice < product.price && (
             <span className="text-lg text-slate-400 line-through">{money(product.price)}</span>
           )}
@@ -716,7 +723,7 @@ export function ProductDetail() {
                     }}
                     className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
                       variant._id === colorVariantId
-                        ? "border-[#030164] bg-[#030164]/5 text-[#030164] ring-2 ring-[#030164]/25"
+                        ? "border-gray-950 bg-gray-950/5 text-gray-950 ring-2 ring-gray-950/25"
                         : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                     }`}
                   >
@@ -746,8 +753,8 @@ export function ProductDetail() {
           <FiShoppingCart /> Add to cart
         </button>
         <div className="mt-5 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
-          <span className="flex items-center gap-2"><FiShield className="text-[#030164]" /> Payment confirmed by our team</span>
-          <span className="flex items-center gap-2"><FiTruck className="text-[#030164]" /> Delivery across Pakistan</span>
+          <span className="flex items-center gap-2"><FiShield className="text-gray-950" /> Payment confirmed by our team</span>
+          <span className="flex items-center gap-2"><FiTruck className="text-gray-950" /> Delivery across Pakistan</span>
         </div>
       </div>
     </div>
@@ -773,7 +780,7 @@ export function CartPage() {
           <div key={`${it.productId}-${it.customText}-${i}`} className={`${ui.card} grid items-center gap-5 p-4 md:grid-cols-[160px_1fr_auto]`}>
             <CustomPreview product={{ name: it.name, preview: it.preview, images: [it.image] }} image={it.image} />
             <div className="space-y-1">
-              <Link to={`/products/${it.slug}`} className="text-lg font-semibold text-slate-900 hover:text-[#030164]">
+              <Link to={`/products/${it.slug}`} className="text-lg font-semibold text-slate-900 hover:text-gray-950">
                 {it.name}
               </Link>
               <p className="text-sm text-slate-500">Custom text: {it.customText || "—"}</p>
@@ -783,7 +790,7 @@ export function CartPage() {
                   {it.color.name}
                 </p>
               )}
-              <p className="font-semibold text-[#030164]">{money(it.price)}</p>
+              <p className="font-semibold text-gray-950">{money(it.price)}</p>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -977,9 +984,9 @@ function OrderView({ order, whatsappUrl, title = "Order", showPayment = false })
           <Badge tone={order.paymentStatus === "verified" ? "green" : "slate"}>payment {statusLabel(order.paymentStatus)}</Badge>
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl bg-[#030164]/5 p-4">
+          <div className="rounded-xl bg-gray-950/5 p-4">
             <div className="text-xs font-medium text-slate-500">Advance due</div>
-            <div className="text-2xl font-bold text-[#030164]">{money(order.advanceAmount)}</div>
+            <div className="text-2xl font-bold text-gray-950">{money(order.advanceAmount)}</div>
           </div>
           <div className="rounded-xl bg-slate-50 p-4">
             <div className="text-xs font-medium text-slate-500">Remaining balance</div>
@@ -1087,7 +1094,7 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
   return (
     <div className={`${ui.card} p-6 md:p-8`}>
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-        <FiCreditCard className="text-[#030164]" /> Pay the advance
+        <FiCreditCard className="text-gray-950" /> Pay the advance
       </h2>
       <p className="mt-1 text-sm text-slate-600">
         Transfer PKR {order.advanceAmount} via JazzCash or Easypaisa, or select Cash on Delivery. Our team will verify your payment receipt shortly.
@@ -1119,7 +1126,7 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
           {!isCod && (
             <Field label="Screenshot (JPEG, PNG or WebP, max 5MB)">
               <input
-                className={`${ui.input} file:mr-3 file:rounded-md file:border-0 file:bg-[#030164]/10 file:px-3 file:py-1 file:text-sm file:font-medium file:text-[#030164]`}
+                className={`${ui.input} file:mr-3 file:rounded-md file:border-0 file:bg-gray-950/10 file:px-3 file:py-1 file:text-sm file:font-medium file:text-gray-950`}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 required
@@ -1165,7 +1172,7 @@ export function ThankYou() {
       .catch((e) => setErr(e.message));
   }, [orderNumber, token]);
   if (err) return <Alert>{err}</Alert>;
-  if (!data) return <p className="py-20 text-center text-slate-500">Loading…</p>;
+  if (!data) return <PageLoader text="Loading your order…" />;
   return (
     <div className="mx-auto max-w-8xl space-y-6">
       <OrderView {...data} title="Thank you" showPayment />
@@ -1245,7 +1252,7 @@ export function Policies() {
         ].map(({ icon: Icon, t, b }) => (
           <div key={t} className={`${ui.card} p-6`}>
             <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
-              <Icon className="text-[#030164]" /> {t}
+              <Icon className="text-gray-950" /> {t}
             </h2>
             <p className="mt-3 whitespace-pre-line leading-relaxed text-slate-600">{b}</p>
           </div>
@@ -1303,9 +1310,28 @@ export function LoginPage() {
           {mode === "login" ? <FiLogIn /> : <FiUserPlus />} {mode === "login" ? "Sign in" : "Register"}
         </button>
       </form>
-      <button className="mt-5 w-full text-center text-sm font-medium text-[#030164] hover:underline" type="button" onClick={() => setMode(mode === "login" ? "register" : "login")}>
+      <button className="mt-5 w-full text-center text-sm font-medium text-gray-950 hover:underline" type="button" onClick={() => setMode(mode === "login" ? "register" : "login")}>
         {mode === "login" ? "Need an account? Register" : "Have an account? Login"}
       </button>
+    </div>
+  );
+}
+
+function Spinner({ className = "h-5 w-5" }) {
+  return (
+    <span
+      role="status"
+      aria-label="Loading"
+      className={`inline-block animate-spin rounded-full border-2 border-gray-950/20 border-t-gray-950 ${className}`}
+    />
+  );
+}
+
+function PageLoader({ text = "Loading…" }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-500">
+      <Spinner className="h-8 w-8" />
+      <p className="text-sm">{text}</p>
     </div>
   );
 }
@@ -1315,28 +1341,30 @@ export function AccountPage() {
   const nav = useNavigate();
   const [orders, setOrders] = useState([]);
   const [err, setErr] = useState("");
+  const [loadingOrders, setLoadingOrders] = useState(true); 
   useEffect(() => {
     if (!ready) return;
     if (!customer) {
       nav("/login");
       return;
     }
-    api
-      .myOrders()
-      .then((d) => setOrders(d.orders))
-      .catch((e) => setErr(e.message));
+   api
+  .myOrders()
+  .then((d) => setOrders(d.orders))
+  .catch((e) => setErr(e.message))
+  .finally(() => setLoadingOrders(false));
   }, [customer, ready, nav]);
   async function logout() {
     await api.logout();
     setCustomer(null);
     nav("/");
   }
-  if (!customer) return <p className="py-20 text-center text-slate-500">Loading…</p>;
+  if (!customer) return <PageLoader />;
   return (
     <div className="mx-auto max-w-4xl">
       <div className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-6`}>
         <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#030164] text-xl font-bold text-white">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-950 text-xl font-bold text-white">
             {(customer.fullName || "?").charAt(0).toUpperCase()}
           </span>
           <div>
@@ -1356,9 +1384,10 @@ export function AccountPage() {
         </div>
       )}
       <h2 className="mb-3 mt-10 text-xl font-bold text-slate-900">Your orders</h2>
-      <div className="space-y-3">
+{loadingOrders && <PageLoader text="Loading your orders…" />}
+<div className="space-y-3">
         {orders.map((o) => (
-          <div key={o.id} className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-5 text-sm transition hover:border-[#030164]/40 hover:shadow-md`}>
+          <div key={o.id} className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-5 text-sm transition hover:border-gray-950/40 hover:shadow-md`}>
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
                 #{o.orderNumber}
@@ -1369,7 +1398,7 @@ export function AccountPage() {
                 {money(o.total)} · advance {money(o.advanceAmount)} · remaining {money(o.remainingCod)}
               </div>
             </div>
-            <Link className="inline-flex items-center gap-1 font-medium text-[#030164] hover:underline" to="/order-lookup">
+            <Link className="inline-flex items-center gap-1 font-medium text-gray-950 hover:underline" to="/order-lookup">
               Track with order number {o.orderNumber} and your email <FiArrowRight />
             </Link>
           </div>

@@ -118,7 +118,6 @@ export const api = {
   paymentShot: (id) => `${API}/api/admin/payments/${id}/screenshot`,
   settings: () => request("/api/admin/settings"),
   saveSettings: (body) => request("/api/admin/settings", { method: "PUT", body }),
-  testOrderEmail: () => request("/api/admin/settings/test-order-email", { method: "POST" }),
   reports: (qs = "") => request(`/api/admin/reports${qs}`),
   runCancel: () => request("/api/admin/jobs/cancel-overdue/run", { method: "POST" }),
   audit: () => request("/api/admin/audit"),

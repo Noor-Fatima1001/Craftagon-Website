@@ -25,14 +25,14 @@ const ANNOUNCEMENT = "Add a name or message on pens, mugs, tumblers & keychains.
 
 /* Shared Tailwind class strings (no CSS file needed) */
 export const ui = {
-  btn: "inline-flex items-center justify-center gap-2 rounded-md bg-[#030164] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0b0a9c] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
+  btn: "inline-flex items-center justify-center gap-2 rounded-md bg-gray-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
   btnOutline:
-    "inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-[#030164] hover:text-[#030164] disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-gray-950 hover:text-gray-950 disabled:opacity-60",
   btnLight:
-    "inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#030164] shadow-md transition hover:bg-slate-100",
+    "inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-950 shadow-md transition hover:bg-slate-100",
   card: "rounded-2xl border border-slate-200 bg-white shadow-sm",
   input:
-    "w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-[#030164] focus:outline-none focus:ring-4 focus:ring-[#030164]/15",
+    "w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-gray-950 focus:outline-none focus:ring-4 focus:ring-gray-950/15",
   pageTitle: "text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl",
 };
 
@@ -61,7 +61,7 @@ function overlayStyle(p = {}) {
 
 export function TopBar() {
   return (
-    <div className="bg-[#030164] px-4 py-2.5 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
+    <div className="bg-gray-950 px-4 py-2.5 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
       {ANNOUNCEMENT}
     </div>
   );
@@ -72,7 +72,7 @@ export function GlobalLoader() {
   if (!loading) return null;
   return (
     <div className="fixed inset-x-0 top-0 z-[100] h-1 overflow-hidden bg-slate-200">
-      <div className="h-full w-1/3 animate-pulse bg-[#030164]" />
+      <div className="h-full w-1/3 animate-pulse bg-gray-950" />
     </div>
   );
 }
@@ -92,15 +92,15 @@ export function Header() {
   }, [open]);
 
   const desktopLink = ({ isActive }) =>
-    `relative py-1 transition-colors hover:text-[#030164] ${
+    `relative py-1 transition-colors hover:text-gray-950 ${
       isActive
-        ? "text-[#030164] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-[#030164]"
+        ? "text-gray-950 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gray-950"
         : "text-slate-600"
     }`;
 
   const mobileLinkClass = ({ isActive }) =>
     `block min-h-[44px] rounded-md px-3 py-3 font-medium transition ${
-      isActive ? "bg-[#030164]/10 text-[#030164]" : "text-slate-700 hover:bg-slate-50"
+      isActive ? "bg-gray-950/10 text-gray-950" : "text-slate-700 hover:bg-slate-50"
     }`;
 
   return (
@@ -116,8 +116,8 @@ export function Header() {
             >
               <FiMenu />
             </button>
-            <Link to="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#030164]">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#030164] text-base text-white">
+            <Link to="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-gray-950">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-950 text-base text-white">
                 {(store?.storeName || "Craftagon").charAt(0)}
               </span>
               {store?.storeName || "Craftagon"}
@@ -145,24 +145,24 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Link
               to="/order-lookup"
-              className="hidden min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-[#030164] sm:inline-flex"
+              className="hidden min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-gray-950 sm:inline-flex"
             >
               <FiPackage /> Track order
             </Link>
             <Link
               to={customer ? "/account" : "/login"}
-              className="hidden min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-[#030164] sm:inline-flex"
+              className="hidden min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-gray-950 sm:inline-flex"
             >
               <FiUser /> {customer ? customer.fullName?.split(" ")[0] || "My Account" : "Login"}
             </Link>
             <Link
               to="/cart"
-              className="relative inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#030164] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#0b0a9c]"
+              className="relative inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-gray-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
             >
               <FiShoppingCart className="text-base" />
               Cart
               {cart.count > 0 && (
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-xs font-bold text-[#030164]">
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-xs font-bold text-gray-950">
                   {cart.count}
                 </span>
               )}
@@ -209,7 +209,7 @@ export function Header() {
               <NavLink
                 key={c._id}
                 to={`/products?category=${c.slug}`}
-                className="block min-h-[44px] rounded-md px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-[#030164]"
+                className="block min-h-[44px] rounded-md px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-gray-950"
                 onClick={() => setOpen(false)}
               >
                 {c.name}
@@ -234,11 +234,11 @@ export function Footer() {
   const occasions = ["Birthday", "Anniversary", "Wedding", "Mother's Day", "Father's Day"];
   const phone = store?.whatsappNumber || store?.phone;
   return (
-    <footer className="mt-20 bg-[#030164] text-white/75">
+    <footer className="mt-20 bg-gray-950 text-white/75">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr]">
         <div>
           <div className="flex items-center gap-2 text-2xl font-extrabold text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-lg text-[#030164]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-lg text-gray-950">
               {(store?.storeName || "Craftagon").charAt(0)}
             </span>
             {store?.storeName || "Craftagon"}
@@ -351,7 +351,7 @@ export function ProductCard({ product }) {
   return (
     <Link
       to={`/products/${product.slug}`}
-      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#030164]/40 hover:shadow-lg"
+      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-gray-950/40 hover:shadow-lg"
     >
       <div className="relative aspect-square overflow-hidden bg-slate-100">
         {product.images?.[0] ? (
@@ -372,10 +372,10 @@ export function ProductCard({ product }) {
         )}
       </div>
       <div className="p-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#030164]/70">{product.category?.name}</div>
-        <div className="mt-1 line-clamp-2 font-semibold text-slate-900 group-hover:text-[#030164]">{product.name}</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-gray-950/70">{product.category?.name}</div>
+        <div className="mt-1 line-clamp-2 font-semibold text-slate-900 group-hover:text-gray-950">{product.name}</div>
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-[#030164]">{money(price)}</span>
+          <span className="text-lg font-bold text-gray-950">{money(price)}</span>
           {onSale && <span className="text-sm text-slate-400 line-through">{money(product.price)}</span>}
         </div>
       </div>
@@ -429,7 +429,7 @@ export function AdminShell() {
   const menu = (
     <>
       <div className="mb-8 flex items-center gap-2 text-lg font-extrabold">
-        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-white text-[#030164]">C</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-white text-gray-950">C</span>
         Craftagon Admin
       </div>
       <nav className="flex flex-col gap-1 text-sm">
@@ -441,7 +441,7 @@ export function AdminShell() {
             onClick={() => setOpen(false)}
             className={({ isActive }) =>
               `flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2 font-medium transition ${
-                isActive ? "bg-white text-[#030164] shadow" : "text-white/75 hover:bg-white/10 hover:text-white"
+                isActive ? "bg-white text-gray-950 shadow" : "text-white/75 hover:bg-white/10 hover:text-white"
               }`
             }
           >
@@ -461,7 +461,7 @@ export function AdminShell() {
   return (
     <div className="flex min-h-screen bg-slate-100">
        <GlobalLoader />
-      <aside className="hidden w-64 shrink-0 bg-[#030164] p-5 text-white md:block">{menu}</aside>
+      <aside className="hidden w-64 shrink-0 bg-gray-950 p-5 text-white md:block">{menu}</aside>
       <div className="flex-1 overflow-x-hidden">
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
           <span className="font-bold text-slate-900">Admin</span>
@@ -477,7 +477,7 @@ export function AdminShell() {
         {open && (
           <div className="fixed inset-0 z-50 md:hidden">
             <button className="absolute inset-0 bg-slate-900/50" type="button" aria-label="Close menu" onClick={() => setOpen(false)} />
-            <aside className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-[#030164] p-5 text-white shadow-2xl">{menu}</aside>
+            <aside className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-gray-950 p-5 text-white shadow-2xl">{menu}</aside>
           </div>
         )}
         <div className="p-4 md:p-8">

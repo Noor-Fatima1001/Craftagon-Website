@@ -55,7 +55,6 @@ router.put(
     .withMessage("Enter a valid order notification email address"),
   a.saveSettings
 );
-router.post("/settings/test-order-email", requireAdmin, a.testOrderEmail);
 router.post("/settings/banner-image", requireAdmin, bannerUpload.single("image"), (req, res) => {
   res.json({ url: `/uploads/banners/${req.file.filename}` });
 });

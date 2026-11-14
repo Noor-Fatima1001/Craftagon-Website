@@ -500,16 +500,6 @@ const saveSettings = asyncHandler(async (req, res) => {
   res.json({ settings });
 });
 
-const testOrderEmail = asyncHandler(async (req, res) => {
-  const settings = await getSettingsDocument();
-  if (!settings.orderNotificationEmail) {
-    throw new AppError("Save an order notification email address before sending a test email", 400);
-  }
-  const result = await emailService.testOrderNotification(settings.orderNotificationEmail);
-  if (!result.sent) throw new AppError(result.reason || "Test email could not be sent", 503);
-  res.json({ message: "Test email sent" });
-});
-
 const reports = asyncHandler(async (req, res) => {
   const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 30 * 86400000);
   const to = req.query.to ? new Date(req.query.to) : new Date();
@@ -562,7 +552,6 @@ module.exports = {
   paymentScreenshot,
   getSettingsAdmin,
   saveSettings,
-  testOrderEmail,
   reports,
   runCancelJob,
   auditLogs,
