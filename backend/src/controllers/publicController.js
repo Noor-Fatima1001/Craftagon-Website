@@ -89,7 +89,7 @@ const listCategories = asyncHandler(async (_req, res) => {
 const getStore = asyncHandler(async (_req, res) => {
   const settings = await getSettings();
   
-  const featured = await Product.find({
+  let featured = await Product.find({
     active: true,
     $or: [{ featured: true }, { _id: { $in: settings.featuredProductIds || [] } }],
   })
@@ -141,6 +141,7 @@ const orderValidators = [
   body("items.*.productId").isMongoId(),
   body("items.*.quantity").isInt({ min: 1, max: 50 }),
   body("items.*.colorVariantId").optional().isMongoId(),
+  body("items.*.customNote").optional().isString().isLength({ max: 300 }),
   body("customer.fullName").trim().isLength({ min: 3, max: 80 }),
   body("customer.phone").trim().isLength({ min: 10, max: 20 }),
   body("customer.email").isEmail().normalizeEmail(),
