@@ -59,7 +59,11 @@ async function orderConfirmation(order, settings) {
       "Thank you for your order",
       `<p>Order ID: <strong>${order.orderNumber}</strong></p>
        <ul>${items}</ul>
-       <p>Subtotal: PKR ${order.subtotal}<br/>Delivery: PKR ${order.deliveryFee}<br/>Total: PKR ${order.total}</p>
+       <p>Subtotal: PKR ${order.subtotal}${
+         order.discount > 0
+           ? `<br/>Discount${order.couponCode ? ` (coupon <strong>${escapeHtml(order.couponCode)}</strong>)` : ""}: - PKR ${order.discount}`
+           : ""
+       }<br/>Delivery: PKR ${order.deliveryFee}<br/>Total: PKR ${order.total}</p>
        <p>Advance due now: <strong>PKR ${order.advanceAmount}</strong><br/>Remaining COD: PKR ${order.remainingCod}</p>
        <p>Please transfer the advance using the payment details on your order page, then upload a screenshot. Staff will verify it manually.</p>
        <p>Contact on WhatsApp for any query : ${settings.whatsappNumber}</p>`
@@ -111,9 +115,10 @@ async function orderNotification(order, to) {
        <tbody>${rows}</tbody>
      </table>
      
-     <h3>Totals</h3>
+          <h3>Totals</h3>
      <p>
        Subtotal: PKR ${escapeHtml(order.subtotal)}<br/>
+       ${order.discount > 0 ? `Discount${order.couponCode ? ` (coupon <strong>${escapeHtml(order.couponCode)}</strong>)` : ""}: - PKR ${escapeHtml(order.discount)}<br/>` : ""}
        Delivery: PKR ${escapeHtml(order.deliveryFee)}<br/>
        <strong>Total: PKR ${escapeHtml(order.total)}</strong><br/>
        Advance Due: PKR ${escapeHtml(order.advanceAmount)}<br/>
