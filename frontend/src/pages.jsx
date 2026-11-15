@@ -210,6 +210,22 @@ export function Home() {
         </div>
       </section>
 
+            {/* Featured */}
+      {!!featured?.length && (
+        <section>
+          <SectionHead
+            title="New Release"
+            subtitle="Hand-picked favourites from our collection."
+            to="/products"
+          />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
         <SectionHead
           title="Shop by category"
@@ -234,24 +250,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* Featured */}
-      {!!featured?.length && (
-        <section>
-          <SectionHead
-            title="Featured"
-            subtitle="Hand-picked favourites from our collection."
-            to="/products"
-          />
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard key={p._id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* How it works */}
-      <section>
+      {/* <section>
         <div className="mb-10 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
             How it works
@@ -277,7 +276,7 @@ export function Home() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Bestsellers */}
       {!!bestsellers?.length && (
@@ -481,6 +480,33 @@ export function About() {
           </Link>
         </div>
       </section>
+    </div>
+  );
+}
+
+export function HowToOrder() {
+  return (
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="How to Order"
+        subtitle="From choosing a product to opening the parcel, ordering takes four simple steps."
+      />
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {STEPS.map(({ icon: Icon, title, text }, i) => (
+          <div key={title} className={`${ui.card} relative p-6`}>
+            <span className="absolute right-5 top-4 text-4xl font-extrabold text-[#000000]">
+              {i + 1}
+            </span>
+            <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#000000]/10 text-xl text-[#000000]">
+              <Icon />
+            </span>
+            <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              {text}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

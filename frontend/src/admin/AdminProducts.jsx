@@ -88,7 +88,7 @@ export default function AdminProducts() {
           <input className="input" type="number" placeholder="Sale price" value={form.salePrice} onChange={(e) => set('salePrice', e.target.value)} />        
         </div>
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Active</label>
-        <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} /> Featured</label>
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} />New Release</label>
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.bestseller} onChange={(e) => set('bestseller', e.target.checked)} /> Bestseller</label>
         <p className="text-sm font-medium">Images</p>
         <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={upload} />

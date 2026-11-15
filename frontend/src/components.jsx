@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import logo from "./assets/logo.jpeg";
+import blackImage from "./assets/blackImage.png";
+import whiteImage from "./assets/whiteImage.png";
 import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import {
   FiAlertCircle,
@@ -63,9 +65,7 @@ function overlayStyle(p = {}) {
 
 export function TopBar() {
   return (
-    <div className="bg-[#000000] px-4 py-2.5 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
-      {ANNOUNCEMENT}
-    </div>
+    <div className="bg-[#000000] px-4 text-center text-xs font-medium tracking-wide text-white sm:text-sm"></div>
   );
 }
 export function GlobalLoader() {
@@ -83,6 +83,17 @@ export function Header() {
   const cart = useCart();
   const { store, categories } = useStore();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const light = scrolled || hovered;
 
   const { customer } = useAuth();
 
@@ -93,13 +104,6 @@ export function Header() {
     };
   }, [open]);
 
-  const desktopLink = ({ isActive }) =>
-    `relative py-1 transition-colors hover:text-[#000000] ${
-      isActive
-        ? "text-[#000000] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-[#000000]"
-        : "text-slate-600"
-    }`;
-
   const mobileLinkClass = ({ isActive }) =>
     `block min-h-[44px] rounded-md px-3 py-3 font-medium transition ${
       isActive
@@ -107,84 +111,100 @@ export function Header() {
         : "text-slate-700 hover:bg-slate-50"
     }`;
 
+  const iconBtn = `relative inline-flex h-10 w-10 items-center justify-center rounded-md text-xl transition ${
+    light ? "text-black hover:bg-black/5" : "text-white hover:bg-white/10"
+  }`;
+
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-2">
+      <header
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={`sticky top-0 z-40 border-b shadow-sm backdrop-blur-md transition-colors duration-300 ${
+          light ? "border-slate-200 bg-white" : "border-black bg-black"
+        }`}
+      >
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-1 px-2 sm:py-1">
+          {/* Left: Menu */}
+          <div
+            className={`flex items-center justify-start gap-1 transition-colors ${
+              light ? "text-black" : "text-white"
+            }`}
+          >
             <button
               type="button"
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-xl text-slate-800 transition hover:bg-slate-100 lg:hidden"
+              className={iconBtn}
               aria-label="Open menu"
               onClick={() => setOpen(true)}
             >
               <FiMenu />
             </button>
+            <span className="hidden sm:inline">Menu</span>
+          </div>
+
+          {/* Center: Logo */}
+          <div className="flex items-center justify-center">
             <Link
               to="/"
-              className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#000000]"
+              className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-[#000000] sm:text-xl"
             >
-              <img
-                src={logo}
-                alt={store?.storeName || "Craftagon"}
-                className="h-10 w-10 rounded-md object-cover"
-              />
-              {store?.storeName || "Craftagon"}
+              <span className="relative block h-20 w-[150px] sm:h-14 sm:w-[200px]">
+                <img
+                  src={blackImage}
+                  alt={store?.storeName || "Craftagon"}
+                  className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                    light ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                <img
+                  src={whiteImage}
+                  alt=""
+                  aria-hidden="true"
+                  className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                    light ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              </span>
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-6 text-sm font-medium lg:flex">
-            <NavLink to="/products" className={desktopLink}>
-              Shop
-            </NavLink>
-            <NavLink to="/about" className={desktopLink}>
-              About
-            </NavLink>
-            <NavLink to="/faq" className={desktopLink}>
-              FAQ
-            </NavLink>
-            <NavLink to="/help" className={desktopLink}>
-              Help & Support
-            </NavLink>
-            <NavLink to="/contact" className={desktopLink}>
-              Contact
-            </NavLink>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <Link
-              to="/order-lookup"
-              className="hidden min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-[#000000] sm:inline-flex"
-            >
-              <FiPackage /> Track order
-            </Link>
-            <Link
-              to={customer ? "/account" : "/login"}
-              className="hidden min-h-[44px] items-center gap-1.5 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-[#000000] sm:inline-flex"
-            >
-              <FiUser />{" "}
-              {customer
-                ? customer.fullName?.split(" ")[0] || "My Account"
-                : "Login"}
-            </Link>
-            <Link
-              to="/cart"
-              className="relative inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#000000] px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
-            >
-              <FiShoppingCart className="text-base" />
-              Cart
+          {/* Right: Cart, Account, Track order (icons only) */}
+          <div className="flex items-center justify-end">
+            <Link to="/cart" className={iconBtn} aria-label="Cart" title="Cart">
+              <FiShoppingCart />
               {cart.count > 0 && (
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1.5 text-xs font-bold text-[#000000]">
+                <span
+                  className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full gap-1 text-xs font-bold ${
+                    light ? "bg-black text-white" : "bg-white text-[#000000]"
+                  }`}
+                >
                   {cart.count}
                 </span>
               )}
+            </Link>
+            <Link
+              to={customer ? "/account" : "/login"}
+              className={iconBtn}
+              aria-label={customer ? "My account" : "Login"}
+              title={customer ? "My account" : "Login"}
+            >
+              <FiUser />
+            </Link>
+            <Link
+              to="/order-lookup"
+              className={iconBtn}
+              aria-label="Track order"
+              title="Track order"
+            >
+              <FiPackage />
             </Link>
           </div>
         </div>
       </header>
 
+      {/* Drawer (all screen sizes) */}
       <div
-        className={`fixed inset-0 z-50 lg:hidden ${open ? "" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}
       >
         <button
           type="button"
@@ -211,50 +231,24 @@ export function Header() {
           <nav className="flex-1 overflow-y-auto p-4 text-base">
             <NavLink
               to="/"
+              end
               className={mobileLinkClass}
               onClick={() => setOpen(false)}
             >
               Home
             </NavLink>
+
+            <p className="mb-1 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Products
+            </p>
             <NavLink
               to="/products"
+              end
               className={mobileLinkClass}
               onClick={() => setOpen(false)}
             >
               All Products
             </NavLink>
-            <NavLink
-              to="/about"
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              About Us
-            </NavLink>
-            <NavLink
-              to="/order-lookup"
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              Track Order
-            </NavLink>
-            <NavLink
-              to="/cart"
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              Cart
-            </NavLink>
-            <NavLink
-              to={customer ? "/account" : "/login"}
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              {customer ? "My Account" : "Login / Register"}
-            </NavLink>
-
-            <p className="mb-1 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Categories
-            </p>
             {categories?.map((c) => (
               <NavLink
                 key={c._id}
@@ -266,30 +260,36 @@ export function Header() {
               </NavLink>
             ))}
 
-            <p className="mb-1 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Support
-            </p>
-            <NavLink
-              to="/faq"
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              FAQ
-            </NavLink>
-            <NavLink
-              to="/help"
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              Help & Support
-            </NavLink>
-            <NavLink
-              to="/contact"
-              className={mobileLinkClass}
-              onClick={() => setOpen(false)}
-            >
-              Contact Us
-            </NavLink>
+            <div className="mt-6 border-t border-slate-100 pt-4">
+              <NavLink
+                to="/how-to-order"
+                className={mobileLinkClass}
+                onClick={() => setOpen(false)}
+              >
+                How to Order
+              </NavLink>
+              <NavLink
+                to="/about"
+                className={mobileLinkClass}
+                onClick={() => setOpen(false)}
+              >
+                About
+              </NavLink>
+              <NavLink
+                to="/faq"
+                className={mobileLinkClass}
+                onClick={() => setOpen(false)}
+              >
+                FAQ
+              </NavLink>
+              <NavLink
+                to="/contact"
+                className={mobileLinkClass}
+                onClick={() => setOpen(false)}
+              >
+                Contact
+              </NavLink>
+            </div>
           </nav>
         </aside>
       </div>
@@ -445,7 +445,7 @@ export function Footer() {
 
 export function Layout() {
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-slate-50 text-slate-900">
       <TopBar />
       <GlobalLoader />
       <Header />

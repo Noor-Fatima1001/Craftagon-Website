@@ -17,6 +17,7 @@ import {
   Help,
   LoginPage,
   AccountPage,
+  HowToOrder,
 } from "./pages";
 import {
   AdminLogin,
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/faq" element={<Faq />} />
           <Route path="/policies" element={<Policies />} />
           <Route path="/about" element={<About />} />
+          <Route path="/how-to-order" element={<HowToOrder />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/help" element={<Help />} />
           <Route path="/login" element={<LoginPage />} />

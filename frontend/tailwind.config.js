@@ -6,8 +6,8 @@ export default {
         accent: "black",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-      },
+  sans: ["Inter", "ui-sans-serif", "system-ui", "Arial", "sans-serif"],
+},
     },
   },
   plugins: [],

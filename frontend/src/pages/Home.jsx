@@ -47,7 +47,7 @@ export default function Home() {
         </div>
       </section>
       <section className="mx-auto max-w-6xl px-4 py-8">
-        <h2 className="font-display text-3xl">Featured</h2>
+        <h2 className="font-display text-3xl">New Release</h2>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 md:grid-cols-4">
           {data.featured.map((p) => <ProductCard key={p._id} product={p} />)}
         </div>

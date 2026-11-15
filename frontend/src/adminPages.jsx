@@ -61,7 +61,7 @@ function Loading({ text = "Loading…" }) {
   return <p className="py-10 text-center text-sm text-slate-500">{text}</p>;
 }
 
-const thClass = "px-6 py-3 text-left";
+const thClass = "px-6 py-3 text-left bg-black";
 const tdClass = "px-6 py-3.5";
 const theadClass = " border-slate-200 bg-accent text-white text-sm font-semibold uppercase text-slate-500";
 const checkboxClass = "h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent";
@@ -449,7 +449,7 @@ export function ProductForm() {
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-3">
             <label className={checkLabelClass}><input className={checkboxClass} type="checkbox" checked={!!form.active} onChange={(e) => set("active", e.target.checked)} /> Active</label>
-            <label className={checkLabelClass}><input className={checkboxClass} type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} /> Featured</label>
+            <label className={checkLabelClass}><input className={checkboxClass} type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} />New Release</label>
             <label className={checkLabelClass}><input className={checkboxClass} type="checkbox" checked={!!form.bestseller} onChange={(e) => set("bestseller", e.target.checked)} /> Bestseller</label>
           </div>
         </Section>
