@@ -12,6 +12,7 @@ const badgeStyles = {
   processing: "bg-violet-50 text-violet-700 ring-violet-600/20",
   dispatched: "bg-cyan-50 text-cyan-700 ring-cyan-600/20",
   delivered: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+  completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
   cancelled: "bg-rose-50 text-rose-700 ring-rose-600/20",
   paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
   verified: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
@@ -658,7 +659,7 @@ useEffect(() => { load(1); }, []);
         <input className="input w-full sm:max-w-sm" placeholder="Search name, email, phone, order #" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="input w-full sm:max-w-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
-          {["pending_payment", "payment_submitted", "confirmed", "processing", "dispatched", "delivered", "cancelled"].map((s) => <option key={s}>{s}</option>)}
+          {["pending_payment", "payment_submitted", "confirmed", "processing", "dispatched", "delivered", "completed", "cancelled"].map((s) => <option key={s}>{s}</option>)}
         </select>
         <button className="btn px-10" onClick={load}>Filter</button>
       </div>
@@ -722,7 +723,12 @@ export function OrderDetail() {
   async function setStatus(status) {
     try {
       const r = await api.updateOrder(id, { status, note, courierName: courier, trackingNumber: tracking });
-      setMsg(`Updated to ${r.order.status}`);
+      const emailMessages = [];
+      if (r.statusEmail?.sent) emailMessages.push(`${status} email sent.`);
+      else if (r.statusEmail?.reason) emailMessages.push(`${status} email failed and will be retried.`);
+      if (r.reviewEmails?.sent) emailMessages.push(`${r.reviewEmails.sent} review request email(s) sent.`);
+      if (r.reviewEmails?.failed) emailMessages.push(`${r.reviewEmails.failed} review request email(s) failed and will be retried.`);
+      setMsg([`Updated to ${r.order.status}.`, ...emailMessages].join(" "));
       setErr("");
       await load();
     } catch (e) {
@@ -757,9 +763,18 @@ export function OrderDetail() {
           ))}
         </div>
         <div className="space-y-1.5 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
-          <p>Subtotal {money(o.subtotal)} · Delivery charges {money(o.deliveryFee)} · <span className="font-semibold text-slate-900">Total {money(o.total)}</span></p>
-          <p>Advance payment {money(o.advanceAmount)} · Remaining balance (COD) {money(o.remainingCod)}</p>
-        </div>
+  <p>
+    Subtotal {money(o.subtotal)}
+    {o.discount > 0 && <> · Discount - {money(o.discount)}</>} · Delivery charges {money(o.deliveryFee)} ·{" "}
+    <span className="font-semibold text-slate-900">Total {money(o.total)}</span>
+  </p>
+  <p>
+    {o.paymentMethod === "bank_transfer" ? "Full payment (Bank Transfer)" : "Advance payment"} {money(o.advanceAmount)} · Remaining balance (COD) {money(o.remainingCod)}
+  </p>
+  <p>
+    Payment: {o.paymentMethod === "bank_transfer" ? "Bank Transfer" : "Cash on Delivery"} · Coupon: {o.couponCode || "—"}
+  </p>
+</div>
       </Section>
 
       <Section title="Payment submissions">
@@ -781,7 +796,7 @@ export function OrderDetail() {
           <Field label="Note"><input className="input" value={note} onChange={(e) => setNote(e.target.value)} /></Field>
         </div>
         <div className="flex flex-wrap gap-2">
-          {["processing", "dispatched", "delivered"].map((s) => (
+          {["processing", "dispatched", "delivered", "completed"].map((s) => (
             <button key={s} className="btn-outline capitalize" onClick={() => setStatus(s)}>{s}</button>
           ))}
           <button className="btn-outline !border-rose-200 !text-rose-600 hover:!bg-rose-50" onClick={() => setStatus("cancelled")}>Cancel order</button>
@@ -869,39 +884,445 @@ export function Payments() {
   );
 }
 
+export function Reviews() {
+  const [reviews, setReviews] = useState([]);
+  const [status, setStatus] = useState("pending");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busyId, setBusyId] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  async function load(nextPage = 1) {
+    setLoading(true);
+    try {
+      const query = new URLSearchParams({ status, page: String(nextPage), limit: "20" });
+      const data = await api.adminReviews(`?${query}`);
+      setReviews(data.reviews);
+      setPage(data.page);
+      setPages(data.pages);
+      setTotal(data.total);
+      setErr("");
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load(1);
+  }, [status]);
+
+  async function moderate(reviewId, nextStatus) {
+    setBusyId(reviewId);
+    setErr("");
+    setMsg("");
+    try {
+      await api.moderateReview(reviewId, nextStatus);
+      setMsg(`Review ${nextStatus}.`);
+      await load(page);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function remove(reviewId) {
+    if (!window.confirm("Delete this review permanently?")) return;
+    setBusyId(reviewId);
+    setErr("");
+    setMsg("");
+    try {
+      await api.deleteReview(reviewId);
+      setMsg("Review deleted.");
+      await load(page);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Product reviews" subtitle="Approve reviews to make them visible on product pages." />
+      {err && <Alert>{err}</Alert>}
+      {msg && <Alert kind="ok">{msg}</Alert>}
+      <div className="flex flex-wrap gap-2">
+        {["pending", "approved", "rejected"].map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setStatus(item)}
+            aria-pressed={status === item}
+            className={`rounded-full px-4 py-2 text-sm font-semibold capitalize ${
+              status === item ? "bg-[#000000] text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"
+            }`}
+          >
+            {item}
+          </button>
+        ))}
+        <span className="ml-auto self-center text-sm text-slate-500">{total} {total === 1 ? "review" : "reviews"}</span>
+      </div>
+      <div className="space-y-3">
+        {loading && <Loading />}
+        {reviews.map((review) => (
+          <article key={review._id} className="card space-y-4 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold text-slate-900">{review.title}</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {review.product?.name || "Product removed"} · Order {review.order?.orderNumber || "—"}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {review.customerName} · {new Date(review.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 text-amber-400" aria-label={`${review.rating} out of 5 stars`}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star} className={star <= review.rating ? "font-bold" : "text-slate-300"}>★</span>
+                ))}
+              </div>
+            </div>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{review.comment}</p>
+            <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+              <Badge value={review.status} />
+              {review.verifiedPurchase && (
+                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  Verified Purchase
+                </span>
+              )}
+              <span className="flex-1" />
+              {review.status !== "approved" && (
+                <button className="btn" disabled={busyId === review._id} onClick={() => moderate(review._id, "approved")}>
+                  Approve
+                </button>
+              )}
+              {review.status !== "rejected" && (
+                <button
+                  className="btn-outline !border-rose-200 !text-rose-600 hover:!bg-rose-50"
+                  disabled={busyId === review._id}
+                  onClick={() => moderate(review._id, "rejected")}
+                >
+                  Reject
+                </button>
+              )}
+              <button
+                className="btn-outline !border-rose-200 !text-rose-600 hover:!bg-rose-50"
+                disabled={busyId === review._id}
+                onClick={() => remove(review._id)}
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        ))}
+        {!loading && !reviews.length && !err && (
+          <div className="card p-8 text-center text-sm text-slate-500">No {status} reviews.</div>
+        )}
+      </div>
+      <div className="card overflow-hidden p-0">
+        <Pagination page={page} pages={pages} onChange={load} />
+      </div>
+    </div>
+  );
+}
+
 export function Coupons() {
   const [list, setList] = useState([]);
-  const [form, setForm] = useState({ code: "", type: "percent", value: 10, minOrder: 0, maxDiscount: "", usageLimit: "" });
-  useEffect(() => { api.coupons().then((d) => setList(d.coupons)); }, []);
+  const [products, setProducts] = useState([]);
+const [productSearch, setProductSearch] = useState("");
+const [historyFor, setHistoryFor] = useState(null);
+  const emptyForm = {
+    code: "",
+    type: "percent",
+    value: 10,
+    minOrder: 0,
+    maxDiscount: "",
+    usageLimit: "",
+    expiresAt: "",
+    active: true,
+    applicableProducts: [],
+  };
+  const [form, setForm] = useState(emptyForm);
+  const [editing, setEditing] = useState(null);
+  const [err, setErr] = useState("");
+  async function load() {
+    const data = await api.coupons();
+    setList(data.coupons || []);
+  }
+  useEffect(() => {
+    load().catch((e) => setErr(e.message));
+  }, []);
+  useEffect(() => {
+  api.adminProducts("?limit=100").then((d) => setProducts(d.products)).catch(() => {});
+}, []);
   async function save(e) {
     e.preventDefault();
-    await api.saveCoupon(null, form);
-    api.coupons().then((d) => setList(d.coupons));
+    try {
+      await api.saveCoupon(editing, {
+        ...form,
+        value: Number(form.value),
+        minOrder: Number(form.minOrder),
+        maxDiscount: form.maxDiscount === "" ? null : Number(form.maxDiscount),
+        usageLimit: form.usageLimit === "" ? null : Number(form.usageLimit),
+        expiresAt: form.expiresAt || null,
+        applicableProducts: (form.applicableProducts || []).map((p) => p._id || p),
+      });
+      setForm(emptyForm);
+      setEditing(null);
+      setErr("");
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+  async function toggle(coupon) {
+    try {
+      await api.saveCoupon(coupon._id, { active: !coupon.active });
+      setErr("");
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+  async function remove(coupon) {
+    if (!window.confirm(`Delete coupon "${coupon.code}"?`)) return;
+    try {
+      await api.deleteCoupon(coupon._id);
+      if (editing === coupon._id) {
+        setEditing(null);
+        setForm(emptyForm);
+      }
+      setErr("");
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    }
   }
   return (
     <div className="space-y-6">
       <PageHeader title="Coupons" subtitle="Create and manage discount codes." />
-      <form onSubmit={save} className="card grid gap-3 p-4 md:grid-cols-5">
-        <input className="input" placeholder="CODE" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-        <select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-          <option value="percent">percent</option>
-          <option value="fixed">fixed</option>
-        </select>
-        <input className="input" type="number" value={form.value} onChange={(e) => setForm({ ...form, value: Number(e.target.value) })} />
-        <input className="input" type="number" placeholder="Min order" value={form.minOrder} onChange={(e) => setForm({ ...form, minOrder: Number(e.target.value) })} />
-        <button className="btn">Add</button>
+      {err && <Alert>{err}</Alert>}
+      <form onSubmit={save} className="card grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+        <Field label="Coupon code">
+          <input
+            className="input uppercase"
+            required
+            maxLength={40}
+            placeholder="CODE"
+            value={form.code}
+            onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+          />
+        </Field>
+        <Field label="Discount type">
+          <select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            <option value="percent">Percentage</option>
+            <option value="fixed">Fixed amount</option>
+          </select>
+        </Field>
+        <Field label={form.type === "percent" ? "Discount percentage" : "Discount amount (PKR)"}>
+          <input className="input" type="number" min="0.01" step="0.01" required value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
+        </Field>
+        <Field label="Minimum order amount (PKR)">
+          <input className="input" type="number" min="0" step="1" value={form.minOrder} onChange={(e) => setForm({ ...form, minOrder: e.target.value })} />
+        </Field>
+        <Field label="Maximum discount (PKR, optional)">
+          <input className="input" type="number" min="0" step="1" value={form.maxDiscount} onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })} />
+        </Field>
+        <Field label="Usage limit (blank for unlimited)">
+          <input className="input" type="number" min="0" step="1" value={form.usageLimit} onChange={(e) => setForm({ ...form, usageLimit: e.target.value })} />
+        </Field>
+        <Field label="Expiry date (optional)">
+          <input
+            className="input"
+            type="date"
+            value={form.expiresAt}
+            onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+          />
+        </Field>
+        <div className="sm:col-span-2">
+  <Field label={`Applicable products (${form.applicableProducts.length ? form.applicableProducts.length + " selected" : "all products"})`}>
+    <input
+      className="input mb-2"
+      placeholder="Search products"
+      value={productSearch}
+      onChange={(e) => setProductSearch(e.target.value)}
+    />
+    <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-slate-200 p-3">
+      {products
+        .filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+        .map((p) => (
+          <label key={p._id} className={checkLabelClass}>
+            <input
+              className={checkboxClass}
+              type="checkbox"
+              checked={form.applicableProducts.includes(p._id)}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  applicableProducts: e.target.checked
+                    ? [...form.applicableProducts, p._id]
+                    : form.applicableProducts.filter((id) => id !== p._id),
+                })
+              }
+            />
+            {p.name}
+          </label>
+        ))}
+    </div>
+  </Field>
+  <p className={`${helpText} mt-1`}>Kuch select na karo to coupon sab products par chalega.</p>
+</div>
+        <label className={checkLabelClass}>
+          <input className={checkboxClass} type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+          Active
+        </label>
+        <div className="flex gap-2 sm:col-span-2 sm:justify-end">
+          <button className="btn">{editing ? "Update coupon" : "Create coupon"}</button>
+          {editing && (
+            <button type="button" className="btn-outline" onClick={() => { setEditing(null); setForm(emptyForm); }}>
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
       <ul className="space-y-3">
         {list.map((c) => (
-          <li key={c._id} className="card flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-            <span className="text-sm text-slate-700">
-              <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-900">{c.code}</span>
-              <span className="ml-3">{c.type} {c.value} · used {c.usedCount}</span>
-            </span>
-            <button className="btn-outline !border-rose-200 !text-rose-600 hover:!bg-rose-50" onClick={async () => { await api.deleteCoupon(c._id); setList(list.filter((x) => x._id !== c._id)); }}>Delete</button>
+          <li key={c._id} className="card flex flex-wrap items-center justify-between gap-3 px-4 py-4">
+            <div className="space-y-1 text-sm text-slate-700">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-900">{c.code}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${c.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                  {c.active ? "Active" : "Inactive"}
+                </span>
+                <span>{c.type === "percent" ? `${c.value}% off` : `${money(c.value)} off`}</span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Minimum {money(c.minOrder || 0)} · Used {c.usedCount || 0}{c.usageLimit > 0 ? ` / ${c.usageLimit}` : " · Unlimited"}
+                {c.expiresAt ? ` · Expires ${new Date(c.expiresAt).toLocaleDateString()}` : ""}
+                {c.maxDiscount > 0 ? ` · Max discount ${money(c.maxDiscount)}` : ""}
+              </p>
+              <p className="text-xs text-slate-500">
+  {c.applicableProducts?.length
+    ? `Only on: ${c.applicableProducts.map((p) => p.name).join(", ")}`
+    : "All products"}
+</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={() => {
+                  setEditing(c._id);
+                  setErr("");
+                  setForm({
+                    code: c.code || "",
+                    type: c.type || "percent",
+                    value: c.value ?? 10,
+                    minOrder: c.minOrder ?? 0,
+                    expiresAt: c.expiresAt ? new Date(c.expiresAt).toISOString().slice(0, 10) : "",
+                    maxDiscount: c.maxDiscount ?? "",
+                    usageLimit: c.usageLimit ?? "",
+                    active: c.active !== false,
+                    applicableProducts: (c.applicableProducts || []).map((p) => p._id || p),
+                  });
+                }}
+              >
+                Edit
+              </button>
+              <button type="button" className="btn-outline" onClick={() => setHistoryFor(historyFor === c._id ? null : c._id)}>
+  {historyFor === c._id ? "Hide history" : "Usage history"}
+</button>
+              <button type="button" className="btn-outline" onClick={() => toggle(c)}>
+                {c.active ? "Deactivate" : "Activate"}
+              </button>
+              <button type="button" className={dangerBtn} onClick={() => remove(c)}>Delete</button>
+            </div>
+            {historyFor === c._id && <CouponHistory coupon={c} />}
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function CouponHistory({ coupon }) {
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  async function load(page = 1) {
+    setLoading(true);
+    try {
+      setData(await api.couponUsage(coupon._id, `?page=${page}&limit=10`));
+      setErr("");
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { load(1); }, [coupon._id]);
+
+  return (
+    <div className="mt-3 w-full overflow-hidden rounded-md border border-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-4 py-3 text-sm">
+        <span className="font-semibold text-slate-900">Usage history: {coupon.code}</span>
+        {data && (
+          <span className="text-slate-600">
+            {data.total} {data.total === 1 ? "use" : "uses"} · Total discount given {money(data.totalDiscount)}
+          </span>
+        )}
+      </div>
+      {err && <div className="p-4"><Alert>{err}</Alert></div>}
+      {loading && !data ? (
+        <Loading text="Loading history…" />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className={theadClass}>
+              <tr>
+                <th className={thClass}>Date</th>
+                <th className={thClass}>Customer</th>
+                <th className={thClass}>Order</th>
+                <th className={`${thClass} text-right`}>Discount</th>
+                <th className={`${thClass} text-right`}>Order total</th>
+                <th className={thClass}>Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {data?.usages.map((u) => (
+                <tr key={u._id}>
+                  <td className={tdClass}>{new Date(u.createdAt).toLocaleString()}</td>
+                  <td className={tdClass}>
+                    <div className="font-medium text-slate-900">{u.customerName || "—"}</div>
+                    <div className="text-xs text-slate-500">{u.customerEmail} · {u.customerPhone}</div>
+                  </td>
+                  <td className={tdClass}>
+                    <Link className="text-accent hover:underline" to={`/admin/orders/${u.order?._id || u.order}`}>
+                      {u.orderNumber}
+                    </Link>
+                  </td>
+                  <td className={`${tdClass} text-right tabular-nums`}>{money(u.discountAmount)}</td>
+                  <td className={`${tdClass} text-right tabular-nums`}>{money(u.orderTotal)}</td>
+                  <td className={tdClass}>
+                    <Badge value={u.status === "released" ? "cancelled" : "verified"} />
+                  </td>
+                </tr>
+              ))}
+              {data && !data.usages.length && (
+                <tr><td className="px-4 py-10 text-center text-sm text-slate-500" colSpan="6">This coupon has not been used yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {data && <Pagination page={data.page} pages={data.pages} onChange={load} />}
     </div>
   );
 }

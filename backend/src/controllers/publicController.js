@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
-const { body, validationResult } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const Order = require("../models/Order");
 const PaymentSubmission = require("../models/PaymentSubmission");
 const Customer = require("../models/Customer");
+const ProductReview = require("../models/ProductReview");
 const env = require("../config/env");
 const AppError = require("../utils/AppError");
 const asyncHandler = require("../utils/asyncHandler");
@@ -14,6 +15,7 @@ const { createOrder, publicOrder } = require("../services/orderService");
 const { whatsappLink, orderWhatsAppMessage } = require("../utils/whatsapp");
 const { normalizeOrderNumber } = require("../utils/ids");
 const emailService = require("../services/emailService");
+const reviewService = require("../services/reviewService");
 
 function validate(req) {
   const errors = validationResult(req);
@@ -81,6 +83,62 @@ const getProduct = asyncHandler(async (req, res) => {
   res.json({ product });
 });
 
+const getProductReviews = asyncHandler(async (req, res) => {
+  const product = await Product.findOne({ slug: req.params.slug, active: true }).select("_id");
+  if (!product) throw new AppError("Product not found", 404);
+
+  const [summary, reviews] = await Promise.all([
+    ProductReview.aggregate([
+      { $match: { product: product._id, status: "approved" } },
+      {
+        $group: {
+          _id: null,
+          average: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+    ProductReview.find({ product: product._id, status: "approved" })
+      .select("customerName rating title comment verifiedPurchase createdAt")
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean(),
+  ]);
+
+  res.json({
+    summary: {
+      average: summary.length ? Number(summary[0].average.toFixed(1)) : 0,
+      count: summary.length ? summary[0].count : 0,
+    },
+    reviews,
+  });
+});
+
+const reviewTokenValidators = [
+  param("token").isHexadecimal().isLength({ min: 64, max: 64 }),
+];
+
+const productReviewValidators = [
+  body("rating").isInt({ min: 1, max: 5 }).withMessage("Rating must be between 1 and 5"),
+  body("title").trim().isLength({ min: 3, max: 120 }).withMessage("Review title must be between 3 and 120 characters"),
+  body("comment").trim().isLength({ min: 10, max: 2000 }).withMessage("Comment must be between 10 and 2000 characters"),
+];
+
+const getReviewInvitation = asyncHandler(async (req, res) => {
+  validate(req);
+  res.json({ invitation: await reviewService.getReviewRequest(req.params.token) });
+});
+
+const postProductReview = asyncHandler(async (req, res) => {
+  validate(req);
+  const review = await reviewService.submitReview(req.params.token, {
+    rating: Number(req.body.rating),
+    title: String(req.body.title).trim(),
+    comment: String(req.body.comment).trim(),
+  });
+  res.status(201).json({ review: { id: review._id, status: review.status } });
+});
+
 const listCategories = asyncHandler(async (_req, res) => {
   const categories = await Category.find({ active: true }).sort({ sortOrder: 1, name: 1 });
   res.json({ categories });
@@ -110,6 +168,8 @@ const quoteValidators = [
   body("items.*.colorVariantId").optional().isMongoId(),
   body("city").optional().isString(),
   body("province").optional().isString(),
+  body("couponCode").optional().isString().isLength({ max: 40 }),
+  body("paymentOption").optional().isIn(["cod", "bank_transfer"]),
 ];
 
 const postQuote = asyncHandler(async (req, res) => {
@@ -118,21 +178,25 @@ const postQuote = asyncHandler(async (req, res) => {
   const ids = req.body.items.map((i) => i.productId);
   const products = await Product.find({ _id: { $in: ids } });
   const productsById = new Map(products.map((p) => [String(p._id), p]));
-  const priced = await quote({
-    productsById,
-    cartItems: req.body.items,
-    settings,
-    city: req.body.city,
-    province: req.body.province,
-  });
-  res.json({
-    subtotal: priced.subtotal,
-    deliveryFee: priced.deliveryFee,
-    total: priced.total,
-    advanceAmount: priced.advanceAmount,
-    remainingCod: priced.remainingCod,
-    items: priced.items,
-  });
+ const priced = await quote({
+  productsById,
+  cartItems: req.body.items,
+  settings,
+  city: req.body.city,
+  province: req.body.province,
+  couponCode: req.body.couponCode,
+  paymentOption: req.body.paymentOption,
+});
+res.json({
+  subtotal: priced.subtotal,
+  discount: priced.discount || 0,
+  couponCode: priced.couponCode || "",
+  deliveryFee: priced.deliveryFee,
+  total: priced.total,
+  advanceAmount: priced.advanceAmount,
+  remainingCod: priced.remainingCod,
+  items: priced.items,
+});
 });
 
 const orderValidators = [
@@ -150,6 +214,8 @@ const orderValidators = [
   body("customer.address").trim().isLength({ min: 8, max: 300 }),
   body("customer.landmark").optional().isString().isLength({ max: 120 }),
   body("customer.notes").optional().isString().isLength({ max: 400 }),
+  body("couponCode").optional().isString().isLength({ max: 40 }),
+  body("paymentMethod").optional().isIn(["cod", "bank_transfer"]),
 ];
 
 const postOrder = asyncHandler(async (req, res) => {
@@ -158,6 +224,8 @@ const postOrder = asyncHandler(async (req, res) => {
     cartItems: req.body.items,
     customer: req.body.customer,
     idempotencyKey: req.body.idempotencyKey,
+    couponCode: req.body.couponCode,
+    paymentMethod: req.body.paymentMethod,
   });
   const settings = await getSettings();
   const message = orderWhatsAppMessage(order, settings);
@@ -172,7 +240,7 @@ const postOrder = asyncHandler(async (req, res) => {
 
 const lookupOrder = asyncHandler(async (req, res) => {
   const { orderNumber, email, token } = req.query;
-  if (!orderNumber) throw new AppError("Order number is required", 400);
+  if (!orderNumber) throw new AppError("Order ID is required", 400);
   const order = await Order.findOne({ orderNumber: normalizeOrderNumber(orderNumber) });
   if (!order) throw new AppError("Order not found", 404);
   const emailOk = email && String(email).toLowerCase().trim() === String(order.customer.email).toLowerCase();
@@ -309,6 +377,11 @@ const postContact = asyncHandler(async (req, res) => {
 module.exports = {
   listProducts,
   getProduct,
+  getProductReviews,
+  reviewTokenValidators,
+  productReviewValidators,
+  getReviewInvitation,
+  postProductReview,
   listCategories,
   getStore,
   quoteValidators,

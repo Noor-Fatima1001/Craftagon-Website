@@ -13,6 +13,7 @@ import {
   FiPackage,
   FiSettings,
   FiShoppingCart,
+  FiStar,
   FiTag,
   FiUser,
   FiX,
@@ -30,7 +31,7 @@ export const ui = {
     "inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-[#000000] hover:text-[#000000] disabled:opacity-60",
   btnLight:
     "inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#000000] shadow-md transition hover:bg-slate-100",
-  card: "rounded-2xl border border-slate-200 bg-white shadow-sm",
+  card: "rounded-md border border-slate-200 bg-white shadow-sm",
   input:
     "w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-[#000000] focus:outline-none focus:ring-4 focus:ring-[#000000]/15",
   pageTitle:
@@ -548,6 +549,8 @@ export function AdminShell() {
     ["Categories", "/admin/categories", FiTag],
     ["Orders", "/admin/orders", FiPackage],
     ["Payments", "/admin/payments", FiCreditCard],
+    ["Reviews", "/admin/reviews", FiStar],
+    ["Coupons", "/admin/coupons", FiTag],
     ["Settings", "/admin/settings", FiSettings],
     ["Reports", "/admin/reports", FiBarChart2],
     ["Profile", "/admin/profile", FiUser],

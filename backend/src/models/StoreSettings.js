@@ -23,7 +23,7 @@ const storeSettingsSchema = new mongoose.Schema(
       body: {
         type: String,
         default:
-          "Need help with an order or a payment? Use Track Order with your order number and email, or send us a message on the Contact page. WhatsApp buttons only open a chat — nothing is sent until you press Send.",
+          "Need help with an order or a payment? Use Track Order with your Order ID and email, or send us a message on the Contact page. WhatsApp buttons only open a chat — nothing is sent until you press Send.",
       },
     },
     banners: { type: String, default: "" },

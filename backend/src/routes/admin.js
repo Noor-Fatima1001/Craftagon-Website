@@ -1,6 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { body } = require("express-validator");
+const { body, param } = require("express-validator");
 const { requireAdmin, requireCronSecret } = require("../middleware/auth");
 const { productUpload, bannerUpload } = require("../middleware/upload");
 const a = require("../controllers/adminController");
@@ -36,9 +36,25 @@ router.post("/categories", requireAdmin, a.saveCategory);
 router.put("/categories/:id", requireAdmin, a.saveCategory);
 router.delete("/categories/:id", requireAdmin, a.deleteCategory);
 
+router.get("/coupons", requireAdmin, a.listCoupons);
+router.post("/coupons", requireAdmin, a.saveCoupon);
+router.put("/coupons/:id", requireAdmin, param("id").isMongoId(), a.saveCoupon);
+router.delete("/coupons/:id", requireAdmin, param("id").isMongoId(), a.deleteCoupon);
+router.get("/coupons/:id/usage",requireAdmin, a.couponUsage);
+
 router.get("/orders", requireAdmin, a.listOrders);
 router.get("/orders/:id", requireAdmin, a.getOrder);
 router.patch("/orders/:id", requireAdmin, a.updateOrder);
+
+router.get("/reviews", requireAdmin, a.listReviews);
+router.patch(
+  "/reviews/:id",
+  requireAdmin,
+  param("id").isMongoId(),
+  body("status").isIn(["approved", "rejected"]),
+  a.updateReview
+);
+router.delete("/reviews/:id", requireAdmin, param("id").isMongoId(), a.deleteReview);
 
 router.get("/payments", requireAdmin, a.listPayments);
 router.get("/payments/:id/screenshot", requireAdmin, a.paymentScreenshot);

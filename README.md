@@ -60,11 +60,18 @@ Change the WhatsApp number in **Admin → Settings** as well.
 
 Uses Nodemailer and your SMTP host (for example a free-tier provider). Free tiers have daily/hourly send limits and can suspend accounts. If SMTP is missing, orders still succeed; the admin dashboard shows SMTP status. The app **does not claim an email was sent** when sending failed.
 
-Templates: order confirmation + advance instructions, payment verified/rejected, cancellation, dispatch with tracking.
+Templates: order confirmation + advance instructions, payment verified/rejected, cancellation, dispatch with tracking, delivered and completed status notifications, and delivered-order review requests.
+Failed Delivered/Completed and review emails are retried every 15 minutes when `ENABLE_INTERNAL_CRON` is enabled.
+
+## Verified purchase reviews
+
+When an admin changes an order to **Delivered** or **Completed**, the backend sends one review request per distinct product in the order. The email link is unique, stored as a hash, expires after 30 days, and can submit one review. Pending and failed requests, plus stale sends, are retried every 15 minutes when `ENABLE_INTERNAL_CRON` is enabled; a send claim is considered stale after 30 minutes.
+
+Review submissions require a valid delivery invitation and are validated on the backend. New reviews remain pending until an admin approves them under **Admin → Reviews**; only approved reviews and their ratings appear on product pages. Admins can also reject or delete reviews. The storefront uses a sans-serif font.
 
 ## WhatsApp
 
-Buttons open `https://wa.me/<number>?text=...` with a prefilled message (order number, advance amount, payment instructions). **The customer or admin must press Send.** Nothing is sent automatically. Do not add a paid WhatsApp API.
+Buttons open `https://wa.me/<number>?text=...` with a prefilled message (Order ID, advance amount, payment instructions). **The customer or admin must press Send.** Nothing is sent automatically. Do not add a paid WhatsApp API.
 
 ## Manual payments
 
@@ -125,13 +132,13 @@ Local disk is fine for development. Production object storage (S3, etc.) usually
 - Admin passwords hashed with bcrypt (cost 12)
 - HttpOnly session cookie + optional Bearer token
 - Helmet, CORS allowlist, rate limits, mongo sanitization, request validation
-- Order lookup requires `orderNumber` **and** a secret `token` (not guessable from the order number alone)
+- Order lookup requires `orderNumber` **and** a secret `token` (not guessable from the Order ID alone)
 - Audit log for payment verification, cancellation, product/settings changes
 - Do not expose `.env`, payment proofs, or customer exports publicly
 
 ## Main customer flow
 
-Browse → enter custom text → live 2D preview → cart (same product + different text stays separate) → checkout → thank-you page with order number, totals snapshot, payment instructions, WhatsApp button → upload proof → admin verifies → dispatch with courier/tracking.
+Browse → enter custom text → live 2D preview → cart (same product + different text stays separate) → checkout → thank-you page with Order ID, totals snapshot, payment instructions, WhatsApp button → upload proof → admin verifies → dispatch with courier/tracking → delivery → review email → admin approval → public product review.
 
 ## Scripts
 

@@ -11,6 +11,7 @@ import {
   OrderLookup,
   Policies,
   ProductDetail,
+  ReviewSubmission,
   Products,
   ThankYou,
   Help,
@@ -29,6 +30,7 @@ import {
   ProductForm,
   Profile,
   Reports,
+  Reviews,
   SettingsPage,
 } from "./adminPages";
 
@@ -51,6 +53,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/review/:token" element={<ReviewSubmission />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/thank-you/:orderNumber" element={<ThankYou />} />
@@ -79,6 +82,7 @@ export default function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="orders/:id" element={<OrderDetail />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="reviews" element={<Reviews />} />
           <Route path="coupons" element={<Coupons />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="reports" element={<Reports />} />

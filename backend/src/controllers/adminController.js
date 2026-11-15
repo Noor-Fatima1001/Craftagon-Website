@@ -6,8 +6,10 @@ const { body, validationResult } = require("express-validator");
 const Admin = require("../models/Admin");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Coupon = require("../models/Coupon");
 const Order = require("../models/Order");
 const PaymentSubmission = require("../models/PaymentSubmission");
+const ProductReview = require("../models/ProductReview");
 const AuditLog = require("../models/AuditLog");
 const env = require("../config/env");
 const AppError = require("../utils/AppError");
@@ -20,8 +22,12 @@ const {
 } = require("../services/settingsService");
 const { adminCancel, cancelOverdueOrders } = require("../services/cancelService");
 const emailService = require("../services/emailService");
+const reviewService = require("../services/reviewService");
 const { dirs } = require("../middleware/upload");
 const { waLink, paymentReminderMessage, cancelNotifyMessage, orderConfirmMessage } = require("../utils/whatsapp");
+const orderNotificationService = require("../services/orderNotificationService");
+const mongoose = require("mongoose");
+const CouponUsage = require("../models/CouponUsage");
 
 function validate(req) {
   const errors = validationResult(req);
@@ -259,6 +265,168 @@ const deleteCategory = asyncHandler(async (req, res) => {
   res.json({ ok: true });
 });
 
+const listCoupons = asyncHandler(async (_req, res) => {
+  const coupons = await Coupon.find().populate("applicableProducts", "name").sort({ createdAt: -1 });
+  res.json({ coupons });
+});
+
+function couponPayload(body, existing = {}) {
+  const payload = {};
+  const has = (key) => Object.prototype.hasOwnProperty.call(body, key);
+
+  if (has("code")) {
+    const code = String(body.code || "").trim().toUpperCase();
+    if (!/^[A-Z0-9_-]{2,40}$/.test(code)) {
+      throw new AppError("Coupon code must be 2-40 letters, numbers, underscores, or hyphens", 400);
+    }
+    payload.code = code;
+  }
+  if (has("type")) {
+    const type = body.type === "percentage" ? "percent" : body.type;
+    if (!["percent", "fixed"].includes(type)) {
+      throw new AppError("Discount type must be percentage or fixed", 400);
+    }
+    payload.type = type;
+  }
+  if (has("value")) {
+    const value = Number(body.value);
+    if (!Number.isFinite(value) || value <= 0) {
+      throw new AppError("Discount value must be greater than zero", 400);
+    }
+    payload.value = value;
+  }
+  for (const field of ["minOrder", "maxDiscount"]) {
+    if (!has(field)) continue;
+    const value = body[field] === "" || body[field] == null ? null : Number(body[field]);
+    if (value !== null && (!Number.isFinite(value) || value < 0)) {
+      throw new AppError(`${field === "minOrder" ? "Minimum order" : "Maximum discount"} must be zero or greater`, 400);
+    }
+    payload[field] = field === "minOrder" ? (value ?? 0) : value;
+  }
+  if (has("usageLimit")) {
+    const value = body.usageLimit === "" || body.usageLimit == null ? null : Number(body.usageLimit);
+    if (value !== null && (!Number.isInteger(value) || value < 0)) {
+      throw new AppError("Usage limit must be a non-negative whole number", 400);
+    }
+    payload.usageLimit = value;
+  }
+  if (has("expiresAt")) {
+    if (body.expiresAt === "" || body.expiresAt == null) {
+      payload.expiresAt = null;
+    } else {
+      const rawDate = String(body.expiresAt).trim();
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
+        ? new Date(`${rawDate}T23:59:59.999Z`)
+        : new Date(rawDate);
+      if (
+        Number.isNaN(date.getTime()) ||
+        (/^\d{4}-\d{2}-\d{2}$/.test(rawDate) && date.toISOString().slice(0, 10) !== rawDate)
+      ) {
+        throw new AppError("Enter a valid expiry date", 400);
+      }
+      payload.expiresAt = date;
+    }
+  }
+    if (has("applicableProducts")) {
+    const ids = Array.isArray(body.applicableProducts) ? body.applicableProducts : [];
+    if (ids.some((id) => !mongoose.isValidObjectId(id))) {
+      throw new AppError("Invalid product selected", 400);
+    }
+    payload.applicableProducts = [...new Set(ids.map(String))];
+  }
+  if (has("active")) {
+    if (typeof body.active !== "boolean") {
+      throw new AppError("Coupon active status must be true or false", 400);
+    }
+    payload.active = body.active;
+  }
+
+  const finalType = payload.type || existing.type;
+  const finalValue = payload.value ?? existing.value;
+  if (!finalType || finalValue == null) {
+    throw new AppError("Discount type and value are required", 400);
+  }
+  if (finalType === "percent" && finalValue > 100) {
+    throw new AppError("Percentage discount cannot exceed 100", 400);
+  }
+  if (existing._id == null && !payload.code) {
+    throw new AppError("Coupon code is required", 400);
+  }
+  return payload;
+}
+
+const saveCoupon = asyncHandler(async (req, res) => {
+  validate(req);
+  let coupon;
+  if (req.params.id) {
+    coupon = await Coupon.findById(req.params.id);
+    if (!coupon) throw new AppError("Coupon not found", 404);
+  }
+  const payload = couponPayload(req.body, coupon || {});
+  if (coupon) coupon.set(payload);
+  else coupon = new Coupon(payload);
+  try {
+    await coupon.save();
+  } catch (err) {
+    if (err.code === 11000) throw new AppError("A coupon with this code already exists", 409);
+    throw err;
+  }
+    if (payload.applicableProducts?.length) {
+    const found = await Product.countDocuments({ _id: { $in: payload.applicableProducts } });
+    if (found !== payload.applicableProducts.length) {
+      throw new AppError("One or more selected products no longer exist", 400);
+    }
+  }
+  await logAudit({
+    admin: req.admin,
+    action: req.params.id ? "coupon_update" : "coupon_create",
+    entity: "Coupon",
+    entityId: coupon._id,
+  });
+  res.json({ coupon });
+});
+
+const deleteCoupon = asyncHandler(async (req, res) => {
+  validate(req);
+  const coupon = await Coupon.findByIdAndDelete(req.params.id);
+  if (!coupon) throw new AppError("Coupon not found", 404);
+  await logAudit({
+    admin: req.admin,
+    action: "coupon_delete",
+    entity: "Coupon",
+    entityId: coupon._id,
+  });
+  res.json({ ok: true });
+});
+
+const couponUsage = asyncHandler(async (req, res) => {
+  const coupon = await Coupon.findById(req.params.id).select("code");
+  if (!coupon) throw new AppError("Coupon not found", 404);
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
+  const filter = { coupon: coupon._id };
+  const [total, usages, agg] = await Promise.all([
+    CouponUsage.countDocuments(filter),
+    CouponUsage.find(filter)
+      .populate("order", "_id")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    CouponUsage.aggregate([
+      { $match: { coupon: coupon._id, status: "used" } },
+      { $group: { _id: null, discount: { $sum: "$discountAmount" } } },
+    ]),
+  ]);
+  res.json({
+    code: coupon.code,
+    usages,
+    total,
+    page,
+    pages: Math.max(1, Math.ceil(total / limit)),
+    totalDiscount: agg[0]?.discount || 0,
+  });
+});
+
 const listOrders = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
@@ -302,6 +470,8 @@ const updateOrder = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) throw new AppError("Order not found", 404);
   const { status, courierName, trackingNumber, note } = req.body;
+  let statusEmail;
+  let reviewEmails;
   if (status === "cancelled") {
     await adminCancel(order, note || "Cancelled by admin", req.admin);
   } else if (status) {
@@ -315,10 +485,32 @@ const updateOrder = asyncHandler(async (req, res) => {
         note: mail.sent ? "Dispatch email sent" : `Dispatch email not sent: ${mail.reason || "not configured"}`,
       });
     }
-    if (status === "delivered") order.deliveredAt = new Date();
+    if (status === "delivered" && !order.deliveredAt) order.deliveredAt = new Date();
+    if (status === "completed") {
+      if (!order.deliveredAt) order.deliveredAt = new Date();
+      if (!order.completedAt) order.completedAt = new Date();
+    }
     order.status = status;
     order.history.push({ status, note: note || `Status updated to ${status}` });
     await order.save();
+
+    if (["delivered", "completed"].includes(status)) {
+      statusEmail = await orderNotificationService.sendOrderStatusNotification(order._id, status);
+      reviewEmails = await reviewService.sendReviewRequestsForOrder(order);
+      if (!statusEmail.skipped) {
+        order.history.push({
+          status: order.status,
+          note: statusEmail.sent ? `${status} notification email sent` : `${status} notification email failed: ${statusEmail.reason}`,
+        });
+      }
+      if (reviewEmails.sent || reviewEmails.failed) {
+        order.history.push({
+          status: order.status,
+          note: `Review request emails: ${reviewEmails.sent} sent, ${reviewEmails.failed} failed`,
+        });
+      }
+      await order.save();
+    }
   } else {
     if (courierName != null) order.courierName = courierName;
     if (trackingNumber != null) order.trackingNumber = trackingNumber;
@@ -329,9 +521,67 @@ const updateOrder = asyncHandler(async (req, res) => {
     action: "order_update",
     entity: "Order",
     entityId: order._id,
-    details: { status, courierName, trackingNumber },
+    details: { status, courierName, trackingNumber, statusEmail, reviewEmails },
   });
-  res.json({ order });
+  res.json({ order, statusEmail, reviewEmails });
+});
+
+const listReviews = asyncHandler(async (req, res) => {
+  const filter = {};
+  const allowedStatuses = ["pending", "approved", "rejected"];
+  if (req.query.status) {
+    if (!allowedStatuses.includes(String(req.query.status))) {
+      throw new AppError("Review status must be pending, approved, or rejected", 400);
+    }
+    filter.status = req.query.status;
+  }
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const total = await ProductReview.countDocuments(filter);
+  const reviews = await ProductReview.find(filter)
+    .populate("product", "name slug images")
+    .populate("order", "orderNumber status")
+    .populate("reviewedBy", "name email")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+  res.json({ reviews, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+});
+
+const updateReview = asyncHandler(async (req, res) => {
+  validate(req);
+  const review = await ProductReview.findById(req.params.id);
+  if (!review) throw new AppError("Review not found", 404);
+  if (!["approved", "rejected"].includes(req.body.status)) {
+    throw new AppError("Review status must be approved or rejected", 400);
+  }
+  review.status = req.body.status;
+  review.reviewedAt = new Date();
+  review.reviewedBy = req.admin._id;
+  await review.save();
+  await logAudit({
+    admin: req.admin,
+    action: "product_review_moderation",
+    entity: "ProductReview",
+    entityId: review._id,
+    details: { status: review.status },
+  });
+  res.json({ review });
+});
+
+const deleteReview = asyncHandler(async (req, res) => {
+  validate(req);
+  const review = await ProductReview.findById(req.params.id);
+  if (!review) throw new AppError("Review not found", 404);
+  await ProductReview.deleteOne({ _id: review._id });
+  await logAudit({
+    admin: req.admin,
+    action: "product_review_delete",
+    entity: "ProductReview",
+    entityId: review._id,
+    details: { product: review.product, order: review.order },
+  });
+  res.json({ ok: true });
 });
 
 const listPayments = asyncHandler(async (req, res) => {
@@ -544,9 +794,15 @@ module.exports = {
   listCategories,
   saveCategory,
   deleteCategory,
+  listCoupons,
+  saveCoupon,
+  deleteCoupon,
   listOrders,
   getOrder,
   updateOrder,
+  listReviews,
+  updateReview,
+  deleteReview,
   listPayments,
   reviewPayment,
   paymentScreenshot,
@@ -555,4 +811,5 @@ module.exports = {
   reports,
   runCancelJob,
   auditLogs,
+  couponUsage,
 };

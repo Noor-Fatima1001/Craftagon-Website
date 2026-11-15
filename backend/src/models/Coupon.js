@@ -11,6 +11,7 @@ const couponSchema = new mongoose.Schema(
     usedCount: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
     expiresAt: Date,
+    applicableProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
   },
   { timestamps: true }
 );

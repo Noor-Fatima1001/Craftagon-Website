@@ -1,4 +1,5 @@
 const AppError = require("../utils/AppError");
+const Coupon = require("../models/Coupon");
 
 function unitPrice(product) {
   if (product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price) {
@@ -53,7 +54,43 @@ function previewSnapshot(product) {
   };
 }
 
-async function quote({ productsById, cartItems, settings, city, province }) {
+async function applyCoupon(code, subtotal) {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!normalized) return { discount: 0, couponCode: "" };
+
+  const coupon = await Coupon.findOne({ code: normalized, active: true });
+  if (!coupon) throw new AppError("Invalid discount code", 400);
+  if (coupon.expiresAt && new Date(coupon.expiresAt) <= new Date()) {
+    throw new AppError("This discount code has expired", 400);
+  }
+  if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+    throw new AppError("This discount code has reached its usage limit", 400);
+  }
+  if (subtotal < (coupon.minOrder || 0)) {
+    throw new AppError(`Minimum order of PKR ${coupon.minOrder} is required for this code`, 400);
+  }
+
+  const type = coupon.type === "percentage" ? "percent" : coupon.type;
+  let discount = type === "percent" ? (subtotal * coupon.value) / 100 : coupon.value;
+  if (coupon.maxDiscount > 0) discount = Math.min(discount, coupon.maxDiscount);
+  discount = Math.round(Math.min(discount, subtotal));
+
+  return {
+    discount,
+    couponCode: coupon.code,
+    couponSnapshot: {
+      code: coupon.code,
+      type,
+      value: coupon.value,
+      minOrder: coupon.minOrder || 0,
+      maxDiscount: coupon.maxDiscount || null,
+      usageLimit: coupon.usageLimit || null,
+      expiresAt: coupon.expiresAt || null,
+    },
+  };
+}
+
+async function quote({ productsById, cartItems, settings, city, province, couponCode, paymentOption }) {
   const lines = [];
   for (const item of cartItems) {
     const product = productsById.get(String(item.productId));
@@ -103,16 +140,25 @@ async function quote({ productsById, cartItems, settings, city, province }) {
     });
   }
   const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+  const {
+    discount,
+    couponCode: appliedCoupon,
+    couponSnapshot,
+  } = await applyCoupon(couponCode, subtotal);
   const fee = deliveryFee(settings, city, province);
-  const total = Math.max(0, subtotal) + fee;
-  const advance = advanceAmount(settings, { items: lines, total });
+  const total = Math.max(0, subtotal - discount) + fee;
+  const advance =
+    paymentOption === "bank_transfer"
+      ? total
+      : advanceAmount(settings, { items: lines, total });
   const remainingCod = Math.max(0, total - advance);
   return {
     items: lines,
     subtotal,
     deliveryFee: fee,
-    discount: 0,
-    couponCode: "",
+    discount,
+    couponCode: appliedCoupon,
+    couponSnapshot,
     total,
     advanceAmount: advance,
     remainingCod,

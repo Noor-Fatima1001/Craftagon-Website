@@ -44,6 +44,8 @@ const orderSchema = new mongoose.Schema(
     subtotal: { type: Number, required: true },
     deliveryFee: { type: Number, required: true },
     discount: { type: Number, default: 0 },
+    couponCode: { type: String, default: "" },
+    paymentMethod: { type: String, enum: ["cod", "bank_transfer"], default: "cod" },
     total: { type: Number, required: true },
     advanceAmount: { type: Number, required: true },
     remainingCod: { type: Number, required: true },
@@ -57,6 +59,7 @@ const orderSchema = new mongoose.Schema(
         "processing",
         "dispatched",
         "delivered",
+        "completed",
         "cancelled",
       ],
       default: "pending_payment",
@@ -77,6 +80,21 @@ const orderSchema = new mongoose.Schema(
     trackingNumber: { type: String, default: "" },
     dispatchedAt: Date,
     deliveredAt: Date,
+    completedAt: Date,
+    deliveredEmailStatus: {
+      type: String,
+      enum: ["pending", "sending", "sent", "failed"],
+      default: "pending",
+    },
+    deliveredEmailSentAt: Date,
+    deliveredEmailError: { type: String, default: "" },
+    completedEmailStatus: {
+      type: String,
+      enum: ["pending", "sending", "sent", "failed"],
+      default: "pending",
+    },
+    completedEmailSentAt: Date,
+    completedEmailError: { type: String, default: "" },
     history: [
       {
         at: { type: Date, default: Date.now },

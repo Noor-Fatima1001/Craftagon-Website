@@ -13,6 +13,8 @@ const { notFound, errorHandler } = require('./middleware/error');
 const { requireAdmin, requireCronSecret } = require('./middleware/auth');
 const { cancelOverdueOrders } = require('./jobs/cancelOverdue');
 const { getSettings } = require('./services/settingsService');
+const { processReviewRequestQueue } = require('./services/reviewService');
+const { retryFailedOrderStatusNotifications } = require('./services/orderNotificationService');
 
 const publicRoutes = require('./routes/public');
 const orderRoutes = require('./routes/orders');
@@ -82,6 +84,18 @@ async function start() {
       if (result.cancelled) console.log('Auto-cancel job:', result);
     } catch (err) {
       console.error('Auto-cancel job failed:', err.message);
+    }
+    try {
+      const result = await retryFailedOrderStatusNotifications();
+      if (result.sent) console.log(`Sent ${result.sent} failed order status email(s)`);
+    } catch (err) {
+      console.error('Order status email retry job failed:', err.message);
+    }
+    try {
+      const result = await processReviewRequestQueue();
+      if (result.sent) console.log(`Sent ${result.sent} queued review request email(s)`);
+    } catch (err) {
+      console.error('Review request queue job failed:', err.message);
     }
   });
   app.listen(PORT, () => console.log(`API listening on ${PORT}`));

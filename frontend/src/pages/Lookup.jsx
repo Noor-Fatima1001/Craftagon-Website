@@ -14,8 +14,8 @@ export default function Lookup() {
       }}
     >
       <h1 className="font-display text-3xl">Track order</h1>
-      <p className="mt-2 text-sm text-slate-600">Use the order number and private token from your confirmation page or email.</p>
-      <label className="label mt-6">Order number</label>
+      <p className="mt-2 text-sm text-slate-600">Use the Order ID and private token from your confirmation page or email.</p>
+      <label className="label mt-6">Order ID</label>
       <input className="input" required value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} />
       <label className="label mt-3">Private token</label>
       <input className="input" required value={token} onChange={(e) => setToken(e.target.value)} />

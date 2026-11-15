@@ -29,6 +29,15 @@ const authLimit = rateLimit({
 });
 
 router.get("/catalog/products", c.listProducts);
+router.get("/catalog/products/:slug/reviews", c.getProductReviews);
+router.get("/reviews/:token", lookupLimit, c.reviewTokenValidators, c.getReviewInvitation);
+router.post(
+  "/reviews/:token",
+  lookupLimit,
+  c.reviewTokenValidators,
+  c.productReviewValidators,
+  c.postProductReview
+);
 router.get("/catalog/products/:slug", c.getProduct);
 router.get("/catalog/categories", c.listCategories);
 router.get("/store", c.getStore);

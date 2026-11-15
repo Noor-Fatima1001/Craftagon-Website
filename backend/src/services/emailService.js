@@ -57,7 +57,7 @@ async function orderConfirmation(order, settings) {
     subject: `Order ${order.orderNumber} received`,
     html: wrap(
       "Thank you for your order",
-      `<p>Order number: <strong>${order.orderNumber}</strong></p>
+      `<p>Order ID: <strong>${order.orderNumber}</strong></p>
        <ul>${items}</ul>
        <p>Subtotal: PKR ${order.subtotal}<br/>Delivery: PKR ${order.deliveryFee}<br/>Total: PKR ${order.total}</p>
        <p>Advance due now: <strong>PKR ${order.advanceAmount}</strong><br/>Remaining COD: PKR ${order.remainingCod}</p>
@@ -177,6 +177,58 @@ async function orderDispatched(order) {
   });
 }
 
+async function orderDelivered(order) {
+  const items = (order.items || [])
+    .map((item) => `<li>${escapeHtml(item.quantity)} × ${escapeHtml(item.name)}</li>`)
+    .join("");
+  return sendMail({
+    to: order.customer.email,
+    subject: `Order ${order.orderNumber} delivered`,
+    html: wrap(
+      "Your order has been delivered",
+      `<p>Hi ${escapeHtml(order.customer.fullName || "there")},</p>
+       <p>Order <strong>${escapeHtml(order.orderNumber)}</strong> has been marked as delivered.</p>
+       <ul>${items}</ul>
+       <p>If you have any questions about your delivery, please contact our team.</p>`
+    ),
+  });
+}
+
+async function orderCompleted(order) {
+  const items = (order.items || [])
+    .map((item) => `<li>${escapeHtml(item.quantity)} × ${escapeHtml(item.name)}</li>`)
+    .join("");
+  return sendMail({
+    to: order.customer.email,
+    subject: `Order ${order.orderNumber} completed`,
+    html: wrap(
+      "Thank you for shopping with us",
+      `<p>Hi ${escapeHtml(order.customer.fullName || "there")},</p>
+       <p>Order <strong>${escapeHtml(order.orderNumber)}</strong> is now complete. We hope you are enjoying your purchase.</p>
+       <ul>${items}</ul>
+       <p>Thank you for choosing Craftagon!</p>`
+    ),
+  });
+}
+
+async function reviewRequest(request, link, productLink) {
+  const product = escapeHtml(request.productName);
+  const orderNumber = escapeHtml(request.orderNumber || "");
+  const reviewLink = escapeHtml(link);
+  const productUrl = escapeHtml(productLink);
+  return sendMail({
+    to: request.customerEmail,
+    subject: "Review your Craftagon purchase",
+    html: wrap(
+      "How was your purchase?",
+      `<p>Hi ${escapeHtml(request.customerName || "there")},</p>
+       <p>Your order <strong>${orderNumber}</strong> has been delivered. We would love to hear what you think about <a href="${productUrl}"><strong>${product}</strong></a>.</p>
+       <p><a href="${reviewLink}" style="display:inline-block;background:#111;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Review Now</a></p>
+       <p>This private review link expires in 30 days and can be used once.</p>`
+    ),
+  });
+}
+
 module.exports = {
   isConfigured,
   status,
@@ -186,4 +238,7 @@ module.exports = {
   paymentResult,
   orderCancelled,
   orderDispatched,
+  orderDelivered,
+  orderCompleted,
+  reviewRequest,
 };

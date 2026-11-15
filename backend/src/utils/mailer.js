@@ -315,7 +315,7 @@ async function sendOrderConfirmation(order, settings) {
           padding: 16px;
           margin: 20px 0;
         ">
-          <p style="margin: 0 0 6px;">Your Order Number</p>
+          <p style="margin: 0 0 6px;">Your Order ID</p>
 
           <p style="
             font-size: 22px;
@@ -373,7 +373,7 @@ Thank You for Your Order, ${order.customer.fullName}!
 
 We're delighted that you've chosen Craftagon. Your order has been placed successfully.
 
-Order Number: ${order.orderNumber}
+Order ID: ${order.orderNumber}
 
 ${(order.items || []).map((item) =>
   `${item.name} | Qty: ${item.quantity} | Total: Rs ${item.lineTotal}`

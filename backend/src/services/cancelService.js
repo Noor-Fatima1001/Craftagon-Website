@@ -51,7 +51,7 @@ async function cancelOverdueOrders() {
 }
 
 async function adminCancel(order, reason, admin) {
-  if (["cancelled", "dispatched", "delivered"].includes(order.status)) {
+  if (["cancelled", "dispatched", "delivered", "completed"].includes(order.status)) {
     throw new AppError("This order cannot be cancelled", 400);
   }
   order.status = "cancelled";
