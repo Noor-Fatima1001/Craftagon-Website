@@ -36,15 +36,15 @@ function validate(req) {
 
 function setAuthCookie(res, admin) {
   const token = jwt.sign({ sub: admin._id }, env.jwtSecret, { expiresIn: "12h" });
+  const secure = env.cookieSecure || env.isProd;
   res.cookie("admin_token", token, {
     httpOnly: true,
-    secure: env.cookieSecure || env.isProd,
-    sameSite: env.isProd ? "strict" : "lax",
+    secure,
+    sameSite: secure ? "none" : "lax",
     maxAge: 12 * 60 * 60 * 1000,
     path: "/",
   });
 }
-
 const loginValidators = [
   body("email").isEmail().normalizeEmail(),
   body("password").isString().isLength({ min: 8 }),
@@ -63,7 +63,13 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (_req, res) => {
-  res.clearCookie("admin_token", { path: "/" });
+  const secure = env.cookieSecure || env.isProd;
+  res.clearCookie("admin_token", {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? "none" : "lax",
+    path: "/",
+  });
   res.json({ ok: true });
 });
 
