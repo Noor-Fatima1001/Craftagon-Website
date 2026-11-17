@@ -78,6 +78,17 @@ app.post('/api/internal/cancel-overdue', requireCronSecret, async (req, res, nex
   }
 });
 
+app.post('/api/internal/run-jobs', requireCronSecret, async (req, res, next) => {
+  try {
+    const overdue = await cancelOverdueOrders();
+    const emails = await retryFailedOrderStatusNotifications();
+    const reviews = await processReviewRequestQueue();
+    res.json({ overdue, emails, reviews });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(notFound);
 app.use(errorHandler);
 
