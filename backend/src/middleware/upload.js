@@ -11,7 +11,13 @@ const dirs = {
   banners: path.join(root, "banners"),
 };
 
-Object.values(dirs).forEach((d) => fs.mkdirSync(d, { recursive: true }));
+Object.values(dirs).forEach((d) => {
+  try {
+    fs.mkdirSync(d, { recursive: true });
+  } catch (err) {
+    console.warn(`Could not create ${d}:`, err.message);
+  }
+});
 
 const ALLOWED = {
   "image/jpeg": ".jpg",
