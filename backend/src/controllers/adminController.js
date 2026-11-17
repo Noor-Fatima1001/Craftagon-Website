@@ -23,7 +23,7 @@ const {
 const { adminCancel, cancelOverdueOrders } = require("../services/cancelService");
 const emailService = require("../services/emailService");
 const reviewService = require("../services/reviewService");
-const { dirs } = require("../middleware/upload");
+const { dirs, publicUrl } = require("../middleware/upload");
 const { waLink, paymentReminderMessage, cancelNotifyMessage, orderConfirmMessage } = require("../utils/whatsapp");
 const orderNotificationService = require("../services/orderNotificationService");
 const mongoose = require("mongoose");
@@ -138,7 +138,7 @@ const getProduct = asyncHandler(async (req, res) => {
 });
 
 const uploadProductImages = asyncHandler(async (req, res) => {
-  res.json({ urls: (req.files || []).map((file) => `/uploads/products/${file.filename}`) });
+  res.json({ urls: (req.files || []).map((file) => publicUrl("products", file.filename)) });
 });
 
 const saveProduct = asyncHandler(async (req, res) => {
@@ -177,8 +177,10 @@ const saveProduct = asyncHandler(async (req, res) => {
   }
   if (req.files?.length) {
     payload.images = [
-      ...existingImages.filter((u) => typeof u === "string" && u.startsWith("/uploads/")),
-      ...req.files.map((f) => `/uploads/products/${f.filename}`),
+      ...existingImages.filter(
+        (u) => typeof u === "string" && (u.startsWith("/uploads/") || /^https?:\/\//i.test(u))
+      ),
+      ...req.files.map((f) => publicUrl("products", f.filename)),
     ];
   } else if (data.images) {
     payload.images = existingImages;
@@ -676,7 +678,8 @@ const paymentScreenshot = asyncHandler(async (req, res) => {
   const payment = await PaymentSubmission.findById(req.params.id);
   if (!payment) throw new AppError("Payment not found", 404);
   if (!payment.screenshotPath) throw new AppError("No screenshot for this payment", 404);
-  const filePath = path.join(dirs.payments, payment.screenshotPath);
+  if (/^https?:\/\//i.test(payment.screenshotPath)) return res.redirect(payment.screenshotPath);
+  const filePath = path.join(dirs.payments, path.basename(payment.screenshotPath));
   if (!fs.existsSync(filePath)) throw new AppError("File not found", 404);
   res.sendFile(filePath);
 });

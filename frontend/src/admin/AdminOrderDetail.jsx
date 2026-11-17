@@ -107,7 +107,7 @@ export default function AdminOrderDetail() {
           <div key={p._id} className="space-y-2 rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
             <p className="flex flex-wrap items-center gap-2">{p.method} · {p.transactionRef} · <Badge value={p.status} /> · claimed {money(p.amountClaimed)}</p>
             {p.screenshotPath && (
-              <img alt="Payment proof" className="mt-2 max-h-64 rounded-lg border border-slate-200" src={`/api/admin/payment-file/${p.screenshotPath.split('/').pop()}`} />
+              <img alt="Payment proof" className="mt-2 max-h-64 rounded-lg border border-slate-200" src={api.paymentShot(p._id)} />
             )}
             {p.status === 'under_review' && (
               <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:flex-wrap sm:items-center">

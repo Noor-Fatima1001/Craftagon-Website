@@ -2,7 +2,7 @@ const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { body, param } = require("express-validator");
 const { requireAdmin, requireCronSecret } = require("../middleware/auth");
-const { productUpload, bannerUpload } = require("../middleware/upload");
+const { productUpload, bannerUpload, publicUrl } = require("../middleware/upload");
 const a = require("../controllers/adminController");
 
 const router = express.Router();
@@ -72,7 +72,7 @@ router.put(
   a.saveSettings
 );
 router.post("/settings/banner-image", requireAdmin, bannerUpload.single("image"), (req, res) => {
-  res.json({ url: `/uploads/banners/${req.file.filename}` });
+  res.json({ url: publicUrl("banners", req.file.filename) });
 });
 
 router.post("/jobs/cancel-overdue", requireCronSecret, a.runCancelJob);

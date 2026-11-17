@@ -149,6 +149,8 @@ export function asset(url) {
   return `${API}${url}`;
 }
 
+export const mediaUrl = asset;
+
 export function statusLabel(value) {
   return String(value || "").replaceAll("_", " ");
 }

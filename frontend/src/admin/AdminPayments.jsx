@@ -137,14 +137,14 @@ export default function AdminPayments() {
               {p.screenshotPath && (
                 <button
                   type="button"
-                  onClick={() => setPreview(`/api/admin/payment-file/${p.screenshotPath.split('/').pop()}`)}
+                  onClick={() => setPreview(api.paymentShot(p._id))}
                   className="mt-3 block overflow-hidden rounded-lg ring-1 ring-slate-200 focus:outline-none focus-visible:ring-2"
                   aria-label="View payment screenshot full size"
                 >
                   <img
                     alt="Payment screenshot"
                     className="max-h-40 w-auto object-cover"
-                    src={`/api/admin/payment-file/${p.screenshotPath.split('/').pop()}`}
+                    src={api.paymentShot(p._id)}
                   />
                 </button>
               )}

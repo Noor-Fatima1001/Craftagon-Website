@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const { asyncHandler } = require('../middleware/error');
-const { paymentUpload } = require('../middleware/upload');
+const { paymentUpload, publicUrl } = require('../middleware/upload');
 const { createOrder, findPublicOrder, publicOrder } = require('../services/orderService');
 const { submitPayment } = require('../services/paymentService');
 const { getSettings } = require('../services/settingsService');
@@ -67,7 +67,7 @@ router.post(
   asyncHandler(async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'Payment screenshot is required' });
     const order = await findPublicOrder(req.params.orderNumber, req.body.token || req.query.token);
-    const screenshotPath = `/uploads/payments/${req.file.filename}`;
+    const screenshotPath = publicUrl('payments', req.file.filename);
     try {
       const submission = await submitPayment({
         order,
@@ -86,7 +86,9 @@ router.post(
         },
       });
     } catch (err) {
-      fs.unlink(path.join(__dirname, '../../uploads/payments', req.file.filename), () => {});
+      if (!/^https?:\/\//i.test(screenshotPath)) {
+        fs.unlink(path.join(__dirname, '../../uploads/payments', req.file.filename), () => {});
+      }
       throw err;
     }
   })

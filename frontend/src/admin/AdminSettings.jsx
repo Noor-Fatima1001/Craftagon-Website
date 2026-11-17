@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api';
+import { api, asset } from '../api';
 
 /* ---------- small UI helpers ---------- */
 
@@ -189,7 +189,7 @@ export default function AdminSettings() {
       {/* Banner */}
       <Section title="Homepage banner" hint="The first banner appears at the top of the homepage.">
         {banners[0]?.image && (
-          <img alt="Current banner" src={banners[0].image} className="max-h-48 w-full rounded-lg object-cover ring-1 ring-slate-200" />
+          <img alt="Current banner" src={asset(banners[0].image)} className="max-h-48 w-full rounded-lg object-cover ring-1 ring-slate-200" />
         )}
         {banners.map((b, i) => (
           <div key={i} className="space-y-4">
