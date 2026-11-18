@@ -8,8 +8,16 @@ body {
 }
 
 @layer base {
+  body,
+  button {
+    text-transform: capitalize;
+  }
+}
+
+@layer base {
   body {
     @apply bg-slate-50 font-sans text-slate-800 antialiased;
+    
   }
 }
 

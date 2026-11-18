@@ -4,7 +4,7 @@ const storeSettingsSchema = new mongoose.Schema(
   {
     key: { type: String, default: "default", unique: true },
     storeName: { type: String, default: "Craftagon" },
-    tagline: { type: String, default: "Personalized gifts, printed with care" },
+    tagline: { type: String, default: "Craftagon Own Your Mark Premium Personalized Gifts" },
     email: { type: String, default: "noor525439@gmail.com" },
     orderNotificationEmail: { type: String, default: "" },
     phone: { type: String, default: "" },

@@ -5,6 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
+import bannerImg from "./assets/banner.jpeg";
 import {
   FiArrowRight,
   FiCheckCircle,
@@ -43,6 +44,7 @@ import { api, asset, money, statusLabel } from "./api";
 import { useAuth, useCart, useStore } from "./context";
 import { Alert, CustomPreview, Field, ProductCard, ui } from "./components";
 
+
 const PROVINCES = [
   "Punjab",
   "Sindh",
@@ -57,7 +59,7 @@ const STEPS = [
   {
     icon: FiSearch,
     title: "Choose a product",
-    text: "Browse pens, mugs, tumblers, diaries and keychains, then pick the one you like.",
+    text: "Browse our Catalogue and choose your desired product.",
   },
   {
     icon: FiEdit3,
@@ -67,14 +69,59 @@ const STEPS = [
   {
     icon: FiCreditCard,
     title: "Pay the advance",
-    text: "Send the advance by JazzCash or Easypaisa and upload the proof, or choose COD. Our team confirms every payment by hand.",
+    text: "Send Advance Through Easypaisa/Jazzcash or Bank Transfer then upload proof of transaction at given section. Every payment is confirmed manually.",
   },
   {
     icon: FiTruck,
     title: "We print and deliver",
-    text: "After your payment is confirmed we print your order and send it to your door. The remaining balance is paid on delivery.",
+    text: "Once Payment is confirmed, We Print Pack and Deliver at your door step.",
   },
 ];
+
+const PAYMENT_STEPS = [
+  {
+    icon: FiCreditCard,
+    title: "Payment",
+    lines: [
+      "Select COD: 50% will be paid in advance & 50% on Delivery.",
+      "Select Bank Transfer: Full Payment will be paid in Advance.",
+      "Note: Priority will be given to Full Advance Payment.",
+    ],
+  },
+  {
+    icon: FiPhone,
+    title: "Payment Options",
+    lines: [
+      "Bank ~ Click to View Bank Details.",
+      "Digital Wallet ~ Click to View Wallet Details.",
+    ],
+  },
+  {
+    icon: FiUpload,
+    title: "Upload Receipt",
+    lines: [
+      "Once Payment is Done upload your transaction receipt at the given option.",
+    ],
+  },
+  {
+    icon: FiShoppingCart,
+    title: "Place Order",
+    lines: ["Once Payment receipt is uploaded place your order."],
+  },
+  {
+    icon: FiShield,
+    title: "Payment Verification",
+    lines: ["Our Team Will manually verify your payment."],
+  },
+  {
+    icon: FiCheckCircle,
+    title: "Order Complete",
+    lines: [
+      "Once your payment is Verified, Your order will be placed successfully.",
+    ],
+  },
+];
+
 
 const WHY = [
   {
@@ -101,26 +148,34 @@ const WHY = [
 
 function PageHeader({ title, subtitle }) {
   return (
-    <div className="mb-8">
+    <div className="mb-6 sm:mb-8">
       <h1 className={ui.pageTitle}>{title}</h1>
-      {subtitle && <p className="mt-2 max-w-2xl text-slate-600">{subtitle}</p>}
+      {subtitle && (
+        <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }
 
 function SectionHead({ title, subtitle, to }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+        <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
           {title}
         </h2>
-        {subtitle && <p className="mt-1 text-slate-500">{subtitle}</p>}
+        {subtitle && (
+          <p className="mt-1 text-sm text-slate-500 sm:text-base">
+            {subtitle}
+          </p>
+        )}
       </div>
       {to && (
         <Link
           to={to}
-          className="hidden items-center gap-1 text-sm font-semibold text-[#000000] hover:underline sm:inline-flex"
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#000000] hover:underline"
         >
           View all <FiArrowRight />
         </Link>
@@ -163,62 +218,25 @@ export function Home() {
     .filter((p) => p.images?.[0])
     .slice(0, 3);
   return (
-    <div className="space-y-20 ">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-6 py-2 shadow-sm md:px-10 md:py-5">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#000000]/10 blur-3xl" />
-        <div className="relative max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#000000]/10 px-4 py-1.5 text-sm font-semibold text-[#000000]">
-            <FiGift /> Personalized print
-          </span>
-          <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-4xl">
-            {banner?.title || "Gifts they will keep"}
-          </h1>
-          <p className="mt-3 max-w-xl text-lg leading-relaxed text-slate-600">
-            {banner?.subtitle ||
-              store?.tagline ||
-              "Names and short messages printed on pens, mugs, tumblers, diaries and keychains."}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/products" className={`${ui.btn} px-7 py-3.5 text-base`}>
-              {banner?.ctaText || "Shop now"} <FiArrowRight />
-            </Link>
-            <Link
-              to="/order-lookup"
-              className={`${ui.btnOutline} px-7 py-3.5 text-base`}
-            >
-              <FiPackage /> Track order
-            </Link>
-          </div>
-          <div className="mt-10 grid gap-4 border-t border-slate-200 pt-6 sm:grid-cols-3">
-            {[
-              { icon: FiEdit3, t: "Your name crafted" },
-              { icon: FiCreditCard, t: "Advance + COD" },
-              { icon: FiTruck, t: "Delivery across Pakistan" },
-            ].map(({ icon: Icon, t }) => (
-              <div
-                key={t}
-                className="flex items-center gap-3 text-sm font-medium text-slate-700"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-lg text-[#000000] shadow-sm ring-1 ring-slate-200">
-                  <Icon />
-                </span>
-                {t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+    <div className="">
+ 
+<section className="relative left-1/2 -mt-[25px] w-screen -translate-x-1/2 sm:-mt-[41px] pb-5 sm:pb-8">
+  <img
+    src={bannerImg}
+    alt="Banner"
+    className="block h-auto w-full object-cover"
+  />
+</section>
 
-            {/* Featured */}
+      {/* Featured */}
       {!!featured?.length && (
-        <section>
+        <section className="pb-5 sm:pb-8">
           <SectionHead
             title="New Release"
             subtitle="Hand-picked favourites from our collection."
             to="/products"
           />
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {featured.map((p) => (
               <ProductCard key={p._id} product={p} />
             ))}
@@ -226,18 +244,18 @@ export function Home() {
         </section>
       )}
 
-      <section>
+      <section className="pb-5 sm:pb-8">
         <SectionHead
           title="Shop by category"
           subtitle="Find the right item for every person and occasion."
           to="/products"
         />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
           {categories?.map((c) => (
             <Link
               key={c._id}
               to={`/products?category=${c.slug}`}
-              className={`${ui.card} group p-5 text-center transition hover:-translate-y-0.5 hover:border-[#000000]/40 hover:shadow-md`}
+              className={`${ui.card} group p-4 text-center transition hover:-translate-y-0.5 hover:border-[#000000]/40 hover:shadow-md sm:p-5`}
             >
               <div className="font-semibold text-slate-800 group-hover:text-[#000000]">
                 {c.name}
@@ -280,13 +298,13 @@ export function Home() {
 
       {/* Bestsellers */}
       {!!bestsellers?.length && (
-        <section>
+        <section className="pb-5 sm:pb-8">
           <SectionHead
             title="Bestsellers"
             subtitle="What most customers are ordering."
             to="/products"
           />
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {bestsellers.map((p) => (
               <ProductCard key={p._id} product={p} />
             ))}
@@ -295,17 +313,17 @@ export function Home() {
       )}
 
       {/* Why us */}
-      <section className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200 md:p-12">
-        <div className="mb-10 max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+      <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-8 md:p-12 mb-5 sm:mb-8">
+        <div className="mb-8 max-w-2xl sm:mb-10">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
             Why customers choose us
           </h2>
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-sm text-slate-500 sm:text-base">
             We keep ordering simple, honest and easy to follow, from the first
             click to delivery.
           </p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
           {WHY.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#000000] text-xl text-white">
@@ -322,19 +340,19 @@ export function Home() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-6 py-12 text-center shadow-sm md:px-12">
-        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
+      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-5 py-10 text-center shadow-sm sm:px-6 sm:py-12 md:px-12">
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">
           Ready to make a gift personal?
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-slate-600">
+        <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600 sm:text-base">
           Pick a product, add the name or message, and we will take care of the
           rest.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link to="/products" className={ui.btn}>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          <Link to="/products" className={`${ui.btn} w-full sm:w-auto`}>
             Start shopping <FiArrowRight />
           </Link>
-          <Link to="/contact" className={ui.btnOutline}>
+          <Link to="/contact" className={`${ui.btnOutline} w-full sm:w-auto`}>
             <FiMail /> Contact us
           </Link>
         </div>
@@ -343,142 +361,162 @@ export function Home() {
   );
 }
 
-export function About() {
-  const { store } = useStore();
 
-  const VALUES = [
-    {
-      icon: FiHeart,
-      title: "Made with care",
-      text: "Every name and message is checked and printed carefully, so your gift looks the way you imagined.",
-    },
-    {
-      icon: FiShield,
-      title: "Honest process",
-      text: "We confirm every advance payment by hand and show clear pricing before you order.",
-    },
-    {
-      icon: FiGift,
-      title: "Personal by design",
-      text: "From pens to dairies, each item is made for one person, not for everyone.",
-    },
-  ];
+
+const DIFFERENT_POINTS = [
+  {
+    title: "Personalization That Matters",
+    text: "Make products truly yours with custom names, messages, and designs.",
+  },
+  {
+    title: "Attention to Detail",
+    text: "We focus on precision and presentation in every customization.",
+  },
+  {
+    title: "Quality You Can Appreciate",
+    text: "We aim to deliver products that look premium and feel special.",
+  },
+  {
+    title: "For Every Occasion",
+    text: "A personal gift, a memorable keepsake, or a corporate order, we have something meaningful to offer.",
+  },
+];
+
+
+export function About() {
+  const { store, featured } = useStore();
+
+  const iconBox =
+    "flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#000000] text-xl text-white";
+  const cardTitle = "mt-4 text-lg font-bold text-slate-900 sm:text-xl";
+  const cardText = "mt-2 text-sm leading-relaxed text-slate-600 sm:text-base";
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-6 md:space-y-8">
       {/* Intro */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-6 py-10 shadow-sm md:px-12 md:py-6">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-5 py-8 shadow-sm sm:px-6 sm:py-10 md:px-12 md:py-14">
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#000000]/10 blur-3xl" />
         <div className="relative max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#000000]/10 px-4 py-1 text-sm font-semibold text-[#000000]">
-            <FiGift /> Personalized Gifts
-          </span>
-          <h1 className="mt-5 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-4xl">
+          <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-4xl">
             {store?.about?.title || "About Craftagon"}
           </h1>
           <div className="mt-4 h-1 w-14 rounded-full bg-[#000000]" />
-          <p className="mt-6 whitespace-pre-line text-lg leading-relaxed text-slate-600">
-            {store?.about?.body ||
-              "Craftagon prints names and short messages onto pens, mugs, tumblers, diaries and keychains. We confirm advance payments before we print."}
+          <p className="mt-5 text-base font-semibold text-slate-900 sm:text-lg">
+            At Craftagon, we believe that ordinary products can become
+            extraordinary when they carry a personal touch.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/products" className={`${ui.btn} px-7 py-3.5 text-base`}>
-              Shop now <FiArrowRight />
-            </Link>
-            <Link
-              to="/contact"
-              className={`${ui.btnOutline} px-7 py-3.5 text-base`}
-            >
-              <FiMail /> Contact us
-            </Link>
-          </div>
+          <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-slate-600">
+            {store?.about?.body ||
+              "We are a Pakistan-based customization and gifting brand dedicated to turning everyday products into meaningful, personalized pieces. From customized pens and premium tumblers to personalized diaries, wallets, bottles, and corporate gifts, we bring creativity and precision together to make every product special."}
+          </p>
         </div>
       </section>
 
-      {/* Mission & Vision */}
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className={`${ui.card} p-6 md:p-8`}>
-          <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#000000] text-xl text-white">
-            <FiTarget />
-          </span>
-          <h2 className="mt-5 text-xl font-bold text-slate-900">Our mission</h2>
-          <p className="mt-2 leading-relaxed text-slate-600">
-            {store?.about?.mission ||
-              "To make personalized gifting simple, affordable and trustworthy for everyone in Pakistan, from the first click to delivery."}
-          </p>
-        </div>
-        <div className={`${ui.card} p-6 md:p-8`}>
-          <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#000000] text-xl text-white">
+          {/* Top: 3 tall cards side by side */}
+      <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
+        {/* Vision */}
+        <div className={`${ui.card} h-full p-5 sm:p-6 md:p-8`}>
+          <span className={iconBox}>
             <FiEye />
           </span>
-          <h2 className="mt-5 text-xl font-bold text-slate-900">Our vision</h2>
-          <p className="mt-2 leading-relaxed text-slate-600">
+          <h2 className={cardTitle}>Our Vision</h2>
+          <p className={cardText}>
             {store?.about?.vision ||
-              "To become the most trusted name for custom printed gifts, where every item feels personal and every order is handled with care."}
+              "Our vision is to become Pakistan’s No. 1 customized printing and engraving brand, a name people remember whenever they think of personalization and gifting."}
+          </p>
+        </div>
+
+        {/* Promise */}
+        <div className={`${ui.card} h-full p-5 sm:p-6 md:p-8`}>
+          <span className={iconBox}>
+            <FiHeart />
+          </span>
+          <h2 className={cardTitle}>Our Promise</h2>
+          <p className={cardText}>
+            {store?.about?.mission ||
+              "Every name has a story. Every gift has a meaning. And every detail matters."}
+          </p>
+        </div>
+
+        {/* Individuals & Businesses */}
+        <div className={`${ui.card} h-full p-5 sm:p-6 md:p-8`}>
+          <span className={iconBox}>
+            <FiGift />
+          </span>
+          <h2 className={cardTitle}>Individuals & Businesses</h2>
+          <p className={cardText}>
+            Whether you are looking for a unique gift for someone special or
+            customized products for your company, Craftagon makes
+            personalization simple and memorable. We proudly serve customers
+            across Pakistan.
           </p>
         </div>
       </section>
 
-      {/* What we do */}
+      {/* Bottom: What Makes Different, wide horizontal card */}
+           {/* Bottom: What Makes Different */}
       <section>
-        <div className="mb-8 max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            What we do
-          </h2>
-          <p className="mt-2 text-slate-500">
-            We print your name or message on everyday products and deliver them
-            to your door.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {["Pens", "Mugs", "Tumblers", "Diaries", "Keychains"].map((item) => (
-            <div
-              key={item}
-              className={`${ui.card} p-5 text-center font-semibold text-slate-800`}
-            >
-              {item}
-            </div>
-          ))}
-        </div>
-      </section>
+        <div className={`${ui.card} p-5 sm:p-6 md:p-8`}>
+          <div className="flex items-center gap-4">
+            <span className={iconBox}>
+              <FiStar />
+            </span>
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl md:text-2xl">
+              What Makes Craftagon Different?
+            </h2>
+          </div>
 
-      {/* Values */}
-      <section className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200 md:p-12">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          What we stand for
-        </h2>
-        <div className="mt-8 grid gap-8 md:grid-cols-3">
-          {VALUES.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="flex gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#000000]/10 text-xl text-[#000000]">
-                <Icon />
-              </span>
-              <div>
-                <h3 className="font-semibold text-slate-900">{title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+          <ul className="mt-6 grid auto-rows-fr gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+            {DIFFERENT_POINTS.map(({ title, text }) => (
+              <li
+                key={title}
+                className="flex h-full flex-col rounded-md border border-slate-200 bg-slate-50 p-4"
+              >
+                <span className="text-sm font-semibold text-slate-900 sm:text-base">
+                  {title}
+                </span>
+                <span className="mt-2 text-sm leading-relaxed text-slate-600">
                   {text}
-                </p>
-              </div>
-            </div>
-          ))}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
+      {/* New Release images (same data as Home page) */}
+      {!!featured?.length && (
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {featured.map((p) => (
+            <Link
+              key={p._id}
+              to={`/products/${p.slug}`}
+              className={`${ui.card} group block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md`}
+            >
+              <div className="aspect-square overflow-hidden bg-slate-100">
+                {p.images?.[0] && (
+                  <img
+                    src={asset(p.images[0])}
+                    alt={p.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                )}
+              </div>
+            </Link>
+          ))}
+        </section>
+      )}
+
       {/* CTA */}
-      {/* CTA */}
-      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-6 py-12 text-center shadow-sm md:px-12">
-        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
-          Ready to make a gift personal?
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-slate-600">
-          Pick a product, add the name or message, and we will take care of the
-          rest.
-        </p>
-        <div className="mt-6 flex justify-center">
-          <Link to="/products" className={ui.btn}>
-            Start shopping <FiArrowRight />
-          </Link>
-        </div>
+      <section className="flex justify-center pb-2 pt-2">
+        <Link
+          to="/products"
+          className={`${ui.btn} w-full px-8 py-3.5 text-base sm:w-auto`}
+        >
+          Shop Now <FiArrowRight />
+        </Link>
       </section>
     </div>
   );
@@ -491,9 +529,9 @@ export function HowToOrder() {
         title="How to Order"
         subtitle="From choosing a product to opening the parcel, ordering takes four simple steps."
       />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
         {STEPS.map(({ icon: Icon, title, text }, i) => (
-          <div key={title} className={`${ui.card} relative p-6`}>
+          <div key={title} className={`${ui.card} relative p-5 sm:p-6`}>
             <span className="absolute right-5 top-4 text-4xl font-extrabold text-[#000000]">
               {i + 1}
             </span>
@@ -511,6 +549,35 @@ export function HowToOrder() {
   );
 }
 
+export function HowPaymentWorks() {
+  return (
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="How Payment Works"
+        subtitle="The way your payment is Processed"
+      />
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+        {PAYMENT_STEPS.map(({ icon: Icon, title, lines }, i) => (
+          <div key={title} className={`${ui.card} relative p-5 sm:p-6`}>
+            <span className="absolute right-5 top-4 text-4xl font-extrabold text-[#000000]">
+              {i + 1}
+            </span>
+            <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#000000]/10 text-xl text-[#000000]">
+              <Icon />
+            </span>
+            <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
+            <div className="mt-2 space-y-2 text-sm leading-relaxed text-slate-600">
+              {lines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Help() {
   const { store } = useStore();
   return (
@@ -521,7 +588,7 @@ export function Help() {
         and email on the Track Order page, or reach out to us directly via
         Contact Us.
       </p>
-      <div className={`${ui.card} space-y-4 p-6 text-sm text-slate-600`}>
+      <div className={`${ui.card} space-y-4 p-4 text-sm text-slate-600 sm:p-6`}>
         <p className="flex gap-3">
           <FaWhatsapp className="mt-0.5 shrink-0 text-lg text-[#000000]" />
           Track your order online or contact us for assistance.
@@ -532,10 +599,10 @@ export function Help() {
         </p>
         <p className="flex gap-3">
           <FiCreditCard className="mt-0.5 shrink-0 text-lg text-[#000000]" />
-          JazzCash and Easypaisa transfers need a screenshot and a transaction
-          ID. COD is confirmed by staff, never automatically.
+          JazzCash/Easypaisa and Bank Transfer  need a screenshot and a transaction
+          ID. COD is confirmed by staff, not automatically.
         </p>
-        <Link className={ui.btn} to="/contact">
+        <Link className={`${ui.btn} w-full sm:w-auto`} to="/contact">
           <FiMail /> Contact us
         </Link>
       </div>
@@ -609,10 +676,10 @@ export function Contact() {
         title="Contact Us"
         subtitle="Questions about an order or a custom design? Send us a message or chat with us on WhatsApp."
       />
-      <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+      <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_1.4fr]">
         <div className="space-y-6">
           {waUrl && (
-            <div className={`${ui.card} p-6`}>
+            <div className={`${ui.card} p-4 sm:p-6`}>
               <h2 className="text-lg font-bold text-slate-900">
                 Prefer a quick chat?
               </h2>
@@ -630,7 +697,7 @@ export function Contact() {
             </div>
           )}
 
-          <div className={`${ui.card} space-y-5 p-6 text-slate-600`}>
+          <div className={`${ui.card} space-y-5 p-4 text-slate-600 sm:p-6`}>
             {[
               { icon: FiMail, label: "Email", v: store?.email },
               { icon: FiPhone, label: "Phone", v: store?.phone },
@@ -642,7 +709,7 @@ export function Contact() {
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#000000]/10 text-[#000000]">
                     <Icon />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                       {label}
                     </div>
@@ -677,7 +744,10 @@ export function Contact() {
         </div>
 
         {/* Right: form */}
-        <form onSubmit={send} className={`${ui.card} space-y-4 p-6 md:p-8`}>
+        <form
+          onSubmit={send}
+          className={`${ui.card} space-y-4 p-4 sm:p-6 md:p-8`}
+        >
           <h2 className="text-xl font-bold text-slate-900">
             Send us a message
           </h2>
@@ -795,7 +865,7 @@ export function Products() {
         title={categoryName || "Shop"}
         subtitle="Pick a product, add your text, and we print it for you."
       />
-      <div className={`${ui.card} flex flex-wrap items-center gap-3 p-4`}>
+      <div className={`${ui.card} flex flex-wrap items-center gap-3 p-3 sm:p-4`}>
         <div className="relative w-full sm:w-auto sm:min-w-[240px]">
           <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -807,7 +877,7 @@ export function Products() {
           />
         </div>
         <button
-          className={ui.btn}
+          className={`${ui.btn} w-full sm:w-auto`}
           type="button"
           onClick={() => set("q", qInput)}
         >
@@ -835,10 +905,14 @@ export function Products() {
           <option value="price_desc">Price: high to low</option>
           <option value="name">Name</option>
         </select>
-        <button className={ui.btnOutline} type="button" onClick={reset}>
+        <button
+          className={`${ui.btnOutline} w-full sm:w-auto`}
+          type="button"
+          onClick={reset}
+        >
           <FiRotateCcw /> Reset Filters
         </button>
-        <span className="ml-auto text-sm font-medium text-slate-500">
+        <span className="w-full text-sm font-medium text-slate-500 sm:ml-auto sm:w-auto">
           {meta.total} products
         </span>
       </div>
@@ -850,7 +924,7 @@ export function Products() {
       {loading ? (
         <PageLoader text="Loading products…" />
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-6 lg:grid-cols-3">
           {products.map((p) => (
             <ProductCard key={p._id} product={p} />
           ))}
@@ -858,7 +932,7 @@ export function Products() {
       )}
       {!loading && !products.length && !err && (
         <div
-          className={`${ui.card} mt-8 flex flex-col items-center gap-2 p-12 text-center text-slate-500`}
+          className={`${ui.card} mt-8 flex flex-col items-center gap-2 p-8 text-center text-slate-500 sm:p-12`}
         >
           <FiSearch className="text-3xl text-slate-300" />
           No products match these filters.
@@ -896,17 +970,19 @@ export function ProductDetail() {
   const [text, setText] = useState("");
   const [qty, setQty] = useState(1);
   const [colorVariantId, setColorVariantId] = useState("");
-  const [err, setErr] = useState("");
+const [productError, setProductError] = useState("");
+const [customTextError, setCustomTextError] = useState("");
+const [err, setErr] = useState("");
   const [customNote, setCustomNote] = useState("");
-  useEffect(() => {
-    api
-      .product(slug)
-      .then((d) => {
-        setProduct(d.product);
-        setColorVariantId(d.product.colorVariants?.[0]?._id || "");
-      })
-      .catch((e) => setErr(e.message));
-  }, [slug]);
+useEffect(() => {
+  api
+    .product(slug)
+    .then((d) => {
+      setProduct(d.product);
+      setColorVariantId(d.product.colorVariants?.[0]?._id || "");
+    })
+    .catch((e) => setProductError(e.message));
+}, [slug]);
   useEffect(() => {
     let active = true;
     setReviewsLoading(true);
@@ -927,7 +1003,7 @@ export function ProductDetail() {
       active = false;
     };
   }, [slug]);
-  if (err) return <Alert>{err}</Alert>;
+if (productError) return <Alert>{productError}</Alert>;
   if (!product) return <PageLoader />;
   const price =
     product.salePrice && product.salePrice < product.price
@@ -941,22 +1017,29 @@ export function ProductDetail() {
   const productImage = selectedColor?.image || product.images?.[0];
   function add() {
     const customText = text.trim();
+
+    setCustomTextError("");
+    setErr("");
+
     if (
       product.customization?.enabled !== false &&
       product.customization?.required !== false &&
       !customText
     ) {
-      setErr("Please enter custom text");
+      setCustomTextError("Please enter custom text");
       return;
     }
+
     if (customText.length > max) {
-      setErr(`Text must be at most ${max} characters`);
+      setCustomTextError(`Text must be at most ${max} characters`);
       return;
     }
+
     if (colorVariants.length && !selectedColor) {
       setErr("Please select a color");
       return;
     }
+
     cart.add({
       productId: product._id,
       name: product.name,
@@ -973,29 +1056,30 @@ export function ProductDetail() {
       maxLength: max,
       preview: product.preview,
     });
+
     nav("/cart");
   }
   return (
-    <div className="space-y-12">
-      <div className="grid gap-10 md:grid-cols-2">
+    <div className="space-y-10 sm:space-y-12">
+      <div className="grid gap-6 sm:gap-10 md:grid-cols-2">
         <div
           className={`${ui.card} h-fit overflow-hidden p-3 md:sticky md:top-28`}
         >
           <CustomPreview product={product} image={productImage} />
         </div>
-        <div className={`${ui.card} h-fit p-6 md:p-8`}>
+        <div className={`${ui.card} h-fit p-4 sm:p-6 md:p-8`}>
           {product.category?.name && (
             <Badge tone="primary">{product.category.name}</Badge>
           )}
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+          <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
             {product.name}
           </h1>
           <div className="mt-4 flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-[#000000]">
+            <span className="text-2xl font-bold text-[#000000] sm:text-3xl">
               {money(price)}
             </span>
             {product.salePrice && product.salePrice < product.price && (
-              <span className="text-lg text-slate-400 line-through">
+              <span className="text-base text-slate-400 line-through sm:text-lg">
                 {money(product.price)}
               </span>
             )}
@@ -1035,18 +1119,32 @@ export function ProductDetail() {
                 </div>
               </Field>
             )}
+           
             <Field label={product.customization?.label || "Custom text"}>
-              <input
-                className={ui.input}
-                maxLength={max}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-              />
-              <p className="mt-1.5 text-xs text-slate-500">
-                {text.length}/{max} characters · this text will be printed on
-                your product
-              </p>
+  <input
+    className={`${ui.input} ${
+      customTextError ? "border-red-500 focus:border-red-500" : ""
+    }`}
+    maxLength={max}
+    value={text}
+    onChange={(e) => {
+      setText(e.target.value);
+      setCustomTextError("");
+    }}
+  />
+
+  {customTextError && (
+    <p className="mt-1.5 text-sm font-medium text-red-600">
+      {customTextError}
+    </p>
+  )}
+
+  <p className="mt-1.5 text-xs text-slate-500">
+    {text.length}/{max} characters · this text will be printed on
+    your product
+  </p>
             </Field>
+
             <Field label="Note (optional)">
               <textarea
                 className={ui.input}
@@ -1099,7 +1197,7 @@ export function ProductDetail() {
           <div>
             <h2
               id="reviews-heading"
-              className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl"
+              className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl md:text-3xl"
             >
               Customer reviews
             </h2>
@@ -1143,7 +1241,7 @@ export function ProductDetail() {
             </div>
           ) : reviewData.reviews.length ? (
             reviewData.reviews.map((review) => (
-              <article key={review._id} className={`${ui.card} p-5`}>
+              <article key={review._id} className={`${ui.card} p-4 sm:p-5`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="font-semibold text-slate-900">
@@ -1180,7 +1278,7 @@ export function ProductDetail() {
             ))
           ) : reviewsError ? null : (
             <div className={`${ui.card} p-6 text-sm text-slate-500`}>
-              No approved reviews yet.
+              No reviews yet.
             </div>
           )}
         </div>
@@ -1254,6 +1352,7 @@ export function ReviewSubmission() {
           <img
             src={asset(invitation.product.image)}
             alt={invitation.product.name}
+            loading="lazy"
             className="h-20 w-20 rounded-lg object-cover"
           />
         )}
@@ -1340,7 +1439,7 @@ export function CartPage() {
       <PageHeader title="Cart" />
       {!cart.items.length && (
         <div
-          className={`${ui.card} flex flex-col items-center gap-3 p-12 text-center`}
+          className={`${ui.card} flex flex-col items-center gap-3 p-8 text-center sm:p-12`}
         >
           <FiShoppingBag className="text-4xl text-slate-300" />
           <p className="text-slate-600">Your cart is empty.</p>
@@ -1353,7 +1452,7 @@ export function CartPage() {
         {cart.items.map((it, i) => (
           <div
             key={`${it.productId}-${it.customText}-${i}`}
-            className={`${ui.card} grid items-center gap-5 p-4 md:grid-cols-[160px_1fr_auto]`}
+            className={`${ui.card} grid grid-cols-[96px_1fr] items-center gap-4 p-3 sm:p-4 md:grid-cols-[160px_1fr_auto] md:gap-5`}
           >
             <CustomPreview
               product={{
@@ -1363,14 +1462,14 @@ export function CartPage() {
               }}
               image={it.image}
             />
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <Link
                 to={`/products/${it.slug}`}
-                className="text-lg font-semibold text-slate-900 hover:text-[#000000]"
+                className="text-base font-semibold text-slate-900 hover:text-[#000000] sm:text-lg"
               >
                 {it.name}
               </Link>
-              <p className="text-sm text-slate-500">
+              <p className="break-words text-sm text-slate-500">
                 Custom text: {it.customText || "—"}
               </p>
               {it.color && (
@@ -1385,9 +1484,9 @@ export function CartPage() {
               )}
               <p className="font-semibold text-[#000000]">{money(it.price)}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="col-span-2 flex items-center justify-end gap-2 md:col-span-1">
               <input
-                className={`${ui.input}`}
+                className={`${ui.input} !w-20`}
                 type="number"
                 min="1"
                 value={it.quantity}
@@ -1407,7 +1506,10 @@ export function CartPage() {
       </div>
       {!!cart.items.length && (
         <div className="mt-8 flex justify-end">
-          <Link to="/checkout" className={`${ui.btn} px-8 py-3.5 text-base`}>
+          <Link
+            to="/checkout"
+            className={`${ui.btn} w-full px-8 py-3.5 text-base sm:w-auto`}
+          >
             Checkout <FiArrowRight />
           </Link>
         </div>
@@ -1415,6 +1517,9 @@ export function CartPage() {
     </div>
   );
 }
+
+const isBankAccount = (a) => /bank/i.test(a.method);
+const AUTO_HIDE_MS = 5000; 
 
 export function Checkout() {
   const cart = useCart();
@@ -1443,6 +1548,7 @@ export function Checkout() {
   const [quote, setQuote] = useState(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [openGroup, setOpenGroup] = useState("");
 
   const paymentAccounts = useMemo(
     () =>
@@ -1454,6 +1560,33 @@ export function Checkout() {
       ),
     [store],
   );
+
+  const paymentGroups = [
+  { key: "bank", label: "Bank", accounts: paymentAccounts.filter(isBankAccount) },
+  {
+    key: "wallet",
+    label: "Digital Wallet",
+    accounts: paymentAccounts.filter((a) => !isBankAccount(a)),
+  },
+].filter((g) => g.accounts.length);
+
+function toggleGroup(g) {
+  if (openGroup === g.key) {
+    setOpenGroup("");
+    return;
+  }
+  // agar selected account is group ka nahi hai to is group ka pehla account select karo
+  if (!g.accounts.some((a) => a.method === accountMethod)) {
+    setAccountMethod(g.accounts[0].method);
+  }
+  setOpenGroup(g.key);
+}
+
+  useEffect(() => {
+  if (!openGroup) return;
+  const t = setTimeout(() => setOpenGroup(""), AUTO_HIDE_MS);
+  return () => clearTimeout(t);
+}, [openGroup, accountMethod]);
 
   const items = useMemo(
     () =>
@@ -1602,20 +1735,20 @@ export function Checkout() {
     (a) => a.method === accountMethod,
   );
 
+  // text-base on mobile (16px) stops iOS Safari from zooming on focus
   const inp =
-    "w-full rounded-md border border-slate-300 bg-white px-3.5 py-3.5 text-sm text-slate-900 placeholder:text-slate-500 transition focus:border-[#000000] focus:outline-none focus:ring-2 focus:ring-[#000000]/20";
+    "w-full rounded-md border border-slate-300 bg-white px-3.5 py-3.5 text-base sm:text-sm text-slate-900 placeholder:text-slate-500 transition focus:border-[#000000] focus:outline-none focus:ring-2 focus:ring-[#000000]/20";
   const optionBase =
     "flex cursor-pointer items-center gap-3 px-4 py-4 text-sm font-semibold text-slate-900";
 
   return (
     <form
       onSubmit={place}
-      className="grid items-start gap-8 lg:grid-cols-[1.3fr_1fr]"
+      className="grid items-start gap-6 sm:gap-8 lg:grid-cols-[1.3fr_1fr]"
     >
-      <div className={`${ui.card} space-y-6 p-6 md:p-8`}>
+      <div className={`${ui.card} space-y-6 p-4 sm:p-6 md:p-8`}>
         <h1 className={ui.pageTitle}>Checkout</h1>
 
-        {/* Contact */}
         {/* Contact */}
         <section className="space-y-3">
           <div className="flex items-baseline justify-between">
@@ -1778,28 +1911,30 @@ export function Checkout() {
               <input
                 type="radio"
                 name="paymentMethod"
-                className="h-4 w-4 accent-black"
+                className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-orange-500 checked:bg-[radial-gradient(circle,_#f97316_40%,_transparent_50%)]"
                 checked={isCod}
                 onChange={() => setPaymentMethod("cod")}
               />
               Cash on Delivery (COD)
             </label>
             {isCod && (
-              <div className="space-y-3 border-t border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+              <div className="space-y-3 border-t border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
                 <p>
-                  We take {advancePct ? `${advancePct}%` : "an"} advance and the
-                  remaining amount is paid in cash on delivery. Priority is
-                  given to full-payment orders.
+                  As per our criteria {advancePct ? `${advancePct}%` : "an"}  will be paid in 
+                  advance and
+                  remaining {advancePct ? `${advancePct}%` : "an"}  on delivery.
                 </p>
+                <p> Note:Priority will be 
+                  given to full advance payment.</p>
                 {quote && (
                   <div className="space-y-2 rounded-lg bg-white p-3 ring-1 ring-slate-200">
                     <Row
-                      label="Advance to pay now"
+                      label="Advance to pay "
                       value={money(advance)}
                       accent
                     />
                     <Row
-                      label="Remaining on delivery"
+                      label="on delivery"
                       value={money(remaining)}
                     />
                   </div>
@@ -1813,7 +1948,7 @@ export function Checkout() {
               <input
                 type="radio"
                 name="paymentMethod"
-                className="h-4 w-4 accent-black"
+                className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-green-600 checked:bg-[radial-gradient(circle,_#22c55e_40%,_transparent_50%)]"
                 checked={!isCod}
                 onChange={() => setPaymentMethod("bank_transfer")}
               />
@@ -1822,16 +1957,18 @@ export function Checkout() {
             {!isCod && (
               <div className="space-y-3 border-t border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
                 <p>
-                  Pay the full amount in advance using the account details
-                  below.
+                  As per our criteria full payment will be paid in advance.
                 </p>
                 {quote && (
-                  <div className="space-y-2 rounded-lg bg-white p-3 ring-1 ring-slate-200">
+                  <div className="space-y-1 rounded-lg bg-white p-3 ring-1 ring-slate-200">
                     <Row
-                      label="Full payment now"
+                      label="Payment to Pay"
                       value={money(advance)}
                       accent
                     />
+                    <p className="text-green-600 text-xs">
+                      Ya! Your order will get priority.
+                    </p>
                     <Row
                       label="Remaining on delivery"
                       value={money(remaining)}
@@ -1843,66 +1980,117 @@ export function Checkout() {
           </div>
 
           {/* Payment details (advance / full payment proof) */}
-          {!!paymentAccounts.length && (
-            <div className="space-y-3 rounded-lg border border-slate-200 p-4">
-              <h3 className="text-sm font-bold text-slate-900">
-                Send {quote ? money(advance) : "the amount"} to one of these
-                accounts
-              </h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {paymentAccounts.map((a) => (
-                  <label
-                    key={a.method}
-                    className={`cursor-pointer rounded-lg border p-3 text-sm ${
-                      accountMethod === a.method
-                        ? "border-[#000000] bg-slate-100"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 font-semibold text-slate-900">
-                      <input
-                        type="radio"
-                        name="accountMethod"
-                        className="h-4 w-4 accent-black"
-                        checked={accountMethod === a.method}
-                        onChange={() => setAccountMethod(a.method)}
-                      />
-                      {a.method}
-                    </div>
-                    <div className="mt-1 text-slate-700">{a.holderName}</div>
-                    <div className="font-mono text-slate-900">
-                      {a.accountNumber}
-                    </div>
-                    {a.instructions && (
-                      <div className="mt-1 text-xs text-slate-500">
-                        {a.instructions}
-                      </div>
-                    )}
-                  </label>
-                ))}
-              </div>
-              <input
-                className={inp}
-                required
-                placeholder="Transaction / reference number"
-                aria-label="Transaction reference number"
-                value={txnRef}
-                onChange={(e) => setTxnRef(e.target.value)}
-              />
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Payment screenshot (JPEG, PNG or WebP, max 5MB)
-                </label>
-                <input
-                  className={`${ui.input} file:mr-3 file:rounded-md file:border-0 file:bg-[#000000]/10 file:px-3 file:py-1 file:text-sm file:font-medium file:text-[#000000]`}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  required
-                  onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
-                />
-              </div>
-            </div>
-          )}
+       {!!paymentAccounts.length && (
+  <div className="space-y-4 rounded-lg border border-slate-200 p-3 sm:p-4">
+    <div>
+      <h3 className="text-sm font-bold text-slate-900">Payment Options</h3>
+      <p className="text-sm text-slate-500">
+        Choose your desired Payment Option
+      </p>
+    </div>
+
+    {/* Bank / Digital Wallet buttons */}
+    <div className="grid grid-cols-2 gap-3">
+      {paymentGroups.map((g) => {
+        const isOpen = openGroup === g.key;
+        const isSelected = g.accounts.some((a) => a.method === accountMethod);
+        return (
+          <button
+            key={g.key}
+            type="button"
+            aria-expanded={isOpen}
+            onClick={() => toggleGroup(g)}
+            className={`rounded-xl border px-4 py-4 text-sm font-semibold transition ${
+              isOpen
+                ? "border-[#000000] bg-[#000000] text-white"
+                : isSelected
+                  ? "border-[#000000] bg-slate-100 text-slate-900"
+                  : "border-slate-300 bg-white text-slate-900 hover:border-slate-400"
+            }`}
+          >
+            {g.label}
+          </button>
+        );
+      })}
+    </div>
+
+    {paymentGroups
+      .filter((g) => g.key === openGroup)
+      .map((g) => (
+        <div key={g.key} className="space-y-3">
+          <p className="text-sm font-semibold text-slate-900">
+            Send {quote ? money(advance) : "the amount"} to{" "}
+            {g.accounts.length > 1 ? "one of these accounts" : "this account"}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {g.accounts.map((a) => (
+              <label
+                key={a.method}
+                className={`cursor-pointer rounded-lg border p-3 text-sm ${
+                  accountMethod === a.method
+                    ? "border-[#000000] bg-slate-100"
+                    : "border-slate-200 bg-white"
+                }`}
+              >
+                <div className="flex items-center gap-2 font-semibold text-slate-900">
+                  <input
+                    type="radio"
+                    name="accountMethod"
+                    className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-orange-500 checked:bg-[radial-gradient(circle,_#f97316_40%,_transparent_50%)]"
+                    checked={accountMethod === a.method}
+                    onChange={() => setAccountMethod(a.method)}
+                  />
+                  {a.method}
+                </div>
+                <div className="mt-1 text-slate-700">{a.holderName}</div>
+                <div className="break-all font-mono text-slate-900">
+                  {a.accountNumber}
+                </div>
+                {a.instructions && (
+                  <div className="mt-1 text-xs text-slate-500">
+                    {a.instructions}
+                  </div>
+                )}
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+
+    {/* Ye dono wese hi hain, koi change nahi */}
+    <input
+      className={inp}
+      required
+      placeholder="Transaction / reference number"
+      aria-label="Transaction reference number"
+      value={txnRef}
+      onChange={(e) => setTxnRef(e.target.value)}
+    />
+    <div>
+      <label className="mb-0.5 block text-sm font-medium text-slate-700">
+        Attach Receipt (JPEG, PNG or WebP, max 5MB)
+      </label>
+      <p className="text-xs text-slate-500 mb-1.5">
+        Upload  your transaction receipt below
+      </p>
+      <input
+        className={`${ui.input} file:mr-3 file:rounded-md file:border-0 file:bg-[#000000]/10 file:px-3 file:py-1 file:text-sm file:font-medium file:text-[#000000]`}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        required
+        onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+      />
+    </div>
+        <input
+      className={inp}
+      required
+      placeholder="Transaction / reference number"
+      aria-label="Transaction reference number"
+      value={txnRef}
+      onChange={(e) => setTxnRef(e.target.value)}
+    />
+  </div>
+)}
         </section>
 
         {err && <Alert>{err}</Alert>}
@@ -1922,7 +2110,7 @@ export function Checkout() {
 
       {/* Right: order summary */}
 
-      <div className="h-fit rounded-md bg-white border border-slate-200 p-6 lg:sticky lg:top-28">
+      <div className="h-fit rounded-md border border-slate-200 bg-white p-4 sm:p-6 lg:sticky lg:top-28">
         <ul className="space-y-4">
           {cart.items.map((i, idx) => (
             <li key={idx} className="flex items-start gap-3 text-sm">
@@ -1932,6 +2120,8 @@ export function Checkout() {
                     <img
                       src={asset(i.image)}
                       alt={i.name}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                   )}
@@ -1948,7 +2138,7 @@ export function Checkout() {
                   <div className="text-xs text-slate-500">{i.color.name}</div>
                 )}
                 {i.customText && (
-                  <div className="mt-1 inline-block rounded-md bg-white px-2 py-0.5 text-xs text-slate-700 shadow-sm">
+                  <div className="mt-1 inline-block max-w-full break-words rounded-md bg-white px-2 py-0.5 text-xs text-slate-700 shadow-sm">
                     Name Customization: “{i.customText}”
                   </div>
                 )}
@@ -2017,7 +2207,7 @@ export function Checkout() {
               </span>
               <span>{money(quote.deliveryFee)}</span>
             </div>
-            <div className="flex items-center justify-between pt-3">
+                        <div className="flex items-center justify-between pt-3">
               <span className="text-lg font-semibold text-slate-900">
                 Total
               </span>
@@ -2028,14 +2218,12 @@ export function Checkout() {
                 </span>
               </span>
             </div>
-            <div className="space-y-2 border-t border-slate-200 pt-3">
-              <Row
-                label={isCod ? "Advance due" : "Pay now (full)"}
-                value={money(advance)}
-                accent
-              />
-              <Row label="Remaining COD" value={money(remaining)} />
-            </div>
+            {isCod && (
+              <div className="space-y-2 border-t border-slate-200 pt-3">
+                <Row label="Advance due" value={money(advance)} accent />
+                <Row label="Remaining COD" value={money(remaining)} />
+              </div>
+            )}
           </div>
         )}
         <p className="mt-4 flex items-center gap-2 text-xs text-slate-500">
@@ -2055,7 +2243,7 @@ function OrderView({
 }) {
   return (
     <div className="space-y-6">
-      <div className={`${ui.card} p-6 md:p-8`}>
+      <div className={`${ui.card} p-4 sm:p-6 md:p-8`}>
         <h1 className={ui.pageTitle}>{title}</h1>
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-slate-600">
@@ -2113,7 +2301,7 @@ function OrderView({
         </div>
         {whatsappUrl && (
           <a
-            className="mt-5 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 sm:w-auto"
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
@@ -2122,13 +2310,13 @@ function OrderView({
           </a>
         )}
       </div>
-      <div className={`${ui.card} p-6 md:p-8`}>
+      <div className={`${ui.card} p-4 sm:p-6 md:p-8`}>
         <h2 className="text-lg font-bold text-slate-900">Items</h2>
         <div className="mt-4 divide-y divide-slate-100">
           {order.items.map((i, idx) => (
             <div
               key={idx}
-              className="grid gap-4 py-4 first:pt-0 sm:grid-cols-[140px_1fr]"
+              className="grid grid-cols-[96px_1fr] gap-4 py-4 first:pt-0 sm:grid-cols-[140px_1fr]"
             >
               <CustomPreview
                 product={{
@@ -2138,7 +2326,7 @@ function OrderView({
                 }}
                 image={i.image}
               />
-              <div className="space-y-1 text-sm text-slate-700">
+              <div className="min-w-0 space-y-1 break-words text-sm text-slate-700">
                 {i.quantity} × {i.name} — “{i.customText}”
                 {i.color && (
                   <div className="flex items-center gap-2 text-slate-500">
@@ -2214,7 +2402,7 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
   }
 
   return (
-    <div className={`${ui.card} p-6 md:p-8`}>
+    <div className={`${ui.card} p-4 sm:p-6 md:p-8`}>
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
         <FiCreditCard className="text-[#000000]" /> Pay the advance
       </h2>
@@ -2230,7 +2418,7 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
           >
             <div className="font-semibold text-slate-900">{a.method}</div>
             <div>{a.holderName}</div>
-            <div className="font-mono">{a.accountNumber}</div>
+            <div className="break-all font-mono">{a.accountNumber}</div>
             <div className="mt-1 text-slate-600">{a.instructions}</div>
           </div>
         ))}
@@ -2281,7 +2469,7 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
           </Field>
           {err && <Alert>{err}</Alert>}
           {msg && <Alert kind="ok">{msg}</Alert>}
-          <button className={ui.btn} disabled={busy}>
+          <button className={`${ui.btn} w-full sm:w-auto`} disabled={busy}>
             {isCod ? <FiCheckCircle /> : <FiUpload />}{" "}
             {busy
               ? "Submitting…"
@@ -2297,7 +2485,7 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
             Submitted payments
           </div>
           {payments.map((p) => (
-            <div key={p._id} className="py-0.5">
+            <div key={p._id} className="break-words py-0.5">
               {p.method} · {p.transactionRef} · {statusLabel(p.status)}
               {p.rejectionReason ? ` · ${p.rejectionReason}` : ""}
             </div>
@@ -2323,7 +2511,7 @@ export function ThankYou() {
   if (err) return <Alert>{err}</Alert>;
   if (!data) return <PageLoader text="Loading your order…" />;
   return (
-    <div className="mx-auto max-w-8xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <OrderView {...data} title="Thank you" showPayment />
       {!data.payments?.length && data.order.paymentStatus !== "verified" && (
         <PaymentSection {...data} token={token} />
@@ -2351,7 +2539,7 @@ export function OrderLookup() {
   }
   return (
     <div className="mx-auto max-w-6xl">
-      <div className={`${ui.card} p-6 md:p-8`}>
+      <div className={`${ui.card} p-4 sm:p-6 md:p-8`}>
         <h1 className={ui.pageTitle}>Track Order</h1>
         <p className="mt-2 text-sm text-slate-600">
           Enter the Order ID and the email used at checkout.
@@ -2373,7 +2561,7 @@ export function OrderLookup() {
             />
           </Field>
           {err && <Alert>{err}</Alert>}
-          <button className={ui.btn}>
+          <button className={`${ui.btn} w-full sm:w-auto`}>
             <FiSearch /> Look up
           </button>
         </form>
@@ -2386,17 +2574,55 @@ export function OrderLookup() {
     </div>
   );
 }
-export function Faq() {
-  const { store } = useStore();
+// Policies aur Faq dono purane functions ko in se replace karo.
+// Naye imports ki zaroorat nahi: FiTruck, FiRotateCcw, FiClock, FiCreditCard,
+// FiLock, FiShield, FiChevronDown pehle se tumhari file mein import hain.
+
+const BRAND_POLICIES = [
+  {
+    icon: FiTruck,
+    t: "Shipping",
+    b: "We deliver across Pakistan. Orders are processed after confirmation, and delivery timelines may vary depending on your location and product availability. Shipping charges are displayed at checkout.",
+  },
+  {
+    icon: FiRotateCcw,
+    t: "Return & Refund",
+    b: "Customized and personalized products cannot be returned or exchanged unless they arrive damaged, defective, or different from what was ordered. Please contact us with order details and photos of the issue.",
+  },
+  {
+    icon: FiClock,
+    t: "Cancellation",
+    b: "Orders can only be cancelled before customization or production begins. Once production has started, cancellation may not be possible.",
+  },
+  {
+    icon: FiCreditCard,
+    t: "Payment",
+    b: "We offer the payment methods displayed at checkout. Any advance payment requirements will be communicated before order confirmation.",
+  },
+  {
+    icon: FiLock,
+    t: "Privacy",
+    b: "Your personal information is used only to process orders, arrange delivery, and provide customer support. We do not sell your personal information.",
+  },
+  {
+    icon: FiShield,
+    t: "Terms & Conditions",
+    b: "Customers are responsible for providing accurate names, spellings, logos, and customization details. Please review your customization information carefully before confirming your order.",
+  },
+];
+
+export function Policies() {
   return (
     <div className="mx-auto max-w-5xl">
-      <PageHeader title="FAQ" subtitle="Quick answers to common questions." />
-      <div className="space-y-3">
-        {store?.faqs?.map((f, i) => (
-          <div key={i} className={`${ui.card} p-5`}>
-            <div className="font-semibold text-slate-900">{f.question}</div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              {f.answer}
+      <PageHeader title="Brand Policies" />
+      <div className="space-y-4">
+        {BRAND_POLICIES.map(({ icon: Icon, t, b }) => (
+          <div key={t} className={`${ui.card} p-4 sm:p-6`}>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 sm:text-xl">
+              <Icon className="shrink-0 text-[#000000]" /> {t}
+            </h2>
+            <p className="mt-3 whitespace-pre-line leading-relaxed text-slate-600">
+              {b}
             </p>
           </div>
         ))}
@@ -2405,25 +2631,22 @@ export function Faq() {
   );
 }
 
-export function Policies() {
+export function Faq() {
   const { store } = useStore();
   return (
     <div className="mx-auto max-w-5xl">
-      <PageHeader title="Policies" />
-      <div className="space-y-4">
-        {[
-          { icon: FiTruck, t: "Shipping", b: store?.policies?.shipping },
-          { icon: FiRotateCcw, t: "Returns", b: store?.policies?.returns },
-          { icon: FiShield, t: "Privacy", b: store?.policies?.privacy },
-        ].map(({ icon: Icon, t, b }) => (
-          <div key={t} className={`${ui.card} p-6`}>
-            <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
-              <Icon className="text-[#000000]" /> {t}
-            </h2>
-            <p className="mt-3 whitespace-pre-line leading-relaxed text-slate-600">
-              {b}
+      <PageHeader title="FAQ" subtitle="Quick answers to common questions." />
+      <div className="space-y-3">
+        {store?.faqs?.map((f, i) => (
+          <details key={i} className={`${ui.card} group p-4 sm:p-5`}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-slate-900 [&::-webkit-details-marker]:hidden">
+              <span>{f.question}</span>
+              <FiChevronDown className="shrink-0 text-slate-500 transition group-open:rotate-180" />
+            </summary>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">
+              {f.answer}
             </p>
-          </div>
+          </details>
         ))}
       </div>
     </div>
@@ -2457,7 +2680,7 @@ export function LoginPage() {
     }
   }
   return (
-    <div className={`${ui.card} mx-auto max-w-xl p-6 md:p-8`}>
+    <div className={`${ui.card} mx-auto max-w-xl p-4 sm:p-6 md:p-8`}>
       <h1 className="text-2xl font-extrabold text-slate-900">
         {mode === "login" ? "Welcome back" : "Create account"}
       </h1>
@@ -2571,20 +2794,22 @@ export function AccountPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div
-        className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-6`}
+        className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-4 sm:p-6`}
       >
-        <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#000000] text-xl font-bold text-white">
+        <div className="flex min-w-0 items-center gap-4">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#000000] text-xl font-bold text-white">
             {(customer.fullName || "?").charAt(0).toUpperCase()}
           </span>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">My Account</h1>
-            <p className="text-sm text-slate-600">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
+              My Account
+            </h1>
+            <p className="break-words text-sm text-slate-600">
               {customer.fullName} · {customer.email}
             </p>
           </div>
         </div>
-        <button className={ui.btnOutline} onClick={logout}>
+        <button className={`${ui.btnOutline} w-full sm:w-auto`} onClick={logout}>
           <FiLogOut /> Log out
         </button>
       </div>
@@ -2601,7 +2826,7 @@ export function AccountPage() {
         {orders.map((o) => (
           <div
             key={o.id}
-            className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-5 text-sm transition hover:border-[#000000]/40 hover:shadow-md`}
+            className={`${ui.card} flex flex-wrap items-center justify-between gap-4 p-4 text-sm transition hover:border-[#000000]/40 hover:shadow-md sm:p-5`}
           >
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
@@ -2629,7 +2854,7 @@ export function AccountPage() {
         ))}
         {!orders.length && (
           <div
-            className={`${ui.card} flex flex-col items-center gap-2 p-10 text-center text-slate-500`}
+            className={`${ui.card} flex flex-col items-center gap-2 p-8 text-center text-slate-500 sm:p-10`}
           >
             <FiPackage className="text-3xl text-slate-300" />
             No orders on this account yet.

@@ -3,6 +3,7 @@ import logo from "./assets/logo.jpeg";
 import blackImage from "./assets/blackImage.png";
 import whiteImage from "./assets/whiteImage.png";
 import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
+import { FaWhatsapp } from "react-icons/fa";
 import {
   FiAlertCircle,
   FiBarChart2,
@@ -19,6 +20,7 @@ import {
   FiTag,
   FiUser,
   FiX,
+   FiShoppingBag,
   FiCreditCard,
 } from "react-icons/fi";
 import { useCart, useStore, useAuth } from "./context";
@@ -34,10 +36,11 @@ export const ui = {
   btnLight:
     "inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#000000] shadow-md transition hover:bg-slate-100",
   card: "rounded-md border border-slate-200 bg-white shadow-sm",
+  // text-base on mobile (16px) stops iOS Safari from zooming on focus
   input:
-    "w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-[#000000] focus:outline-none focus:ring-4 focus:ring-[#000000]/15",
+    "w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-[#000000] focus:outline-none focus:ring-4 focus:ring-[#000000]/15",
   pageTitle:
-    "text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl",
+    "text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl md:text-4xl",
 };
 
 function overlayStyle(p = {}) {
@@ -65,7 +68,9 @@ function overlayStyle(p = {}) {
 
 export function TopBar() {
   return (
-    <div className="bg-[#000000] px-4 text-center text-xs font-medium tracking-wide text-white sm:text-sm"></div>
+    <div className="bg-[#c79901] px-4 py-1 text-center text-sm font-medium tracking-wide text-black sm:text-sm">
+      Pakistan's Premium Customization & Gifting Brand
+    </div>
   );
 }
 export function GlobalLoader() {
@@ -75,7 +80,40 @@ export function GlobalLoader() {
   return (
     <div className="fixed inset-x-0 top-0 z-[100] h-1 overflow-hidden bg-slate-200">
       <div className="h-full w-1/3 animate-pulse bg-[#000000]" />
+      
     </div>
+  );
+}
+
+export function WhatsAppButton() {
+  const { store } = useStore();
+
+  const waNumber = (
+    store?.whatsapp ||
+    store?.whatsappNumber ||
+    store?.phone ||
+    ""
+  )
+    .replace(/\D/g, "")
+    .replace(/^0/, "92");
+
+  if (!waNumber) return null;
+
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(
+    "Hello Craftagon, I have a question.",
+  )}`;
+
+  return (
+<a
+  href={waUrl}
+  target="_blank"
+  rel="noreferrer"
+  aria-label="Chat on WhatsApp"
+  title="Chat on WhatsApp"
+  className="fixed bottom-5 right-5 z-40 flex h-14 w-14 animate-bounce items-center justify-center rounded-full bg-[#25D366] text-4xl text-white shadow-lg transition hover:brightness-95 sm:bottom-6 sm:right-6"
+>
+  <FaWhatsapp />
+</a>
   );
 }
 
@@ -111,7 +149,7 @@ export function Header() {
         : "text-slate-700 hover:bg-slate-50"
     }`;
 
-  const iconBtn = `relative inline-flex h-10 w-10 items-center justify-center rounded-md text-xl transition ${
+ const iconBtn = `relative inline-flex h-9 w-9 items-center justify-center rounded-md text-xl transition sm:h-10 sm:w-10 ${
     light ? "text-black hover:bg-black/5" : "text-white hover:bg-white/10"
   }`;
 
@@ -120,11 +158,13 @@ export function Header() {
       <header
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className={`sticky top-0 z-40 border-b shadow-sm backdrop-blur-md transition-colors duration-300 ${
-          light ? "border-slate-200 bg-white" : "border-black bg-black"
+        className={`sticky top-0 z-40 transition-colors duration-300 ${
+          light ? " bg-white" : " bg-black"
         }`}
       >
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-1 px-2 sm:py-1">
+        {/* Mobile: [menu] [logo (left)] ........ [icons]
+            Desktop (sm+): menu left, logo center, icons right */}
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-1 px-2 py-2">
           {/* Left: Menu */}
           <div
             className={`flex items-center justify-start gap-1 transition-colors ${
@@ -142,13 +182,13 @@ export function Header() {
             <span className="hidden sm:inline">Menu</span>
           </div>
 
-          {/* Center: Logo */}
+          {/* Logo: left on mobile, center on desktop */}
           <div className="flex items-center justify-center">
             <Link
               to="/"
               className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-[#000000] sm:text-xl"
             >
-              <span className="relative block h-20 w-[150px] sm:h-14 sm:w-[200px]">
+  <span className="relative block h-20 w-[150px] sm:h-16 sm:w-[200px]">
                 <img
                   src={blackImage}
                   alt={store?.storeName || "Craftagon"}
@@ -169,36 +209,44 @@ export function Header() {
           </div>
 
           {/* Right: Cart, Account, Track order (icons only) */}
-          <div className="flex items-center justify-end">
-            <Link to="/cart" className={iconBtn} aria-label="Cart" title="Cart">
-              <FiShoppingCart />
-              {cart.count > 0 && (
-                <span
-                  className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full gap-1 text-xs font-bold ${
-                    light ? "bg-black text-white" : "bg-white text-[#000000]"
-                  }`}
-                >
-                  {cart.count}
-                </span>
-              )}
-            </Link>
-            <Link
-              to={customer ? "/account" : "/login"}
-              className={iconBtn}
-              aria-label={customer ? "My account" : "Login"}
-              title={customer ? "My account" : "Login"}
-            >
-              <FiUser />
-            </Link>
-            <Link
-              to="/order-lookup"
-              className={iconBtn}
-              aria-label="Track order"
-              title="Track order"
-            >
-              <FiPackage />
-            </Link>
-          </div>
+          
+{/* Right: Cart, Account, Track order */}
+<div className="flex items-center justify-end gap-0.5">
+  {/* Shopping Bag */}
+  <Link to="/cart" className={iconBtn} aria-label="Cart" title="Cart">
+    <FiShoppingBag />
+    {cart.count > 0 && (
+      <span
+        className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full gap-1 text-xs font-bold ${
+          light ? "bg-black text-white" : "bg-white text-black"
+        }`}
+      >
+        {cart.count}
+      </span>
+    )}
+  </Link>
+
+  {/* Account */}
+  <Link
+    to={customer ? "/account" : "/login"}
+    className={iconBtn}
+    aria-label={customer ? "My account" : "Login"}
+    title={customer ? "My account" : "Login"}
+  >
+    <FiUser />
+  </Link>
+
+  {/* Track Order - Hidden on Mobile */}
+  <Link
+    to="/order-lookup"
+    className={`${iconBtn} hidden sm:flex`}
+    aria-label="Track order"
+    title="Track order"
+  >
+    <FiPackage />
+  </Link>
+</div>
+
         </div>
       </header>
 
@@ -217,7 +265,7 @@ export function Header() {
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm font-bold text-slate-900">Menu</span>
             <button
               type="button"
@@ -269,6 +317,13 @@ export function Header() {
                 How to Order
               </NavLink>
               <NavLink
+                to="/how-payment-works"
+                className={mobileLinkClass}
+                onClick={() => setOpen(false)}
+              >
+                How Payment Works
+              </NavLink>
+              <NavLink
                 to="/about"
                 className={mobileLinkClass}
                 onClick={() => setOpen(false)}
@@ -300,7 +355,7 @@ export function Header() {
 export function Footer() {
   const { store, categories } = useStore();
   const link = "block text-white/75 transition hover:text-white";
-  const head = "mb-5 text-xs font-bold uppercase tracking-[0.2em] text-white";
+  const head = "mb-4 text-xs font-bold uppercase tracking-[0.2em] text-white sm:mb-5";
   const occasions = [
     "Birthday",
     "Anniversary",
@@ -309,20 +364,26 @@ export function Footer() {
     "Father's Day",
   ];
   const phone = store?.whatsappNumber || store?.phone;
+
+  const waNumber = String(phone || "")
+  .replace(/\D/g, "")
+  .replace(/^0/, "92");
+const waUrl = waNumber ? `https://wa.me/${waNumber}` : "";
+
   return (
-    <footer className="mt-20 bg-[#000000] text-white/75">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr]">
-        <div>
-          <div className="flex items-center gap-2 text-2xl font-extrabold text-white">
+    <footer className="mt-12 bg-[#000000] text-white/75 sm:mt-20">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 sm:gap-10 sm:py-14 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr]">
+        <div className="col-span-2 lg:col-span-1">
+          <div className="flex items-start justify-start gap-2 text-2xl font-extrabold text-white">
             <img
-              src={logo}
-              alt={store?.storeName || "Craftagon"}
-              className="h-28 w-28 rounded-md object-cover"
-            />
+  src={blackImage}
+  alt={store?.storeName || "Craftagon"}
+  className="h-10 w-auto max-w-full flex justify-start object-contain sm:h-12"
+/>
           </div>
           <p className="mt-4 text-sm leading-relaxed">
             {store?.tagline ||
-              "Personalised gifts, printed with your name or message and delivered across Pakistan."}
+              "Craftagon Own Your Mark Premium Personalized Gifts "}
           </p>
           {store?.address && (
             <p className="mt-4 text-sm leading-relaxed">
@@ -330,20 +391,24 @@ export function Footer() {
               {store.address}
             </p>
           )}
-          {phone && (
-            <p className="mt-4 text-sm">
-              <span className="text-white/60">Call / WhatsApp</span>
-              <br />
-              <a
-                href={`tel:${String(phone).replace(/\s+/g, "")}`}
-                className="transition hover:text-white"
-              >
-                {phone}
-              </a>
-            </p>
-          )}
+         {phone && (
+  <p className="mt-4 text-sm">
+    <span className="text-white/60">Contact onWhatsApp</span>
+    <br />
+    <a
+      href={waUrl}
+      target="_blank"
+      rel="noreferrer"
+      className="transition hover:text-white"
+    >
+      {phone}
+    </a>
+  </p>
+)}
           {store?.email && (
-            <p className="mt-2 text-sm">
+            <p className="mt-2 break-all text-sm">
+             <span className="text-white/60">Email Us</span>
+              <br />
               <a
                 href={`mailto:${store.email}`}
                 className="transition hover:text-white"
@@ -352,9 +417,6 @@ export function Footer() {
               </a>
             </p>
           )}
-          <p className="mt-2 text-xs text-white/60">
-            Click or tap to start a WhatsApp conversation with our support team
-          </p>
         </div>
 
         <div>
@@ -410,28 +472,30 @@ export function Footer() {
           </div>
         </div>
 
-        <div>
+        <div className="col-span-2 lg:col-span-1">
           <div className={head}>Ordering & Delivery</div>
           <div className="space-y-3 text-sm">
             <Link className={link} to="/order-lookup">
               Track your order
             </Link>
-            <Link className={link} to="/help">
-              How payment works
+            <Link className={link} to="/how-to-order">
+              How to Order
+            </Link>
+            <Link className={link} to="/how-payment-works">
+              How Payment Works
             </Link>
             <Link className={link} to="/login">
               Login / Register
             </Link>
             <p className="flex gap-2 pt-1 leading-relaxed text-white/60">
               <FiCreditCard className="mt-1 shrink-0" />
-              Pay the advance by JazzCash or Easypaisa, or choose COD. No card
-              checkout.
+              Easy Checkout and Payment Processing
             </p>
           </div>
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-4">
-        <div className="flex flex-col items-center justify-between gap-2 border-t border-white/15 py-6 text-xs text-white/60 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-2 border-t border-white/15 py-6 text-center text-xs text-white/60 sm:flex-row sm:text-left">
           <span>
             © {new Date().getFullYear()} {store?.storeName || "Craftagon"}. All
             rights reserved.
@@ -449,10 +513,11 @@ export function Layout() {
       <TopBar />
       <GlobalLoader />
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-6 sm:px-4 sm:py-10">
         <Outlet />
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }
@@ -466,13 +531,15 @@ export function ProductCard({ product }) {
   return (
     <Link
       to={`/products/${product.slug}`}
-      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#000000]/40 hover:shadow-lg"
+      className="group overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#000000]/40 hover:shadow-lg sm:rounded-2xl"
     >
       <div className="relative aspect-square overflow-hidden bg-slate-100">
         {product.images?.[0] ? (
           <img
             src={asset(product.images[0])}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
@@ -481,24 +548,24 @@ export function ProductCard({ product }) {
           </div>
         )}
         {onSale && (
-          <span className="absolute right-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold tracking-wide text-white shadow">
+          <span className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white shadow sm:right-3 sm:top-3 sm:px-3 sm:py-1 sm:text-xs">
             Sale
           </span>
         )}
       </div>
-      <div className="p-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#000000]/70">
+      <div className="p-2.5 sm:p-4">
+        <div className="truncate text-[10px] font-semibold uppercase tracking-wider text-[#000000]/70 sm:text-xs">
           {product.category?.name}
         </div>
-        <div className="mt-1 line-clamp-2 font-semibold text-slate-900 group-hover:text-[#000000]">
+        <div className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#000000] sm:text-base">
           {product.name}
         </div>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-[#000000]">
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 sm:mt-2">
+          <span className="text-base font-bold text-[#000000] sm:text-lg">
             {money(price)}
           </span>
           {onSale && (
-            <span className="text-sm text-slate-400 line-through">
+            <span className="text-xs text-slate-400 line-through sm:text-sm">
               {money(product.price)}
             </span>
           )}
@@ -605,7 +672,7 @@ export function AdminShell() {
         {menu}
       </aside>
       <div className="flex-1 overflow-x-hidden">
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+        <div className="sticky top-0 z-30 flex items-center justify-between bg-white px-4 py-3 md:hidden">
           <span className="font-bold text-slate-900">Admin</span>
           <button
             className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 text-lg text-slate-800"

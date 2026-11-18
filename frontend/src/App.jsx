@@ -18,6 +18,7 @@ import {
   LoginPage,
   AccountPage,
   HowToOrder,
+  HowPaymentWorks,
 } from "./pages";
 import {
   AdminLogin,
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/policies" element={<Policies />} />
           <Route path="/about" element={<About />} />
           <Route path="/how-to-order" element={<HowToOrder />} />
+          <Route path="/how-payment-works" element={<HowPaymentWorks />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/help" element={<Help />} />
           <Route path="/login" element={<LoginPage />} />
