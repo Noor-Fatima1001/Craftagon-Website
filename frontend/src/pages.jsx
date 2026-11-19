@@ -43,6 +43,7 @@ import { FaWhatsapp, FaFacebookF, FaInstagram } from "react-icons/fa";
 import { api, asset, money, statusLabel } from "./api";
 import { useAuth, useCart, useStore } from "./context";
 import { Alert, CustomPreview, Field, ProductCard, ui } from "./components";
+import { fetchGoogleFonts, loadGoogleFonts } from "./googleFonts";
 
 
 const PROVINCES = [
@@ -58,7 +59,7 @@ const PROVINCES = [
 const STEPS = [
   {
     icon: FiSearch,
-    title: "Choose a product",
+    title: "Choose an Article",
     text: "Browse our Catalogue and choose your desired product.",
   },
   {
@@ -956,9 +957,28 @@ export function Products() {
   );
 }
 
+const CUSTOM_FONTS = [
+  { label: "Poppins", value: "'Poppins', sans-serif" },
+  { label: "Montserrat", value: "'Montserrat', sans-serif" },
+  { label: "Oswald", value: "'Oswald', sans-serif" },
+  { label: "Bebas Neue", value: "'Bebas Neue', sans-serif" },
+  { label: "Playfair Display", value: "'Playfair Display', serif" },
+  { label: "Roboto Slab", value: "'Roboto Slab', serif" },
+  { label: "Cinzel", value: "'Cinzel', serif" },
+  { label: "Lobster", value: "'Lobster', cursive" },
+  { label: "Pacifico", value: "'Pacifico', cursive" },
+  { label: "Dancing Script", value: "'Dancing Script', cursive" },
+  { label: "Great Vibes", value: "'Great Vibes', cursive" },
+  { label: "Satisfy", value: "'Satisfy', cursive" },
+  { label: "Courgette", value: "'Courgette', cursive" },
+  { label: "Caveat", value: "'Caveat', cursive" },
+  { label: "Permanent Marker", value: "'Permanent Marker', cursive" },
+];
+
 export function ProductDetail() {
   const { slug } = useParams();
   const cart = useCart();
+
   const nav = useNavigate();
   const [product, setProduct] = useState(null);
   const [reviewData, setReviewData] = useState({
@@ -970,19 +990,27 @@ export function ProductDetail() {
   const [text, setText] = useState("");
   const [qty, setQty] = useState(1);
   const [colorVariantId, setColorVariantId] = useState("");
-const [productError, setProductError] = useState("");
-const [customTextError, setCustomTextError] = useState("");
-const [err, setErr] = useState("");
+  const [productError, setProductError] = useState("");
+  const [customTextError, setCustomTextError] = useState("");
+  const [err, setErr] = useState("");
   const [customNote, setCustomNote] = useState("");
-useEffect(() => {
-  api
-    .product(slug)
-    .then((d) => {
-      setProduct(d.product);
-      setColorVariantId(d.product.colorVariants?.[0]?._id || "");
-    })
-    .catch((e) => setProductError(e.message));
-}, [slug]);
+  const [fontLabel, setFontLabel] = useState(CUSTOM_FONTS[0].label);
+
+  // Google Fonts (API fail ho to CUSTOM_FONTS fallback chalega)
+  const [fonts, setFonts] = useState(CUSTOM_FONTS);
+  const [fontSearch, setFontSearch] = useState("");
+  const [fontLimit, setFontLimit] = useState(24);
+
+  useEffect(() => {
+    api
+      .product(slug)
+      .then((d) => {
+        setProduct(d.product);
+        setColorVariantId(d.product.colorVariants?.[0]?._id || "");
+      })
+      .catch((e) => setProductError(e.message));
+  }, [slug]);
+
   useEffect(() => {
     let active = true;
     setReviewsLoading(true);
@@ -1003,8 +1031,43 @@ useEffect(() => {
       active = false;
     };
   }, [slug]);
-if (productError) return <Alert>{productError}</Alert>;
+
+  // Google Fonts list fetch
+  useEffect(() => {
+    let active = true;
+    fetchGoogleFonts()
+      .then((list) => {
+        if (active && list.length) setFonts(list);
+      })
+      .catch(() => {}); // fallback list chalti rahegi
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Search + "load more" ke hisaab se jo fonts screen par dikhne hain
+  const visibleFonts = useMemo(() => {
+    const filtered = fonts.filter((f) =>
+      f.label.toLowerCase().includes(fontSearch.trim().toLowerCase()),
+    );
+    const list = filtered.slice(0, fontLimit);
+    // selected font hamesha list mein rahe, chahe search se bahar ho
+    const selected = fonts.find((f) => f.label === fontLabel);
+    if (selected && !list.some((f) => f.label === selected.label)) {
+      list.unshift(selected);
+    }
+    return { list, total: filtered.length };
+  }, [fonts, fontSearch, fontLimit, fontLabel]);
+
+  // Sirf visible fonts ka CSS load karo
+  useEffect(() => {
+    loadGoogleFonts(visibleFonts.list.map((f) => f.label));
+  }, [visibleFonts]);
+
+  if (productError) return <Alert>{productError}</Alert>;
   if (!product) return <PageLoader />;
+
+  const selectedFont = fonts.find((f) => f.label === fontLabel) || fonts[0];
   const price =
     product.salePrice && product.salePrice < product.price
       ? product.salePrice
@@ -1015,6 +1078,7 @@ if (productError) return <Alert>{productError}</Alert>;
     (variant) => variant._id === colorVariantId,
   );
   const productImage = selectedColor?.image || product.images?.[0];
+
   function add() {
     const customText = text.trim();
 
@@ -1048,6 +1112,7 @@ if (productError) return <Alert>{productError}</Alert>;
       price,
       quantity: qty,
       customText,
+      customFont: selectedFont.label,
       customNote: customNote.trim(),
       colorVariantId: selectedColor?._id || "",
       color: selectedColor
@@ -1059,13 +1124,18 @@ if (productError) return <Alert>{productError}</Alert>;
 
     nav("/cart");
   }
+
   return (
     <div className="space-y-10 sm:space-y-12">
       <div className="grid gap-6 sm:gap-10 md:grid-cols-2">
         <div
           className={`${ui.card} h-fit overflow-hidden p-3 md:sticky md:top-28`}
         >
-          <CustomPreview product={product} image={productImage} />
+          <CustomPreview
+            product={product}
+            image={productImage}
+            fontFamily={selectedFont.value}
+          />
         </div>
         <div className={`${ui.card} h-fit p-4 sm:p-6 md:p-8`}>
           {product.category?.name && (
@@ -1119,31 +1189,97 @@ if (productError) return <Alert>{productError}</Alert>;
                 </div>
               </Field>
             )}
-           
+
             <Field label={product.customization?.label || "Custom text"}>
-  <input
-    className={`${ui.input} ${
-      customTextError ? "border-red-500 focus:border-red-500" : ""
-    }`}
-    maxLength={max}
-    value={text}
-    onChange={(e) => {
-      setText(e.target.value);
-      setCustomTextError("");
-    }}
-  />
+              <input
+                className={`${ui.input} ${
+                  customTextError ? "border-red-500 focus:border-red-500" : ""
+                }`}
+                maxLength={max}
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setCustomTextError("");
+                }}
+              />
 
-  {customTextError && (
-    <p className="mt-1.5 text-sm font-medium text-red-600">
-      {customTextError}
-    </p>
-  )}
+              {customTextError && (
+                <p className="mt-1.5 text-sm font-medium text-red-600">
+                  {customTextError}
+                </p>
+              )}
 
-  <p className="mt-1.5 text-xs text-slate-500">
-    {text.length}/{max} characters · this text will be printed on
-    your product
-  </p>
+              <p className="mt-1.5 text-xs text-slate-500">
+                {text.length}/{max} characters · this text will be printed on
+                your product
+              </p>
             </Field>
+
+            {product.customization?.enabled !== false && (
+              <div className="space-y-4">
+                {/* Live preview */}
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-medium text-slate-500">
+                    Text preview
+                  </p>
+                  <p
+                    className="mt-3 min-h-[3rem] break-words text-center text-3xl leading-snug text-slate-900"
+                    style={{ fontFamily: selectedFont.value }}
+                  >
+                    {text || "Your text here"}
+                  </p>
+                </div>
+
+                {/* Font options */}
+                <div>
+                  <p className="mb-2 text-sm font-medium text-slate-700">
+                    Font style
+                  </p>
+                  <input
+                    className={`${ui.input} mb-3`}
+                    placeholder="Search fonts"
+                    aria-label="Search fonts"
+                    value={fontSearch}
+                    onChange={(e) => {
+                      setFontSearch(e.target.value);
+                      setFontLimit(24);
+                    }}
+                  />
+                  <div className="grid max-h-96 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                    {visibleFonts.list.map((f) => (
+                      <button
+                        key={f.label}
+                        type="button"
+                        onClick={() => setFontLabel(f.label)}
+                        aria-pressed={f.label === fontLabel}
+                        style={{ fontFamily: f.value }}
+                        className={`rounded-md border px-3 py-2 text-base transition ${
+                          f.label === fontLabel
+                            ? "border-[#000000] bg-slate-100 ring-2 ring-[#000000]/25"
+                            : "border-slate-200 bg-white hover:border-slate-300"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                  {!visibleFonts.list.length && (
+                    <p className="mt-2 text-sm text-slate-500">
+                      No fonts found.
+                    </p>
+                  )}
+                  {fontLimit < visibleFonts.total && (
+                    <button
+                      type="button"
+                      className={`${ui.btnOutline} mt-3 w-full`}
+                      onClick={() => setFontLimit((n) => n + 24)}
+                    >
+                      Load more fonts
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             <Field label="Note (optional)">
               <textarea
@@ -1434,6 +1570,9 @@ export function ReviewSubmission() {
 
 export function CartPage() {
   const cart = useCart();
+  useEffect(() => {
+    loadGoogleFonts(cart.items.map((i) => i.customFont).filter(Boolean));
+  }, [cart.items]);
   return (
     <div>
       <PageHeader title="Cart" />
@@ -1461,6 +1600,7 @@ export function CartPage() {
                 images: [it.image],
               }}
               image={it.image}
+              fontFamily={it.customFont ? `'${it.customFont}', cursive` : undefined}
             />
             <div className="min-w-0 space-y-1">
               <Link
@@ -1472,6 +1612,14 @@ export function CartPage() {
               <p className="break-words text-sm text-slate-500">
                 Custom text: {it.customText || "—"}
               </p>
+              {it.customFont && (
+                <p className="text-sm text-slate-500">
+                  Font:{" "}
+                  <span style={{ fontFamily: `'${it.customFont}', cursive` }}>
+                    {it.customFont}
+                  </span>
+                </p>
+              )}
               {it.color && (
                 <p className="flex items-center gap-2 text-sm text-slate-500">
                   Color:{" "}
@@ -1587,17 +1735,21 @@ function toggleGroup(g) {
   const t = setTimeout(() => setOpenGroup(""), AUTO_HIDE_MS);
   return () => clearTimeout(t);
 }, [openGroup, accountMethod]);
+const items = useMemo(
+  () =>
+    cart.items.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      customText: i.customText,
+      ...(i.customFont ? { customFont: i.customFont } : {}),   // <-- new
+      ...(i.colorVariantId ? { colorVariantId: i.colorVariantId } : {}),
+    })),
+  [cart.items],
+);
 
-  const items = useMemo(
-    () =>
-      cart.items.map((i) => ({
-        productId: i.productId,
-        quantity: i.quantity,
-        customText: i.customText,
-        ...(i.colorVariantId ? { colorVariantId: i.colorVariantId } : {}),
-      })),
-    [cart.items],
-  );
+  useEffect(() => {
+    loadGoogleFonts(cart.items.map((i) => i.customFont).filter(Boolean));
+  }, [cart.items]);
 
   useEffect(() => {
     if (customer) {
@@ -2142,6 +2294,14 @@ function toggleGroup(g) {
                     Name Customization: “{i.customText}”
                   </div>
                 )}
+                {i.customFont && (
+                  <div className="mt-1 text-xs text-slate-600">
+                    Font:{" "}
+                    <span style={{ fontFamily: `'${i.customFont}', cursive` }}>
+                      {i.customFont}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="shrink-0 text-slate-900">
                 {money(i.price * i.quantity)}
@@ -2241,6 +2401,10 @@ function OrderView({
   title = "Order",
   showPayment = false,
 }) {
+  useEffect(() => {
+    loadGoogleFonts(order.items.map((i) => i.customFont).filter(Boolean));
+  }, [order]);
+
   return (
     <div className="space-y-6">
       <div className={`${ui.card} p-4 sm:p-6 md:p-8`}>
@@ -2325,9 +2489,24 @@ function OrderView({
                   images: [i.image],
                 }}
                 image={i.image}
+                fontFamily={i.customFont ? `'${i.customFont}', cursive` : undefined}
               />
               <div className="min-w-0 space-y-1 break-words text-sm text-slate-700">
                 {i.quantity} × {i.name} — “{i.customText}”
+
+                {i.customFont && (
+  <div className="text-slate-500">
+    Font:{" "}
+    <span
+      className="text-base text-slate-900"
+      style={{
+        fontFamily: `'${i.customFont}', cursive`,
+      }}
+    >
+      {i.customFont}
+    </span>
+  </div>
+)}
                 {i.color && (
                   <div className="flex items-center gap-2 text-slate-500">
                     Color:{" "}

@@ -18,6 +18,7 @@ const orderItemSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true },
     customText: { type: String, default: "" },
+    customFont: { type: String, trim: true, maxlength: 60, default: "" },
     color: { type: orderColorSchema, default: undefined },
     preview: { type: mongoose.Schema.Types.Mixed },
     lineTotal: { type: Number, required: true },

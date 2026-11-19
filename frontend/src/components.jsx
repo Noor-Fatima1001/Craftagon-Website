@@ -575,7 +575,7 @@ export function ProductCard({ product }) {
   );
 }
 
-export function CustomPreview({ product, text, image }) {
+export function CustomPreview({ product, text, image, fontFamily }) {
   const p = product?.preview || {};
   const img = image || product?.images?.[0];
   const value = text || "";
@@ -597,7 +597,7 @@ export function CustomPreview({ product, text, image }) {
       {p.enabled !== false && (
         <div
           className="pointer-events-none absolute max-w-full px-1"
-          style={overlayStyle(p)}
+          style={overlayStyle({ ...p, fontFamily: fontFamily ?? p.fontFamily })}
         >
           {value}
         </div>

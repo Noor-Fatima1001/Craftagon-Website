@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, asset, money, request } from "./api";
 import { useAuth } from "./context";
 import { Alert, CustomPreview, Field } from "./components";
+import { loadGoogleFonts } from "./googleFonts";
 
 
 const badgeStyles = {
@@ -718,6 +719,11 @@ export function OrderDetail() {
     setTracking(d.order.trackingNumber || "");
   }
   useEffect(() => { load().catch((e) => setErr(e.message)); }, [id]);
+  useEffect(() => {
+    if (data) {
+      loadGoogleFonts(data.order.items.map((i) => i.customFont).filter(Boolean));
+    }
+  }, [data]);
   if (!data) return err ? <Alert>{err}</Alert> : <Loading />;
   const o = data.order;
   async function setStatus(status) {
@@ -758,7 +764,16 @@ export function OrderDetail() {
         <div className="divide-y divide-slate-100 text-sm text-slate-700">
           {o.items.map((i, idx) => (
             <div key={idx} className="py-3 first:pt-0">
-              {i.quantity} × <span className="font-medium text-slate-900">{i.name}</span> · Unit price {money(i.unitPrice)} · Customization: “{i.customText || "—"}”{i.color ? ` · Color: ${i.color.name} (${i.color.value})` : ""} · Line total <span className="font-semibold text-slate-900">{money(i.lineTotal)}</span>
+              {i.quantity} × <span className="font-medium text-slate-900">{i.name}</span> · Unit price {money(i.unitPrice)} · Customization: “{i.customText || "—"}”
+              {i.customFont && (
+                <>
+                  {" · "}Font:{" "}
+                  <span style={{ fontFamily: `'${i.customFont}', cursive` }}>
+                    {i.customFont}
+                  </span>
+                </>
+              )}
+              {i.color ? ` · Color: ${i.color.name} (${i.color.value})` : ""} · Line total <span className="font-semibold text-slate-900">{money(i.lineTotal)}</span>
             </div>
           ))}
         </div>

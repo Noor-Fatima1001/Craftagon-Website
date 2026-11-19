@@ -49,7 +49,7 @@ async function orderConfirmation(order, settings) {
   const items = order.items
     .map(
       (i) =>
-        `<li>${i.quantity} × ${i.name}${i.customText ? ` (text: ${i.customText})` : ""}${i.color?.name ? ` (color: ${i.color.name})` : ""} — PKR ${i.lineTotal}</li>`
+        `<li>${i.quantity} × ${escapeHtml(i.name)}${i.customText ? ` (text: ${escapeHtml(i.customText)})` : ""}${i.customFont ? ` (font: ${escapeHtml(i.customFont)})` : ""}${i.color?.name ? ` (color: ${escapeHtml(i.color.name)})` : ""} — PKR ${i.lineTotal}</li>`
     )
     .join("");
   return sendMail({
@@ -65,7 +65,6 @@ async function orderConfirmation(order, settings) {
            : ""
        }<br/>Delivery: PKR ${order.deliveryFee}<br/>Total: PKR ${order.total}</p>
        <p>Advance due now: <strong>PKR ${order.advanceAmount}</strong><br/>Remaining COD: PKR ${order.remainingCod}</p>
-       <p>Please transfer the advance using the payment details on your order page, then upload a screenshot. Staff will verify it manually.</p>
        <p>Contact on WhatsApp for any query : ${settings.whatsappNumber}</p>`
     ),
   });
@@ -76,7 +75,7 @@ async function orderNotification(order, to) {
   const rows = (order.items || [])
     .map(
       (item) => `<tr>
-        <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.name)}${item.customText ? `<br/>Personalization: ${escapeHtml(item.customText)}` : ""}${item.color?.name ? `<br/>Color: ${escapeHtml(item.color.name)}` : ""}</td>
+        <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.name)}${item.customText ? `<br/>Personalization: ${escapeHtml(item.customText)}` : ""}${item.customFont ? `<br/>Font: ${escapeHtml(item.customFont)}` : ""}${item.color?.name ? `<br/>Color: ${escapeHtml(item.color.name)}` : ""}</td>
         <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.quantity)}</td>
         <td style="padding:8px;border-bottom:1px solid #ddd">PKR ${escapeHtml(item.unitPrice)}</td>
         <td style="padding:8px;border-bottom:1px solid #ddd">PKR ${escapeHtml(item.lineTotal)}</td>
@@ -93,7 +92,7 @@ async function orderNotification(order, to) {
     `<h3>Order Details</h3>
      <p>
        <strong>Placed:</strong> ${value(order.createdAt ? new Date(order.createdAt).toLocaleString() : "")}<br/>
-       <strong>Status:</strong> ${value(order.status)} <strong>
+       <strong>Status:</strong> ${value(order.status)}
      </p>
      
      <h3>Customer</h3>
@@ -109,6 +108,7 @@ async function orderNotification(order, to) {
          <tr style="border-bottom:1px solid #ddd">
            <th style="padding:8px">Product</th>
            <th style="padding:8px">Qty</th>
+           <th style="padding:8px">Unit Price</th>
            <th style="padding:8px">Total</th>
          </tr>
        </thead>

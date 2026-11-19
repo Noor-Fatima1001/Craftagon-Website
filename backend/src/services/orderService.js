@@ -19,7 +19,10 @@ function publicOrder(order, extra = {}) {
           city: order.customer.city,
           province: order.customer.province,
         },
-    items: order.items,
+    items: (order.items || []).map((item) => ({
+      ...(typeof item.toObject === "function" ? item.toObject() : item),
+      customFont: item.customFont || "",
+    })),
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,
     total: order.total,

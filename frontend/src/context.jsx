@@ -9,6 +9,7 @@ function sameItem(a, b) {
   return (
     a.productId === b.productId &&
     (a.customText || "") === (b.customText || "") &&
+    (a.customFont || "") === (b.customFont || "") &&   // <-- new
     (a.colorVariantId || "") === (b.colorVariantId || "")
   );
 }
