@@ -1650,7 +1650,7 @@ export function Checkout() {
     landmark: "",
     notes: "",
   });
-  const [paymentMethod, setPaymentMethod] = useState("cod"); // "cod" | "bank_transfer"
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer"); // "cod" | "bank_transfer"
   const [accountMethod, setAccountMethod] = useState("");
   const [txnRef, setTxnRef] = useState("");
   const [screenshot, setScreenshot] = useState(null);
