@@ -42,7 +42,7 @@ export default function Cart() {
                 <PreviewCanvas product={{ ...item, images: [item.image], name: item.name }}/>
                 <div className="md:col-span-3">
                   <p className="font-semibold">{item.name}</p>
-                  <p className="text-sm text-slate-500">Custom text: {item.customizationText || '—'}</p>
+                  <p className="text-sm text-slate-500">Name or Short Message: {item.customizationText || '—'}</p>
                   <p className="mt-1 text-sm">{qItem ? money(qItem.unitPrice) : '…'}</p>
                   <div className="mt-3 flex items-center gap-3">
                     <input className="input w-20" type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.productId, item.customizationText, Number(e.target.value))} />

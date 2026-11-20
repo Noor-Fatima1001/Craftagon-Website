@@ -70,11 +70,11 @@ async function run() {
 
   const cats = [
     { name: "Customized Pens", slug: "pens", description: "Name-printed pens for offices and gifts", sortOrder: 1 },
-    { name: "Mugs", slug: "mugs", description: "Ceramic mugs with custom text", sortOrder: 2 },
+    { name: "Mugs", slug: "mugs", description: "Ceramic mugs with Name or Short Message", sortOrder: 2 },
     { name: "Tumblers", slug: "tumblers", description: "Travel tumblers with a personal line", sortOrder: 3 },
     { name: "Diaries", slug: "diaries", description: "Dated diaries with a name on the cover", sortOrder: 4 },
     { name: "Notebooks", slug: "notebooks", description: "Everyday notebooks, personalized", sortOrder: 5 },
-    { name: "Gifts", slug: "gifts", description: "Ready keychains with custom text", sortOrder: 6 },
+    { name: "Gifts", slug: "gifts", description: "Ready keychains with Name or Short Message", sortOrder: 6 },
   ];
 
   const catDocs = {};
@@ -170,7 +170,7 @@ async function run() {
       category: "diaries",
       price: 1790,
       stock: 18,
-      description: "Soft-touch diary with gold-style custom text.",
+      description: "Soft-touch diary with gold-style Name or Short Message.",
       make: () => svgBook("#7c2d12", "Name"),
       preview: { x: 50, y: 50, fontSize: 24, color: "#b45309", align: "center", maxWidth: 40 },
     },

@@ -13,7 +13,7 @@ function svgMockup(title, accent) {
   <rect x="180" y="90" width="540" height="480" rx="28" fill="#ffffff" stroke="#e5e7eb"/>
   <rect x="230" y="150" width="440" height="300" rx="16" fill="${accent}"/>
   <text x="450" y="300" text-anchor="middle" font-family="Georgia,serif" font-size="28" fill="#ffffff">${title}</text>
-  <text x="450" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#dbeafe">Custom text prints here</text>
+  <text x="450" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#dbeafe">Name or Short Message prints here</text>
   <text x="450" y="540" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#334155">Craftagon sample mockup</text>
 </svg>`;
 }
@@ -27,7 +27,7 @@ async function run() {
   const cats = [
     { name: 'Customized Pens', slug: 'pens', sortOrder: 1, description: 'Metal and plastic pens with printed names.' },
     { name: 'Mugs', slug: 'mugs', sortOrder: 2, description: 'Ceramic mugs for gifting and offices.' },
-    { name: 'Tumblers', slug: 'tumblers', sortOrder: 3, description: 'Insulated tumblers with custom text.' },
+    { name: 'Tumblers', slug: 'tumblers', sortOrder: 3, description: 'Insulated tumblers with Name or Short Message.' },
     { name: 'Diaries', slug: 'diaries', sortOrder: 4, description: 'Hardcover diaries with foil or print names.' },
     { name: 'Notebooks', slug: 'notebooks', sortOrder: 5, description: 'Softcover notebooks for teams and students.' },
     { name: 'Gifts', slug: 'gifts', sortOrder: 6, description: 'Ready keychains and extras.' },
@@ -56,7 +56,7 @@ async function run() {
       category: 'pens',
       price: 890,
       featured: true,
-      description: 'Heavier rollerball pen for corporate gifts. Custom text on the clip side.',
+      description: 'Heavier rollerball pen for corporate gifts. Name or Short Message on the clip side.',
       accent: '#0f172a',
       preview: { textY: 50, fontSize: 16, color: '#f8fafc' },
     },
@@ -88,7 +88,7 @@ async function run() {
       price: 1450,
       featured: true,
       bestseller: true,
-      description: 'Double-wall steel tumbler. Custom text wraps the centre band.',
+      description: 'Double-wall steel tumbler. Name or Short Message wraps the centre band.',
       accent: '#334155',
       preview: { textY: 46, fontSize: 22, color: '#ffffff' },
     },
@@ -164,7 +164,7 @@ async function run() {
       price: 1990,
       stock: 25,
       bestseller: true,
-      description: 'Mug and mini diary packed together. Custom text is printed on the mug.',
+      description: 'Mug and mini diary packed together. Name or Short Message is printed on the mug.',
       accent: '#2563eb',
       preview: { textY: 46, fontSize: 22, color: '#eff6ff' },
     },
@@ -190,7 +190,7 @@ async function run() {
         customization: {
           enabled: true,
           required: true,
-          label: 'Name / custom text',
+          label: 'Name / Name or Short Message',
           minLength: 1,
           maxLength: p.customization?.maxLength || 24,
         },

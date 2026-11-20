@@ -358,7 +358,7 @@ export function ProductForm() {
     bestseller: false,
     images: [],
     colorVariants: [],
-    customization: { enabled: true, required: true, maxLength: 24, label: "Custom text" },
+    customization: { enabled: true, required: true, maxLength: 24, label: "Name or Short Message" },
     preview: { enabled: true, x: 50, y: 55, fontSize: 22, fontFamily: "Georgia, serif", color: "#1f2937", align: "center", maxWidth: 70 },
   });
   const [files, setFiles] = useState([]);
@@ -1459,12 +1459,10 @@ export function SettingsPage() {
         </label>
       </Section>
 
-      <Section title="Banners / FAQs / policies">
+      <Section title="Banners / policies">
         <textarea className="input h-32 font-mono text-xs" value={settings.banners || ""} onChange={(e) => setSettings({ ...settings, banners: e.target.value })} />
         <p className={helpText}>Banners, one per line: title | subtitle | image | button text | button link | active (true/false). Use \| for a literal | and \n for a line break.</p>
         <textarea className="input h-32 font-mono text-xs" value={settings.faqs || ""} onChange={(e) => setSettings({ ...settings, faqs: e.target.value })} />
-        <p className={helpText}>FAQs, one per line: question | answer. Use \| for a literal | and \n for a line break.</p>
-        <textarea className="input h-32 font-mono text-xs" value={settings.policies || ""} onChange={(e) => setSettings({ ...settings, policies: e.target.value })} />
         <p className={helpText}>Policies, one per line: key | text. Use \| for a literal | and \n for a line break.</p>
       </Section>
 

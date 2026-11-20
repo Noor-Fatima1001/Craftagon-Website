@@ -138,7 +138,7 @@ Local disk is fine for development. Production object storage (S3, etc.) usually
 
 ## Main customer flow
 
-Browse → enter custom text → live 2D preview → cart (same product + different text stays separate) → checkout → thank-you page with Order ID, totals snapshot, payment instructions, WhatsApp button → upload proof → admin verifies → dispatch with courier/tracking → delivery → review email → admin approval → public product review.
+Browse → enter Name or Short Message → live 2D preview → cart (same product + different text stays separate) → checkout → thank-you page with Order ID, totals snapshot, payment instructions, WhatsApp button → upload proof → admin verifies → dispatch with courier/tracking → delivery → review email → admin approval → public product review.
 
 ## Scripts
 

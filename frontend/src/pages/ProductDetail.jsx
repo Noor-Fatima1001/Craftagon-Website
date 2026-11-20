@@ -28,7 +28,7 @@ export default function ProductDetail() {
   function add() {
     setMsg('');
     if (product.customization?.required && !text.trim()) {
-      setMsg('Please enter custom text');
+      setMsg('Please enter Name or Short Message');
       return;
     }
     if (text.trim().length < min || text.trim().length > max) {
@@ -62,9 +62,9 @@ export default function ProductDetail() {
         </p>
         <p className="mt-4 leading-relaxed text-slate-600">{product.description}</p>
 
-        <div className="my-6 border-t border-slate-100" />
+        <div className="my-6" />
 
-        <label className="label">{product.customization?.label || 'Custom text'}</label>
+        <label className="label">Name or Short Message</label>
         <input className="input" maxLength={max} value={text} onChange={(e) => setText(e.target.value)} placeholder="e.g. Ayesha" />
         <p className="mt-1.5 text-xs text-slate-500">{text.trim().length}/{max} characters. Image uploads are not available.</p>
 

@@ -103,11 +103,11 @@ async function quote({ productsById, cartItems, settings, city, province, coupon
     if (customFont.length > 60) throw new AppError("Font name must be at most 60 characters", 400);
     const cz = product.customization || {};
     if (cz.enabled !== false && cz.required !== false && !customText) {
-      throw new AppError(`Custom text is required for ${product.name}`, 400);
+      throw new AppError(`Name or Short Message is required for ${product.name}`, 400);
     }
     const max = cz.maxLength || 24;
     if (customText.length > max) {
-      throw new AppError(`Custom text for ${product.name} must be at most ${max} characters`, 400);
+      throw new AppError(`Name or Short Message for ${product.name} must be at most ${max} characters`, 400);
     }
     const colorVariantId = String(item.colorVariantId || "").trim();
     const colorVariant = (product.colorVariants || []).find(

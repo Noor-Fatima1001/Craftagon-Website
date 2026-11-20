@@ -9,7 +9,7 @@ export default function PreviewCanvas({ product, text, className = '' }) {
     return (
       <div className={`flex h-80 w-full items-center justify-center rounded-2xl bg-slate-100 ${className}`}>
         <p className="px-6 text-center text-slate-500">
-          {value ? `Preview: “${value}”` : 'Add custom text to see a preview'}
+          {value ? `Preview: “${value}”` : 'Add Name or Short Message to see a preview'}
         </p>
       </div>
     );

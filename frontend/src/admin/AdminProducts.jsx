@@ -3,7 +3,7 @@ import { api, mediaUrl, money } from '../api';
 
 const empty = {
   name: '', description: '', category: '', price: 0, salePrice: '', stock: 0, active: true, featured: false, bestseller: false, images: [],
-  customization: { enabled: true, required: true, label: 'Name / custom text', minLength: 1, maxLength: 24 },
+  customization: { enabled: true, required: true, label: 'Name / Name or Short Message', minLength: 1, maxLength: 24 },
   preview: { enabled: true, textX: 50, textY: 42, fontSize: 22, fontFamily: 'Georgia, serif', color: '#1e3a8a', textAlign: 'center' },
 };
 

@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema(
       enabled: { type: Boolean, default: true },
       required: { type: Boolean, default: true },
       maxLength: { type: Number, default: 24 },
-      label: { type: String, default: "Custom text" },
+      label: { type: String, default: "Name or Short Message" },
     },
     preview: {
       enabled: { type: Boolean, default: true },

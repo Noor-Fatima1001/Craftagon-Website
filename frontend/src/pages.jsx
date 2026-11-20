@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState,useRef } from "react";
 import {
   Link,
   useNavigate,
@@ -38,6 +38,12 @@ import {
   FiStar,
   FiHelpCircle,
   FiChevronDown,
+  FiMoreHorizontal,
+  FiCheck,
+FiX,
+FiUser,
+FiHome,
+FiCalendar,
 } from "react-icons/fi";
 import { FaWhatsapp, FaFacebookF, FaInstagram } from "react-icons/fa";
 import { api, asset, money, statusLabel } from "./api";
@@ -59,7 +65,7 @@ const PROVINCES = [
 const STEPS = [
   {
     icon: FiSearch,
-    title: "Choose an Article",
+    title: "Choose a Product",
     text: "Browse our Catalogue and choose your desired product.",
   },
   {
@@ -89,14 +95,14 @@ const PAYMENT_STEPS = [
       "Note: Priority will be given to Full Advance Payment.",
     ],
   },
-  {
-    icon: FiPhone,
-    title: "Payment Options",
-    lines: [
-      "Bank ~ Click to View Bank Details.",
-      "Digital Wallet ~ Click to View Wallet Details.",
-    ],
-  },
+{
+  icon: FiMoreHorizontal,
+  title: "Payment Options",
+  lines: [
+    "Bank ~ Click to View Bank Details.",
+    "Digital Wallet ~ Click to View Wallet Details.",
+  ],
+},
   {
     icon: FiUpload,
     title: "Upload Receipt",
@@ -105,7 +111,7 @@ const PAYMENT_STEPS = [
     ],
   },
   {
-    icon: FiShoppingCart,
+    icon: FiShoppingBag,
     title: "Place Order",
     lines: ["Once Payment receipt is uploaded place your order."],
   },
@@ -126,24 +132,20 @@ const PAYMENT_STEPS = [
 
 const WHY = [
   {
-    icon: FiGift,
-    title: "Made for one person",
-    text: "Every item carries the name or message you choose, so the gift feels personal and not generic.",
+    icon: FiStar, // Premium Quality
+    title: "Premium Quality",
   },
   {
-    icon: FiShield,
-    title: "Payments checked by people",
-    text: "We compare each payment proof with the real transfer before printing. Nothing is verified automatically.",
+    icon: FiEdit3, // Personalized for you
+    title: "Personalized for you",
   },
   {
-    icon: FiTag,
-    title: "Clear pricing",
-    text: "You see the subtotal, delivery fee, advance and remaining COD amount before you place the order.",
+    icon: FiEye, // Attention to Detail
+    title: "Attention to Detail",
   },
   {
-    icon: FiHeadphones,
-    title: "Easy support",
-    text: "Track your order online anytime, reach out via our contact form, or connect with us instantly on WhatsApp for assistance.",
+    icon: FiTruck, // Nationwide Delivery
+    title: "Nationwide Delivery",
   },
 ];
 
@@ -313,48 +315,32 @@ export function Home() {
         </section>
       )}
 
-      {/* Why us */}
-      <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-8 md:p-12 mb-5 sm:mb-8">
-        <div className="mb-8 max-w-2xl sm:mb-10">
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
-            Why customers choose us
-          </h2>
-          <p className="mt-2 text-sm text-slate-500 sm:text-base">
-            We keep ordering simple, honest and easy to follow, from the first
-            click to delivery.
-          </p>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
-          {WHY.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="flex gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#000000] text-xl text-white">
-                <Icon />
-              </span>
-              <div>
-                <h3 className="font-semibold text-slate-900">{title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  {text}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+    {/* Why us */}
+<section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-8 md:p-12 mb-5 sm:mb-8">
+  <div className="mb-8 sm:mb-10">
+    <h2 className="text-center text-xl font-bold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
+      Why customers choose us
+    </h2>
+  </div>
+  <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
+    {WHY.map(({ icon: Icon, title }) => (
+      <div key={title} className="flex items-center gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#000000] text-xl text-white">
+          <Icon />
+        </span>
+        <h3 className="font-medium text-slate-900">{title}</h3>
+      </div>
+    ))}
+  </div>
+</section>
 
       <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-[#000000]/10 px-5 py-10 text-center shadow-sm sm:px-6 sm:py-12 md:px-12">
         <h2 className="text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">
-          Ready to make a gift personal?
+          Ready for Personalization?
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600 sm:text-base">
-          Pick a product, add the name or message, and we will take care of the
-          rest.
-        </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
           <Link to="/products" className={`${ui.btn} w-full sm:w-auto`}>
             Start shopping <FiArrowRight />
-          </Link>
-          <Link to="/contact" className={`${ui.btnOutline} w-full sm:w-auto`}>
-            <FiMail /> Contact us
           </Link>
         </div>
       </section>
@@ -407,8 +393,7 @@ export function About() {
             extraordinary when they carry a personal touch.
           </p>
           <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-slate-600">
-            {store?.about?.body ||
-              "We are a Pakistan-based customization and gifting brand dedicated to turning everyday products into meaningful, personalized pieces. From customized pens and premium tumblers to personalized diaries, wallets, bottles, and corporate gifts, we bring creativity and precision together to make every product special."}
+              We are a Pakistan-based customization and gifting brand dedicated to turning everyday products into meaningful, personalized pieces. From customized pens and premium tumblers to personalized diaries, wallets, bottles, and corporate gifts, we bring creativity and precision together to make every product special.
           </p>
         </div>
       </section>
@@ -454,8 +439,6 @@ export function About() {
         </div>
       </section>
 
-      {/* Bottom: What Makes Different, wide horizontal card */}
-           {/* Bottom: What Makes Different */}
       <section>
         <div className={`${ui.card} p-5 sm:p-6 md:p-8`}>
           <div className="flex items-center gap-4">
@@ -484,31 +467,6 @@ export function About() {
           </ul>
         </div>
       </section>
-
-      {/* New Release images (same data as Home page) */}
-      {!!featured?.length && (
-        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {featured.map((p) => (
-            <Link
-              key={p._id}
-              to={`/products/${p.slug}`}
-              className={`${ui.card} group block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md`}
-            >
-              <div className="aspect-square overflow-hidden bg-slate-100">
-                {p.images?.[0] && (
-                  <img
-                    src={asset(p.images[0])}
-                    alt={p.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                )}
-              </div>
-            </Link>
-          ))}
-        </section>
-      )}
 
       {/* CTA */}
       <section className="flex justify-center pb-2 pt-2">
@@ -994,12 +952,12 @@ export function ProductDetail() {
   const [customTextError, setCustomTextError] = useState("");
   const [err, setErr] = useState("");
   const [customNote, setCustomNote] = useState("");
+  const [fontOpen, setFontOpen] = useState(false);
+const fontBoxRef = useRef(null);
   const [fontLabel, setFontLabel] = useState(CUSTOM_FONTS[0].label);
 
   // Google Fonts (API fail ho to CUSTOM_FONTS fallback chalega)
   const [fonts, setFonts] = useState(CUSTOM_FONTS);
-  const [fontSearch, setFontSearch] = useState("");
-  const [fontLimit, setFontLimit] = useState(24);
 
   useEffect(() => {
     api
@@ -1039,30 +997,25 @@ export function ProductDetail() {
       .then((list) => {
         if (active && list.length) setFonts(list);
       })
-      .catch(() => {}); // fallback list chalti rahegi
+      .catch(() => {});
     return () => {
       active = false;
     };
   }, []);
 
-  // Search + "load more" ke hisaab se jo fonts screen par dikhne hain
-  const visibleFonts = useMemo(() => {
-    const filtered = fonts.filter((f) =>
-      f.label.toLowerCase().includes(fontSearch.trim().toLowerCase()),
-    );
-    const list = filtered.slice(0, fontLimit);
-    // selected font hamesha list mein rahe, chahe search se bahar ho
-    const selected = fonts.find((f) => f.label === fontLabel);
-    if (selected && !list.some((f) => f.label === selected.label)) {
-      list.unshift(selected);
-    }
-    return { list, total: filtered.length };
-  }, [fonts, fontSearch, fontLimit, fontLabel]);
+useEffect(() => {
+  loadGoogleFonts([fontLabel]);
+}, [fontLabel]);
 
-  // Sirf visible fonts ka CSS load karo
-  useEffect(() => {
-    loadGoogleFonts(visibleFonts.list.map((f) => f.label));
-  }, [visibleFonts]);
+useEffect(() => {
+  function onClickOutside(e) {
+    if (fontBoxRef.current && !fontBoxRef.current.contains(e.target)) {
+      setFontOpen(false);
+    }
+  }
+  document.addEventListener("mousedown", onClickOutside);
+  return () => document.removeEventListener("mousedown", onClickOutside);
+}, []);
 
   if (productError) return <Alert>{productError}</Alert>;
   if (!product) return <PageLoader />;
@@ -1090,7 +1043,7 @@ export function ProductDetail() {
       product.customization?.required !== false &&
       !customText
     ) {
-      setCustomTextError("Please enter custom text");
+      setCustomTextError("Please enter Name or Short Message");
       return;
     }
 
@@ -1164,7 +1117,7 @@ export function ProductDetail() {
               <p className="whitespace-pre-wrap">{product.notes}</p>
             </div>
           )}
-          <div className="my-6 border-t border-slate-100" />
+          <div className="my-6" />
           <div className="space-y-5">
             {!!colorVariants.length && (
               <Field label="Color">
@@ -1197,7 +1150,7 @@ export function ProductDetail() {
               </Field>
             )}
 
-            <Field label={product.customization?.label || "Custom text"}>
+            <Field label="Name or Short Message">
               <input
                 className={`${ui.input} ${
                   customTextError ? "border-red-500 focus:border-red-500" : ""
@@ -1236,55 +1189,42 @@ export function ProductDetail() {
                     {text || "Your text here"}
                   </p>
                 </div>
+{/* Font options */}
+<div ref={fontBoxRef} className="relative">
+  <p className="mb-2 text-sm font-medium text-slate-700">Font style</p>
+  <button
+    type="button"
+    aria-expanded={fontOpen}
+    onClick={() => setFontOpen((o) => !o)}
+    className={`${ui.input} flex items-center justify-between text-left`}
+  >
+    <span>{fontLabel}</span>
+    <FiChevronDown
+      className={`shrink-0 text-slate-500 transition ${fontOpen ? "rotate-180" : ""}`}
+    />
+  </button>
 
-                {/* Font options */}
-                <div>
-                  <p className="mb-2 text-sm font-medium text-slate-700">
-                    Font style
-                  </p>
-                  <input
-                    className={`${ui.input} mb-3`}
-                    placeholder="Search fonts"
-                    aria-label="Search fonts"
-                    value={fontSearch}
-                    onChange={(e) => {
-                      setFontSearch(e.target.value);
-                      setFontLimit(24);
-                    }}
-                  />
-                  <div className="grid max-h-96 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
-                    {visibleFonts.list.map((f) => (
-                      <button
-                        key={f.label}
-                        type="button"
-                        onClick={() => setFontLabel(f.label)}
-                        aria-pressed={f.label === fontLabel}
-                        style={{ fontFamily: f.value }}
-                        className={`rounded-md border px-3 py-2 text-base transition ${
-                          f.label === fontLabel
-                            ? "border-[#000000] bg-slate-100 ring-2 ring-[#000000]/25"
-                            : "border-slate-200 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-                  {!visibleFonts.list.length && (
-                    <p className="mt-2 text-sm text-slate-500">
-                      No fonts found.
-                    </p>
-                  )}
-                  {fontLimit < visibleFonts.total && (
-                    <button
-                      type="button"
-                      className={`${ui.btnOutline} mt-3 w-full`}
-                      onClick={() => setFontLimit((n) => n + 24)}
-                    >
-                      Load more fonts
-                    </button>
-                  )}
-                </div>
+  {fontOpen && (
+    <ul className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+      {fonts.map((f) => (
+        <li key={f.label}>
+          <button
+            type="button"
+            onClick={() => {
+              setFontLabel(f.label);
+              setFontOpen(false);
+            }}
+            className={`block w-full px-3 py-2 text-left text-sm hover:bg-slate-100 ${
+              f.label === fontLabel ? "bg-slate-100 font-semibold" : ""
+            }`}
+          >
+            {f.label}
+          </button>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
               </div>
             )}
 
@@ -1322,7 +1262,7 @@ export function ProductDetail() {
             className={`${ui.btn} mt-6 w-full py-3.5 text-base`}
             onClick={add}
           >
-            <FiShoppingCart /> Add to cart
+       Add to cart
           </button>
           <div className="mt-5 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
             <span className="flex items-center gap-2">
@@ -1617,7 +1557,7 @@ export function CartPage() {
                 {it.name}
               </Link>
               <p className="break-words text-sm text-slate-500">
-                Custom text: {it.customText || "—"}
+                Name or Short Message: {it.customText || "—"}
               </p>
               {it.notes && (
                 <p className="whitespace-pre-wrap break-words text-sm text-slate-500">
@@ -2081,7 +2021,7 @@ const items = useMemo(
               <input
                 type="radio"
                 name="paymentMethod"
-                className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-orange-500 checked:bg-[radial-gradient(circle,_#f97316_40%,_transparent_50%)]"
+                className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-black checked:bg-accent-black checked:bg-[radial-gradient(circle,_#000000_40%,_transparent_50%)]"
                 checked={isCod}
                 onChange={() => setPaymentMethod("cod")}
               />
@@ -2206,7 +2146,7 @@ const items = useMemo(
                   <input
                     type="radio"
                     name="accountMethod"
-                    className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-orange-500 checked:bg-[radial-gradient(circle,_#f97316_40%,_transparent_50%)]"
+                    className="h-4 w-4 appearance-none rounded-full border border-slate-400 checked:border-black checked:bg-accent-black checked:bg-[radial-gradient(circle,_#000000_40%,_transparent_50%)]"
                     checked={accountMethod === a.method}
                     onChange={() => setAccountMethod(a.method)}
                   />
@@ -2300,7 +2240,7 @@ const items = useMemo(
                 )}
                 {i.customText && (
                   <div className="mt-1 inline-block max-w-full break-words rounded-md bg-white px-2 py-0.5 text-xs text-slate-700 shadow-sm">
-                    Name Customization: “{i.customText}”
+                    Text to Print: “{i.customText}”
                   </div>
                 )}
                 {i.customFont && (
@@ -2696,25 +2636,530 @@ function PaymentSection({ order, payments, paymentAccounts, token }) {
   );
 }
 
+const PAY_LABEL = {
+  pending: "Pending",
+  under_review: "Under Review",
+  verified: "Verified",
+  rejected: "Rejected",
+};
+const PAY_PILL = {
+  pending: "bg-slate-100 text-slate-700",
+  under_review: "bg-amber-50 text-amber-700",
+  verified: "bg-emerald-100 text-emerald-700",
+  rejected: "bg-rose-100 text-rose-700",
+};
+
+// Popup: Submitted -> Under Review -> Verified
+function PaymentStatusModal({ paymentStatus, submitted, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const verified = paymentStatus === "verified";
+  const rejected = paymentStatus === "rejected";
+  const steps = [
+    { label: "Submitted", tone: submitted ? "green" : "grey", icon: FiCheck },
+    {
+      label: "Under Review",
+      tone:
+        verified || rejected
+          ? "green"
+          : paymentStatus === "under_review"
+            ? "orange"
+            : "grey",
+      icon: verified || rejected ? FiCheck : FiClock,
+    },
+    {
+      label: rejected ? "Rejected" : "Verified",
+      tone: verified ? "green" : rejected ? "red" : "grey",
+      icon: rejected ? FiX : FiCheck,
+    },
+  ];
+  const dot = {
+    green: "bg-emerald-500 text-white",
+    orange: "bg-orange-500 text-white",
+    red: "bg-rose-500 text-white",
+    grey: "bg-slate-200 text-slate-400",
+  };
+  const text = {
+    green: "text-emerald-700",
+    orange: "text-orange-600",
+    red: "text-rose-600",
+    grey: "text-slate-400",
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Payment status"
+        className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl sm:p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-lg font-bold text-slate-900">
+            Payment Status
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-full p-1.5 text-slate-500 hover:bg-slate-100"
+          >
+            <FiX />
+          </button>
+        </div>
+
+        <div className="mt-6 flex">
+          {steps.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={s.label}
+                className="relative flex flex-1 flex-col items-center text-center"
+              >
+                {i > 0 && (
+                  <span
+                    className={`absolute right-1/2 top-[18px] h-0.5 w-full -translate-y-1/2 ${
+                      steps[i - 1].tone === "green"
+                        ? "bg-emerald-500"
+                        : "bg-slate-200"
+                    }`}
+                  />
+                )}
+                <span
+                  className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full text-base ${dot[s.tone]}`}
+                >
+                  {s.tone === "grey" ? i + 1 : <Icon />}
+                </span>
+                <span className={`mt-2 text-xs font-semibold sm:text-sm ${text[s.tone]}`}>
+                  {s.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="mt-6 rounded-md bg-slate-50 p-3 text-center text-sm text-slate-600">
+          Status:{" "}
+          <strong
+            className={
+              verified
+                ? "text-emerald-700"
+                : rejected
+                  ? "text-rose-600"
+                  : "text-slate-900"
+            }
+          >
+            {PAY_LABEL[paymentStatus] || "Pending"}
+          </strong>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Order Status tracker
+function OrderTracker({ order }) {
+  const st = order.status;
+  const ps = order.paymentStatus;
+  const afterProd = ["dispatched", "delivered", "completed"].includes(st);
+
+  const steps = [
+    { key: "placed", label: "Order Placed", icon: FiCheck, state: "done" },
+    {
+      key: "payment",
+      label: "Payment Verification",
+      icon: FiShield,
+      state:
+        ps === "verified"
+          ? "done"
+          : ps === "under_review" || ps === "rejected"
+            ? "current"
+            : "upcoming",
+      sub:
+        ps === "verified"
+          ? { text: "Verified", cls: "text-emerald-600" }
+          : ps === "under_review"
+            ? { text: "Under Review", cls: "text-orange-600" }
+            : ps === "rejected"
+              ? { text: "Rejected", cls: "text-rose-600" }
+              : null,
+    },
+    {
+      key: "custom",
+      label: "Customization",
+      icon: FiPackage,
+      state: afterProd
+        ? "done"
+        : ["confirmed", "processing"].includes(st)
+          ? "current"
+          : "upcoming",
+    },
+    {
+      key: "dispatched",
+      label: "Dispatched",
+      icon: FiTruck,
+      state: ["delivered", "completed"].includes(st)
+        ? "done"
+        : st === "dispatched"
+          ? "current"
+          : "upcoming",
+    },
+    {
+      key: "completed",
+      label: "Completed",
+      icon: FiCheckCircle,
+      state: st === "completed" ? "done" : st === "delivered" ? "current" : "upcoming",
+    },
+  ];
+
+  return (
+    <div className="flex">
+      {steps.map((s, i) => {
+        const Icon = s.icon;
+        return (
+          <div
+            key={s.key}
+            className="relative flex flex-1 flex-col items-center text-center"
+          >
+            {i > 0 && (
+              <span
+                className={`absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2 ${
+                  steps[i - 1].state === "done" ? "bg-[#B8862B]" : "bg-slate-200"
+                }`}
+              />
+            )}
+            {s.state === "done" && (
+              <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#B8862B] text-lg text-white">
+                <FiCheck />
+              </span>
+            )}
+            {s.state === "current" && (
+              <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#B8862B] bg-white">
+                <span className="h-5 w-5 rounded-full bg-[#B8862B]" />
+              </span>
+            )}
+            {s.state === "upcoming" && (
+              <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-lg text-slate-400">
+                <Icon />
+              </span>
+            )}
+            <span
+              className={`mt-2 px-1 text-[11px] leading-tight sm:text-sm ${
+                s.state === "upcoming"
+                  ? "text-slate-500"
+                  : "font-semibold text-slate-900"
+              }`}
+            >
+              {s.label}
+            </span>
+            {s.sub && (
+              <span className={`text-[11px] font-medium sm:text-xs ${s.sub.cls}`}>
+                {s.sub.text}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ThankYou() {
   const { orderNumber } = useParams();
   const [params] = useSearchParams();
   const token = params.get("token");
+  const { store } = useStore();
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
+  const [showStatus, setShowStatus] = useState(false);
+
   useEffect(() => {
+    let active = true;
+    const url = `orderNumber=${orderNumber}&token=${token || ""}`;
     api
-      .lookup(`orderNumber=${orderNumber}&token=${token || ""}`)
-      .then(setData)
-      .catch((e) => setErr(e.message));
+      .lookup(url)
+      .then((d) => active && setData(d))
+      .catch((e) => active && setErr(e.message));
+    // admin status change hone par page khud update ho (har 30 sec)
+    const timer = setInterval(() => {
+      api
+        .lookup(url)
+        .then((d) => active && setData(d))
+        .catch(() => {});
+    }, 30000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
   }, [orderNumber, token]);
+
+  useEffect(() => {
+    if (data) {
+      loadGoogleFonts(data.order.items.map((i) => i.customFont).filter(Boolean));
+    }
+  }, [data]);
+
   if (err) return <Alert>{err}</Alert>;
   if (!data) return <PageLoader text="Loading your order…" />;
+
+  const { order, payments, whatsappUrl } = data;
+  const customer = order.customer || {};
+  const isBank = order.paymentMethod === "bank_transfer";
+  const pct = order.total
+    ? Math.round((order.advanceAmount / order.total) * 100)
+    : 0;
+  const submitted =
+    !!payments?.length || ["under_review", "verified", "rejected"].includes(order.paymentStatus);
+
+  // WhatsApp: order number + customer name auto draft
+  const waNumber = (store?.whatsappNumber || store?.whatsapp || store?.phone || "")
+    .replace(/\D/g, "")
+    .replace(/^0/, "92");
+  const waMessage = `Hello Craftagon, I need help with my order.\nOrder Number: ${order.orderNumber}\nCustomer Name: ${customer.fullName || ""}`;
+  const waUrl = waNumber
+    ? `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`
+    : whatsappUrl;
+
+  const infoRow = "flex items-start gap-3 text-sm text-slate-700";
+  const infoIcon = "mt-0.5 shrink-0 text-lg text-[#B8862B]";
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <OrderView {...data} title="Thank you" showPayment />
-      {!data.payments?.length && data.order.paymentStatus !== "verified" && (
+      {/* Header */}
+      <div className="text-center">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-600 text-3xl text-emerald-600">
+          <FiCheck />
+        </span>
+        <h1 className="mt-5 font-serif text-3xl font-bold text-slate-900 sm:text-4xl md:text-5xl">
+          Thank You for Your Order!
+        </h1>
+        <p className="mt-3 text-sm text-slate-600 sm:text-base">
+          Your order has been successfully received. We’re getting everything
+          ready for you.
+        </p>
+        <div className="mt-5 inline-block rounded-full bg-stone-100 px-6 py-2.5 text-sm text-slate-800">
+          Order Number: <strong>{order.orderNumber}</strong>
+        </div>
+      </div>
+
+      {order.status === "cancelled" && (
+        <Alert>This order was cancelled.{order.cancelReason ? ` ${order.cancelReason}` : ""}</Alert>
+      )}
+
+      {/* Amount summary */}
+      <div className={`${ui.card} grid divide-y divide-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0`}>
+        <div className="flex flex-col items-center justify-center p-5 text-center sm:p-6">
+          <div className="text-sm text-slate-600">Total Amount</div>
+          <div className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+            {money(order.total)}
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center p-5 text-center sm:p-6">
+          <div className="text-sm text-slate-600">
+            {isBank ? "Full Payment" : "Advance Payment"}
+          </div>
+          <div className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+            {money(order.advanceAmount)}
+          </div>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setShowStatus(true)}
+            className={`mt-2 rounded-full px-4 py-1 text-xs font-semibold transition hover:brightness-95 ${
+              PAY_PILL[order.paymentStatus] || PAY_PILL.pending
+            }`}
+          >
+            {PAY_LABEL[order.paymentStatus] || "Pending"}
+          </button>
+        </div>
+        <div className="flex flex-col items-center justify-center p-5 text-center sm:p-6">
+          <div className="text-sm text-slate-600">Remaining Balance</div>
+          <div className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+            {money(order.remainingCod)}
+          </div>
+          <div className="mt-2 text-xs text-slate-600">
+            {order.remainingCod > 0 ? "Pay upon Delivery" : "Nothing due on delivery"}
+          </div>
+        </div>
+      </div>
+
+      {/* Order status */}
+      <div className={`${ui.card} p-4 sm:p-6`}>
+        <h2 className="mb-6 font-serif text-xl font-bold text-slate-900">
+          Order Status
+        </h2>
+        <OrderTracker order={order} />
+        {(order.courierName || order.trackingNumber) && (
+          <p className="mt-6 rounded-md bg-slate-50 p-3 text-sm text-slate-600">
+            <FiTruck className="mr-2 inline" />
+            {order.courierName || "Courier"}
+            {order.trackingNumber ? ` · Tracking: ${order.trackingNumber}` : ""}
+          </p>
+        )}
+      </div>
+
+      {/* Items + Delivery */}
+      <div className="grid gap-6 md:grid-cols-[1.4fr_1fr]">
+        <div className={`${ui.card} p-4 sm:p-6`}>
+          <h2 className="font-serif text-xl font-bold text-slate-900">
+            Order Items
+          </h2>
+          <div className="mt-4 divide-y divide-slate-100">
+            {order.items.map((i, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-[96px_1fr] gap-4 py-4 first:pt-0 sm:grid-cols-[120px_1fr]"
+              >
+                <CustomPreview
+                  product={{ name: i.name, preview: i.preview, images: [i.image] }}
+                  image={i.image}
+                  fontFamily={i.customFont ? `'${i.customFont}', cursive` : undefined}
+                />
+                <div className="min-w-0 space-y-1 break-words text-sm text-slate-600">
+                  <div className="font-semibold text-slate-900">{i.name}</div>
+                  <div>Quantity: {i.quantity}</div>
+                  <div>Customization: {i.customText || "—"}</div>
+                  {i.customFont && (
+                    <div>
+                      Font:{" "}
+                      <span style={{ fontFamily: `'${i.customFont}', cursive` }}>
+                        {i.customFont}
+                      </span>
+                    </div>
+                  )}
+                  {i.color && (
+                    <div className="flex items-center gap-2">
+                      Color:
+                      <span
+                        className="inline-block h-4 w-4 rounded-full border border-slate-300"
+                        style={{ backgroundColor: i.color.value }}
+                      />
+                      {i.color.name}
+                    </div>
+                  )}
+                  {i.notes && (
+                    <div className="whitespace-pre-wrap">Product notes: {i.notes}</div>
+                  )}
+                  {i.customNote && (
+                    <div className="whitespace-pre-wrap">Your note: {i.customNote}</div>
+                  )}
+                  <div className="pt-1 text-base font-semibold text-slate-900">
+                    {money(i.lineTotal)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 space-y-1 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{money(order.subtotal)}</span>
+            </div>
+            {order.discount > 0 && (
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span>- {money(order.discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span>Delivery</span>
+              <span>{money(order.deliveryFee)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-slate-900">
+              <span>Total</span>
+              <span>{money(order.total)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`${ui.card} h-fit space-y-4 p-4 sm:p-6`}>
+          <h2 className="font-serif text-xl font-bold text-slate-900">
+            Delivery Information
+          </h2>
+          <p className={infoRow}>
+            <FiUser className={infoIcon} /> {customer.fullName}
+          </p>
+          <p className={infoRow}>
+            <FiPhone className={infoIcon} /> {customer.phone}
+          </p>
+          <p className={infoRow}>
+            <FiHome className={infoIcon} />
+            <span className="break-words">
+              {customer.address}
+              {customer.landmark ? `, ${customer.landmark}` : ""}
+            </span>
+          </p>
+          <p className={infoRow}>
+            <FiMapPin className={infoIcon} /> {customer.city}
+            {customer.province ? `, ${customer.province}` : ""}
+          </p>
+          <p className={infoRow}>
+            <FiCalendar className={infoIcon} /> Order Date:{" "}
+            {new Date(order.createdAt).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </p>
+          <p className={infoRow}>
+            <FiCreditCard className={infoIcon} /> Payment Method:{" "}
+            {isBank ? "Full Advance Payment" : `Cash on Delivery (${pct}% advance)`}
+          </p>
+        </div>
+      </div>
+
+      {/* Payment form (agar abhi payment submit nahi hui) */}
+      {!payments?.length && order.paymentStatus !== "verified" && (
         <PaymentSection {...data} token={token} />
+      )}
+
+      {/* Help */}
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-stone-50 p-5 sm:flex-row sm:items-center sm:p-6">
+        <div className="flex items-center gap-4">
+          <FaWhatsapp className="shrink-0 text-4xl text-[#B8862B]" />
+          <div>
+            <div className="font-semibold text-slate-900">
+              Need Help With Your Order?
+            </div>
+            <div className="text-sm text-slate-600">
+              Our support team is here to help you anytime.
+            </div>
+          </div>
+        </div>
+        {waUrl && (
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-black sm:w-auto"
+          >
+            <FaWhatsapp className="text-lg" /> Chat on WhatsApp
+          </a>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="py-6 text-center">
+        <p className="font-serif text-xl font-bold text-slate-900 sm:text-2xl">
+          Thank You For Shopping at Craftagon!
+        </p>
+        <p className="mt-2 text-slate-600">Visit us Again...</p>
+      </div>
+
+      {showStatus && (
+        <PaymentStatusModal
+          paymentStatus={order.paymentStatus}
+          submitted={submitted}
+          onClose={() => setShowStatus(false)}
+        />
       )}
     </div>
   );
@@ -2831,22 +3276,121 @@ export function Policies() {
   );
 }
 
+const FAQ_SECTIONS = [
+  {
+    heading: "Orders & Customization",
+    items: [
+      {
+        question: "What is Craftagon?",
+        answer:
+          "Craftagon is a Pakistan-based customization and gifting brand offering personalized products for individuals and businesses.",
+      },
+      {
+        question: "What products do you offer?",
+        answer:
+          "We offer customized pens, tumblers, bottles, mugs, diaries, wallets, keychains, desk plates, and much more.",
+      },
+      {
+        question: "Can I customize products with my name or logo?",
+        answer:
+          "Yes! You can personalize selected products with names, messages, logos, or designs.",
+      },
+      {
+        question: "Can I place bulk or corporate orders?",
+        answer:
+          "Absolutely! We welcome bulk and corporate orders. Contact us for product options and customized quotations.",
+      },
+    ],
+  },
+  {
+    heading: "Shipping & Delivery",
+    items: [
+      {
+        question: "Do you deliver across Pakistan?",
+        answer: "Yes, we offer nationwide delivery across Pakistan.",
+      },
+      {
+        question: "How long does delivery take?",
+        answer:
+          "Delivery usually takes 3–6 business days after order confirmation. Customized orders may require additional processing time.",
+      },
+      {
+        question: "Do you offer Express delivery?",
+        answer: "Yes! We do offer quick delivery in twin cities.",
+      },
+    ],
+  },
+  {
+    heading: "Payments",
+    items: [
+      {
+        question: "How does payment work?",
+        answer:
+          "We require 50% advance payment to confirm your customized order. The remaining 50% can be paid upon delivery. Full advance payment is also available, which is a priority.",
+      },
+      {
+        question: "What payment methods do you accept?",
+        answer: "We accept Bank and Digital Wallet Transfer.",
+      },
+    ],
+  },
+  {
+    heading: "Return and Support",
+    items: [
+      {
+        question: "Can I cancel my order?",
+        answer:
+          "Orders can only be cancelled before customization or production begins.",
+      },
+      {
+        question: "Can I return or exchange a customized product?",
+        answer:
+          "Customized products are not eligible for returns or exchanges unless they arrive damaged, defective, or different from what you ordered.",
+      },
+      {
+        question: "How can I track my order?",
+        answer:
+          "Once your order is dispatched, you can track your order by clicking the tracking logo on our site.",
+      },
+      {
+        question: "How can I contact Craftagon?",
+        answer: "You can reach us through our official Email & WhatsApp support.",
+      },
+      {
+        question: "Can I request a special design?",
+        answer:
+          "Yes! Contact us with your requirements, and our team will help you explore available customization options.",
+      },
+    ],
+  },
+];
+
 export function Faq() {
-  const { store } = useStore();
   return (
     <div className="mx-auto max-w-5xl">
-      <PageHeader title="FAQ" subtitle="Quick answers to common questions." />
-      <div className="space-y-3">
-        {store?.faqs?.map((f, i) => (
-          <details key={i} className={`${ui.card} group p-4 sm:p-5`}>
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-slate-900 [&::-webkit-details-marker]:hidden">
-              <span>{f.question}</span>
-              <FiChevronDown className="shrink-0 text-slate-500 transition group-open:rotate-180" />
-            </summary>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">
-              {f.answer}
-            </p>
-          </details>
+      <PageHeader
+        title="Frequently Asked Questions (FAQs)"
+      />
+      <div className="space-y-8 border border-gray-300 p-6 sm:p-8 rounded-lg">
+        {FAQ_SECTIONS.map((section) => (
+          <section key={section.heading}>
+            <h2 className="mb-3 text-lg font-bold text-slate-900 sm:text-xl">
+              {section.heading}
+            </h2>
+            <div className="space-y-3">
+              {section.items.map((f) => (
+                <details key={f.question} className={`${ui.card} group p-4 sm:p-5`}>
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-slate-900 [&::-webkit-details-marker]:hidden">
+                    <span>{f.question}</span>
+                    <FiChevronDown className="shrink-0 text-slate-500 transition group-open:rotate-180" />
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                    {f.answer}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </section>
         ))}
       </div>
     </div>
