@@ -349,6 +349,7 @@ export function ProductForm() {
     name: "",
     slug: "",
     description: "",
+    notes: "",
     category: "",
     price: "",
     salePrice: "",
@@ -387,7 +388,7 @@ export function ProductForm() {
   async function save(e) {
     e.preventDefault();
     const fd = new FormData();
-    ["name", "slug", "description", "category", "price", "salePrice"].forEach((k) => fd.append(k, form[k] ?? ""));
+    ["name", "slug", "description", "notes", "category", "price", "salePrice"].forEach((k) => fd.append(k, form[k] ?? ""));
     fd.append("active", form.active);
     fd.append("featured", form.featured);
     fd.append("bestseller", form.bestseller);
@@ -435,6 +436,7 @@ export function ProductForm() {
           <Field label="Name"><input className="input" value={form.name} onChange={(e) => set("name", e.target.value)} /></Field>
           <Field label="Slug"><input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} /></Field>
           <Field label="Description"><textarea className="input min-h-[100px]" value={form.description} onChange={(e) => set("description", e.target.value)} /></Field>
+          <Field label="Product notes"><textarea className="input min-h-[100px]" maxLength={2000} value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} /></Field>
           <Field label="Category">
             <select className="input" value={form.category} onChange={(e) => set("category", e.target.value)}>
               <option value="">Select</option>
@@ -773,6 +775,16 @@ export function OrderDetail() {
                   </span>
                 </>
               )}
+              {i.notes && (
+                <p className="mt-1 whitespace-pre-wrap break-words text-slate-600">
+                  Product notes: {i.notes}
+                </p>
+              )}
+              {i.customNote && (
+  <p className="mt-1 whitespace-pre-wrap break-words rounded bg-amber-50 px-2 py-1 text-slate-700">
+    Customer note: {i.customNote}
+  </p>
+)}
               {i.color ? ` · Color: ${i.color.name} (${i.color.value})` : ""} · Line total <span className="font-semibold text-slate-900">{money(i.lineTotal)}</span>
             </div>
           ))}

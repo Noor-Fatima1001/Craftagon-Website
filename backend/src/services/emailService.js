@@ -45,11 +45,25 @@ function escapeHtml(value) {
   });
 }
 
+function itemNotesHtml(notes) {
+  const value = String(notes || "").trim();
+  return value
+    ? `<br/>Product notes: ${escapeHtml(value).replace(/\r?\n/g, "<br/>")}`
+    : "";
+}
+
+function itemCustomNoteHtml(note) {
+  const value = String(note || "").trim();
+  return value
+    ? `<br/>Customer note: ${escapeHtml(value).replace(/\r?\n/g, "<br/>")}`
+    : "";
+}
+
 async function orderConfirmation(order, settings) {
   const items = order.items
     .map(
       (i) =>
-        `<li>${i.quantity} × ${escapeHtml(i.name)}${i.customText ? ` (text: ${escapeHtml(i.customText)})` : ""}${i.customFont ? ` (font: ${escapeHtml(i.customFont)})` : ""}${i.color?.name ? ` (color: ${escapeHtml(i.color.name)})` : ""} — PKR ${i.lineTotal}</li>`
+        `<li>${escapeHtml(i.quantity)} × ${escapeHtml(i.name)}${itemNotesHtml(i.notes)}${itemCustomNoteHtml(i.customNote)}${i.customText ? ` (text: ${escapeHtml(i.customText)})` : ""}${i.customFont ? ` (font: ${escapeHtml(i.customFont)})` : ""}${i.color?.name ? ` (color: ${escapeHtml(i.color.name)})` : ""} — PKR ${escapeHtml(i.lineTotal)}</li>`
     )
     .join("");
   return sendMail({
@@ -75,7 +89,7 @@ async function orderNotification(order, to) {
   const rows = (order.items || [])
     .map(
       (item) => `<tr>
-        <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.name)}${item.customText ? `<br/>Personalization: ${escapeHtml(item.customText)}` : ""}${item.customFont ? `<br/>Font: ${escapeHtml(item.customFont)}` : ""}${item.color?.name ? `<br/>Color: ${escapeHtml(item.color.name)}` : ""}</td>
+        <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.name)}${itemNotesHtml(item.notes)}${itemCustomNoteHtml(item.customNote)}${item.customText ? `<br/>Personalization: ${escapeHtml(item.customText)}` : ""}${item.customFont ? `<br/>Font: ${escapeHtml(item.customFont)}` : ""}${item.color?.name ? `<br/>Color: ${escapeHtml(item.color.name)}` : ""}</td>
         <td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(item.quantity)}</td>
         <td style="padding:8px;border-bottom:1px solid #ddd">PKR ${escapeHtml(item.unitPrice)}</td>
         <td style="padding:8px;border-bottom:1px solid #ddd">PKR ${escapeHtml(item.lineTotal)}</td>
@@ -84,48 +98,51 @@ async function orderNotification(order, to) {
     .join("");
   const value = (item) => escapeHtml(item || "—");
 
- return sendMail({
-  to,
-  subject: `New order ${order.orderNumber} — Craftagon`,
-  html: wrap(
-    `New order ${escapeHtml(order.orderNumber)}`,
-    `<h3>Order Details</h3>
-     <p>
-       <strong>Placed:</strong> ${value(order.createdAt ? new Date(order.createdAt).toLocaleString() : "")}<br/>
-       <strong>Status:</strong> ${value(order.status)}
-     </p>
-     
-     <h3>Customer</h3>
-     <p>
-       <strong>Name:</strong> ${value(customer.fullName)}<br/>
-       <strong>Phone:</strong> ${value(customer.phone)}<br/>
-       <strong>Address:</strong> ${value(customer.address)}, ${value(customer.city)} (${value(customer.province)})
-     </p>
-     
-     <h3>Items</h3>
-     <table style="border-collapse:collapse;width:100%;text-align:left">
-       <thead>
-         <tr style="border-bottom:1px solid #ddd">
-           <th style="padding:8px">Product</th>
-           <th style="padding:8px">Qty</th>
-           <th style="padding:8px">Unit Price</th>
-           <th style="padding:8px">Total</th>
-         </tr>
-       </thead>
-       <tbody>${rows}</tbody>
-     </table>
-     
-          <h3>Totals</h3>
-     <p>
-       Subtotal: PKR ${escapeHtml(order.subtotal)}<br/>
-       ${order.discount > 0 ? `Discount${order.couponCode ? ` (coupon <strong>${escapeHtml(order.couponCode)}</strong>)` : ""}: - PKR ${escapeHtml(order.discount)}<br/>` : ""}
-       Delivery: PKR ${escapeHtml(order.deliveryFee)}<br/>
-       <strong>Total: PKR ${escapeHtml(order.total)}</strong><br/>
-       Advance Due: PKR ${escapeHtml(order.advanceAmount)}<br/>
-       Remaining COD: PKR ${escapeHtml(order.remainingCod)}
-     </p>`
-  ),
-});
+  return sendMail({
+    to,
+    subject: `New order ${order.orderNumber} — Craftagon`,
+    html: wrap(
+      `New order ${escapeHtml(order.orderNumber)}`,
+      `<h3>Order Details</h3>
+       <p>
+         <strong>Placed:</strong> ${value(order.createdAt ? new Date(order.createdAt).toLocaleString() : "")}<br/>
+         <strong>Status:</strong> ${value(order.status)}
+       </p>
+
+       <h3>Customer</h3>
+       <p>
+         <strong>Name:</strong> ${value(customer.fullName)}<br/>
+         <strong>Email:</strong> ${value(customer.email)}<br/>
+         <strong>Phone:</strong> ${value(customer.phone)}<br/>
+         <strong>Address:</strong> ${value(customer.address)}, ${value(customer.city)} (${value(customer.province)})<br/>
+         <strong>Landmark:</strong> ${value(customer.landmark)}<br/>
+         <strong>Order notes:</strong> ${escapeHtml(customer.notes || "—").replace(/\r?\n/g, "<br/>")}
+       </p>
+
+       <h3>Items</h3>
+       <table style="border-collapse:collapse;width:100%;text-align:left">
+         <thead>
+           <tr style="border-bottom:1px solid #ddd">
+             <th style="padding:8px">Product</th>
+             <th style="padding:8px">Qty</th>
+             <th style="padding:8px">Unit Price</th>
+             <th style="padding:8px">Total</th>
+           </tr>
+         </thead>
+         <tbody>${rows}</tbody>
+       </table>
+
+       <h3>Totals</h3>
+       <p>
+         Subtotal: PKR ${escapeHtml(order.subtotal)}<br/>
+         ${order.discount > 0 ? `Discount${order.couponCode ? ` (coupon <strong>${escapeHtml(order.couponCode)}</strong>)` : ""}: - PKR ${escapeHtml(order.discount)}<br/>` : ""}
+         Delivery: PKR ${escapeHtml(order.deliveryFee)}<br/>
+         <strong>Total: PKR ${escapeHtml(order.total)}</strong><br/>
+         Advance Due: PKR ${escapeHtml(order.advanceAmount)}<br/>
+         Remaining COD: PKR ${escapeHtml(order.remainingCod)}
+       </p>`
+    ),
+  });
 }
 
 async function paymentResult(order, verified, note) {
@@ -184,7 +201,10 @@ async function orderDispatched(order) {
 
 async function orderDelivered(order) {
   const items = (order.items || [])
-    .map((item) => `<li>${escapeHtml(item.quantity)} × ${escapeHtml(item.name)}</li>`)
+    .map(
+      (item) =>
+        `<li>${escapeHtml(item.quantity)} × ${escapeHtml(item.name)}${itemNotesHtml(item.notes)}${itemCustomNoteHtml(item.customNote)}</li>`
+    )
     .join("");
   return sendMail({
     to: order.customer.email,
@@ -201,7 +221,10 @@ async function orderDelivered(order) {
 
 async function orderCompleted(order) {
   const items = (order.items || [])
-    .map((item) => `<li>${escapeHtml(item.quantity)} × ${escapeHtml(item.name)}</li>`)
+    .map(
+      (item) =>
+        `<li>${escapeHtml(item.quantity)} × ${escapeHtml(item.name)}${itemNotesHtml(item.notes)}${itemCustomNoteHtml(item.customNote)}</li>`
+    )
     .join("");
   return sendMail({
     to: order.customer.email,

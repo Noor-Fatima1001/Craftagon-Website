@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true },
     description: { type: String, default: "" },
+    notes: { type: String, trim: true, maxlength: 2000, default: "" },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     images: [{ type: String }],
     colorVariants: [

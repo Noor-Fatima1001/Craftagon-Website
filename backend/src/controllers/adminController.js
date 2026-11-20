@@ -49,6 +49,9 @@ const loginValidators = [
   body("email").isEmail().normalizeEmail(),
   body("password").isString().isLength({ min: 8 }),
 ];
+const productValidators = [
+  body("notes").optional().isString().isLength({ max: 2000 }),
+];
 
 const login = asyncHandler(async (req, res) => {
   validate(req);
@@ -148,6 +151,7 @@ const uploadProductImages = asyncHandler(async (req, res) => {
 });
 
 const saveProduct = asyncHandler(async (req, res) => {
+  validate(req);
   const data = req.body;
   const categoryExists = await Category.exists({ _id: data.category });
   if (!categoryExists) throw new AppError("A valid category is required", 400);
@@ -159,6 +163,7 @@ const saveProduct = asyncHandler(async (req, res) => {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, ""),
     description: data.description || "",
+    notes: String(data.notes || "").trim(),
     category: data.category,
     price: Number(data.price),
     salePrice: data.salePrice === "" || data.salePrice == null ? undefined : Number(data.salePrice),
@@ -790,6 +795,7 @@ const auditLogs = asyncHandler(async (_req, res) => {
 
 module.exports = {
   loginValidators,
+  productValidators,
   login,
   logout,
   me,

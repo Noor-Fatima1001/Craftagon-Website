@@ -22,6 +22,7 @@ function publicOrder(order, extra = {}) {
     items: (order.items || []).map((item) => ({
       ...(typeof item.toObject === "function" ? item.toObject() : item),
       customFont: item.customFont || "",
+      notes: item.notes || "",
     })),
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,

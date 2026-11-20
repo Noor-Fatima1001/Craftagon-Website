@@ -99,6 +99,7 @@ async function quote({ productsById, cartItems, settings, city, province, coupon
     if (!Number.isInteger(qty) || qty < 1 || qty > 50) throw new AppError("Invalid quantity", 400);
     const customText = String(item.customText || "").trim();
     const customFont = String(item.customFont || "").trim();
+    const customNote = String(item.customNote || "").trim().slice(0, 300);
     if (customFont.length > 60) throw new AppError("Font name must be at most 60 characters", 400);
     const cz = product.customization || {};
     if (cz.enabled !== false && cz.required !== false && !customText) {
@@ -129,6 +130,8 @@ async function quote({ productsById, cartItems, settings, city, province, coupon
       unitPrice: price,
       customText,
       customFont,
+      customNote,
+      notes: String(product.notes || "").trim(),
       ...(colorVariant
         ? {
             color: {

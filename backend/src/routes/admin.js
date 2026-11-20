@@ -27,8 +27,8 @@ router.get("/audit", requireAdmin, a.auditLogs);
 router.get("/products", requireAdmin, a.listProducts);
 router.get("/products/:id", requireAdmin, a.getProduct);
 router.post("/uploads/product", requireAdmin, productUpload.array("images", 6), a.uploadProductImages);
-router.post("/products", requireAdmin, productUpload.array("images", 6), a.saveProduct);
-router.put("/products/:id", requireAdmin, productUpload.array("images", 6), a.saveProduct);
+router.post("/products", requireAdmin, productUpload.array("images", 6), a.productValidators, a.saveProduct);
+router.put("/products/:id", requireAdmin, productUpload.array("images", 6), a.productValidators, a.saveProduct);
 router.delete("/products/:id", requireAdmin, a.deleteProduct);
 
 router.get("/categories", requireAdmin, a.listCategories);

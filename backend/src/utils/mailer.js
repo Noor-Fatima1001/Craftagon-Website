@@ -38,6 +38,18 @@ function escapeHtml(value = '') {
   });
 }
 
+function itemNotesHtml(notes) {
+  const value = String(notes || '').trim();
+  return value
+    ? `<br/><strong>Product notes:</strong> ${escapeHtml(value).replace(/\r?\n/g, '<br/>')}`
+    : '';
+}
+
+function itemNotesText(notes) {
+  const value = String(notes || '').trim();
+  return value ? ` | Product notes: ${value}` : '';
+}
+
 function formatDate(date) {
   if (!date) return 'Please check your order page';
 
@@ -112,7 +124,7 @@ function orderItemsHtml(order) {
     .map((item) => `
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
-          ${escapeHtml(item.name)}
+          ${escapeHtml(item.name)}${itemNotesHtml(item.notes)}
         </td>
         <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
           ${escapeHtml(item.customizationText || '—')}
@@ -376,7 +388,7 @@ We're delighted that you've chosen Craftagon. Your order has been placed success
 Order ID: ${order.orderNumber}
 
 ${(order.items || []).map((item) =>
-  `${item.name} | Qty: ${item.quantity} | Total: Rs ${item.lineTotal}`
+  `${item.name}${itemNotesText(item.notes)} | Qty: ${item.quantity} | Total: Rs ${item.lineTotal}`
 ).join('\n')}
 
 Subtotal: Rs ${order.pricing.subtotal}

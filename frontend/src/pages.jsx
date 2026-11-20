@@ -1113,6 +1113,7 @@ export function ProductDetail() {
       quantity: qty,
       customText,
       customFont: selectedFont.label,
+      notes: product.notes || "",
       customNote: customNote.trim(),
       colorVariantId: selectedColor?._id || "",
       color: selectedColor
@@ -1157,6 +1158,12 @@ export function ProductDetail() {
           <p className="mt-4 leading-relaxed text-slate-600">
             {product.description}
           </p>
+          {product.notes && (
+            <div className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+              <p className="mb-1 font-semibold text-slate-900">Product notes</p>
+              <p className="whitespace-pre-wrap">{product.notes}</p>
+            </div>
+          )}
           <div className="my-6 border-t border-slate-100" />
           <div className="space-y-5">
             {!!colorVariants.length && (
@@ -1612,6 +1619,16 @@ export function CartPage() {
               <p className="break-words text-sm text-slate-500">
                 Custom text: {it.customText || "—"}
               </p>
+              {it.notes && (
+                <p className="whitespace-pre-wrap break-words text-sm text-slate-500">
+                  Product notes: {it.notes}
+                </p>
+              )}
+              {it.customNote && (
+  <p className="whitespace-pre-wrap break-words text-sm text-slate-500">
+    Note: {it.customNote}
+  </p>
+)}
               {it.customFont && (
                 <p className="text-sm text-slate-500">
                   Font:{" "}
@@ -1741,7 +1758,8 @@ const items = useMemo(
       productId: i.productId,
       quantity: i.quantity,
       customText: i.customText,
-      ...(i.customFont ? { customFont: i.customFont } : {}),   // <-- new
+      ...(i.customFont ? { customFont: i.customFont } : {}),
+      ...(i.customNote ? { customNote: i.customNote } : {}),
       ...(i.colorVariantId ? { colorVariantId: i.colorVariantId } : {}),
     })),
   [cart.items],
@@ -2209,15 +2227,6 @@ const items = useMemo(
         </div>
       ))}
 
-    {/* Ye dono wese hi hain, koi change nahi */}
-    <input
-      className={inp}
-      required
-      placeholder="Transaction / reference number"
-      aria-label="Transaction reference number"
-      value={txnRef}
-      onChange={(e) => setTxnRef(e.target.value)}
-    />
     <div>
       <label className="mb-0.5 block text-sm font-medium text-slate-700">
         Attach Receipt (JPEG, PNG or WebP, max 5MB)
@@ -2302,6 +2311,16 @@ const items = useMemo(
                     </span>
                   </div>
                 )}
+                {i.notes && (
+                  <div className="mt-1 whitespace-pre-wrap break-words text-xs text-slate-600">
+                    Product notes: {i.notes}
+                  </div>
+                )}
+                {i.customNote && (
+  <div className="mt-1 whitespace-pre-wrap break-words text-xs text-slate-600">
+    Note: {i.customNote}
+  </div>
+)}
               </div>
               <div className="shrink-0 text-slate-900">
                 {money(i.price * i.quantity)}
@@ -2439,14 +2458,6 @@ function OrderView({
             </div>
           </div>
         </div>
-        {/* {showPayment && order.paymentDeadlineAt && order.paymentStatus !== "verified" && (
-          <p className="mt-4 flex gap-2 text-sm text-slate-500">
-            <FiClock className="mt-0.5 shrink-0" />
-            <span>
-              Pay before {new Date(order.paymentDeadlineAt).toLocaleString()}. Unpaid orders may be cancelled after the deadline. Verified or under-review payments are not auto-cancelled.
-            </span>
-          </p>
-        )} */}
         <div className="mt-5 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
           <div className="mb-1 flex items-center gap-2 font-semibold text-slate-900">
             <FiTruck /> Shipping
@@ -2495,18 +2506,28 @@ function OrderView({
                 {i.quantity} × {i.name} — “{i.customText}”
 
                 {i.customFont && (
-  <div className="text-slate-500">
-    Font:{" "}
-    <span
-      className="text-base text-slate-900"
-      style={{
-        fontFamily: `'${i.customFont}', cursive`,
-      }}
-    >
-      {i.customFont}
-    </span>
-  </div>
-)}
+                  <div className="text-slate-500">
+                    Font:{" "}
+                    <span
+                      className="text-base text-slate-900"
+                      style={{
+                        fontFamily: `'${i.customFont}', cursive`,
+                      }}
+                    >
+                      {i.customFont}
+                    </span>
+                  </div>
+                )}
+                {i.notes && (
+                  <div className="whitespace-pre-wrap break-words text-slate-500">
+                    Product notes: {i.notes}
+                  </div>
+                )}
+                {i.customNote && (
+                  <div className="whitespace-pre-wrap break-words text-slate-500">
+                    Your note: {i.customNote}
+                  </div>
+                )}
                 {i.color && (
                   <div className="flex items-center gap-2 text-slate-500">
                     Color:{" "}
