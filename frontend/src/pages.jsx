@@ -636,7 +636,7 @@ export function Contact() {
         subtitle="Questions about an order or a custom design? Send us a message or chat with us on WhatsApp."
       />
       <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_1.4fr]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {waUrl && (
             <div className={`${ui.card} p-4 sm:p-6`}>
               <h2 className="text-lg font-bold text-slate-900">
@@ -682,7 +682,7 @@ export function Contact() {
                 <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Follow us
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   {socials.map(({ icon: Icon, label, url }) => (
                     <a
                       key={label}
@@ -691,7 +691,7 @@ export function Contact() {
                       rel="noreferrer"
                       aria-label={label}
                       title={label}
-                      className="flex h-10 w-10 items-center justify-center rounded-md bg-[#000000]/10 text-[#000000] transition hover:bg-[#000000] hover:text-white"
+                      className="flex h-11 w-11 items-center justify-center rounded-md bg-[#000000]/10 text-[#000000] transition hover:bg-[#000000] hover:text-white sm:h-10 sm:w-10"
                     >
                       <Icon />
                     </a>
@@ -705,7 +705,7 @@ export function Contact() {
         {/* Right: form */}
         <form
           onSubmit={send}
-          className={`${ui.card} space-y-4 p-4 sm:p-6 md:p-8`}
+          className={`${ui.card} min-w-0 space-y-4 p-4 sm:p-6 md:p-8`}
         >
           <h2 className="text-xl font-bold text-slate-900">
             Send us a message
@@ -715,6 +715,7 @@ export function Contact() {
               <input
                 className={ui.input}
                 required
+                autoComplete="name"
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               />
@@ -724,6 +725,7 @@ export function Contact() {
                 className={ui.input}
                 type="email"
                 required
+                autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
@@ -733,6 +735,9 @@ export function Contact() {
             <Field label="Phone (optional)">
               <input
                 className={ui.input}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
@@ -748,7 +753,7 @@ export function Contact() {
           </div>
           <Field label="Message">
             <textarea
-              className={`${ui.input} min-h-[140px]`}
+              className={`${ui.input} min-h-[140px] resize-y`}
               required
               value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -756,7 +761,10 @@ export function Contact() {
           </Field>
           {err && <Alert>{err}</Alert>}
           {msg && <Alert kind="ok">{msg}</Alert>}
-          <button className={`${ui.btn} w-full sm:w-auto`} disabled={busy}>
+          <button
+            className={`${ui.btn} w-full justify-center sm:w-auto`}
+            disabled={busy}
+          >
             <FiSend /> {busy ? "Sending…" : "Send message"}
           </button>
         </form>
@@ -2812,12 +2820,12 @@ function OrderTracker({ order }) {
           ? "current"
           : "upcoming",
     },
-    {
-      key: "completed",
-      label: "Completed",
-      icon: FiCheckCircle,
-      state: st === "completed" ? "done" : st === "delivered" ? "current" : "upcoming",
-    },
+    // {
+    //   key: "completed",
+    //   label: "Completed",
+    //   icon: FiCheckCircle,
+    //   state: st === "completed" ? "done" : st === "delivered" ? "current" : "upcoming",
+    // },
   ];
 
   return (
