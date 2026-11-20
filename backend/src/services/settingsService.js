@@ -103,7 +103,7 @@ function decodeRows(text, section) {
 const defaults = {
   storeName: "Craftagon",
   tagline: "Personalized gifts, printed with care",
-  email: "noor525439@gmail.com",
+  email: "craftagoncustomercare@gmail.com",
   orderNotificationEmail: "",
   whatsappNumber: env.storeWhatsapp,
   banners: [
