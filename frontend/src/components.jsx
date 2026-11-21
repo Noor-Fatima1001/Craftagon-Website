@@ -3,7 +3,7 @@ import logo from "./assets/logo.jpeg";
 import blackImage from "./assets/blackImage.png";
 import whiteImage from "./assets/whiteImage.png";
 import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import {
   FiAlertCircle,
   FiBarChart2,
@@ -370,6 +370,12 @@ export function Footer() {
   .replace(/^0/, "92");
 const waUrl = waNumber ? `https://wa.me/${waNumber}` : "";
 
+  const socialLinks = [
+    { label: "Facebook", url: store?.socialLinks?.facebook, Icon: FaFacebookF },
+    { label: "Instagram", url: store?.socialLinks?.instagram, Icon: FaInstagram },
+    { label: "TikTok", url: store?.socialLinks?.tiktok, Icon: FaTiktok },
+  ].filter(({ url }) => typeof url === "string" && url.trim());
+
   return (
     <footer className="mt-12 bg-[#000000] text-white/75 sm:mt-20">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 sm:gap-10 sm:py-14 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr]">
@@ -405,6 +411,22 @@ const waUrl = waNumber ? `https://wa.me/${waNumber}` : "";
     </a>
   </p>
 )}
+          {socialLinks.length > 0 && (
+            <div className="mt-4 flex items-center gap-4">
+              {socialLinks.map(({ label, url, Icon }) => (
+                <a
+                  key={label}
+                  href={url.trim()}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={label}
+                  className="text-xl text-white/75 transition hover:text-white"
+                >
+                  <Icon aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          )}
           {store?.email && (
             <p className="mt-2 break-all text-sm">
              <span className="text-white/60">Email Us</span>

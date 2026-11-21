@@ -710,6 +710,7 @@ const saveSettings = asyncHandler(async (req, res) => {
     "orderNotificationEmail",
     "phone",
     "whatsappNumber",
+    "socialLinks",
     "address",
     "banners",
     "featuredProductIds",
@@ -726,6 +727,15 @@ const saveSettings = asyncHandler(async (req, res) => {
   for (const key of allowed) {
     if (req.body[key] !== undefined) {
       if (key === "delivery") continue;
+      if (key === "socialLinks") {
+        const currentLinks = settings.socialLinks || {};
+        settings.set("socialLinks", {
+          facebook: req.body.socialLinks.facebook ?? currentLinks.facebook ?? "",
+          instagram: req.body.socialLinks.instagram ?? currentLinks.instagram ?? "",
+          tiktok: req.body.socialLinks.tiktok ?? currentLinks.tiktok ?? "",
+        });
+        continue;
+      }
       if (key === "orderNotificationEmail") {
         if (typeof req.body[key] !== "string") {
           throw new AppError("Order notification email must be a valid email address", 400);

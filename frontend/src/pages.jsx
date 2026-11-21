@@ -217,6 +217,7 @@ function Row({ label, value, strong, accent }) {
 export function Home() {
   const { store, featured, bestsellers, categories } = useStore();
   const banner = store?.banners?.[0];
+  const bannerImage = typeof banner?.image === "string" ? banner.image.trim() : "";
   const heroImages = [...(featured || []), ...(bestsellers || [])]
     .filter((p) => p.images?.[0])
     .slice(0, 3);
@@ -225,7 +226,7 @@ export function Home() {
  
 <section className="relative left-1/2 -mt-[25px] w-screen -translate-x-1/2 sm:-mt-[41px] pb-5 sm:pb-8">
   <img
-    src={bannerImg}
+    src={bannerImage ? asset(bannerImage) : bannerImg}
     alt="Banner"
     className="block h-auto w-full object-cover"
   />

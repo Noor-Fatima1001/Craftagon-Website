@@ -69,6 +69,34 @@ router.put(
     .optional({ values: "falsy" })
     .isEmail()
     .withMessage("Enter a valid order notification email address"),
+  body("socialLinks")
+    .optional()
+    .isObject()
+    .withMessage("Social links must be an object"),
+  body("socialLinks.facebook")
+    .optional({ values: "undefined" })
+    .isString()
+    .withMessage("Facebook link must be a URL or empty")
+    .bail()
+    .trim()
+    .custom((value) => value === "" || /^https?:\/\/[^\s]+$/i.test(value))
+    .withMessage("Facebook link must start with http:// or https://"),
+  body("socialLinks.instagram")
+    .optional({ values: "undefined" })
+    .isString()
+    .withMessage("Instagram link must be a URL or empty")
+    .bail()
+    .trim()
+    .custom((value) => value === "" || /^https?:\/\/[^\s]+$/i.test(value))
+    .withMessage("Instagram link must start with http:// or https://"),
+  body("socialLinks.tiktok")
+    .optional({ values: "undefined" })
+    .isString()
+    .withMessage("TikTok link must be a URL or empty")
+    .bail()
+    .trim()
+    .custom((value) => value === "" || /^https?:\/\/[^\s]+$/i.test(value))
+    .withMessage("TikTok link must start with http:// or https://"),
   a.saveSettings
 );
 router.post("/settings/banner-image", requireAdmin, bannerUpload.single("image"), (req, res) => {

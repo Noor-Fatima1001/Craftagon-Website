@@ -217,6 +217,10 @@ async function getSettings() {
   return settings;
 }
 
+function asBannerRows(value) {
+  return typeof value === "string" ? decodeRows(value, "banners") : value || [];
+}
+
 function publicSettings(doc) {
   return {
     storeName: doc.storeName,
@@ -224,10 +228,20 @@ function publicSettings(doc) {
     email: doc.email,
     phone: doc.phone,
     whatsappNumber: doc.whatsappNumber,
+    socialLinks: {
+      facebook: doc.socialLinks?.facebook || "",
+      instagram: doc.socialLinks?.instagram || "",
+      tiktok: doc.socialLinks?.tiktok || "",
+    },
     address: doc.address,
     about: doc.about || {},
     help: doc.help || {},
-    banners: (doc.banners || []).filter((b) => b.active !== false),
+    banners: asBannerRows(doc.banners)
+  .filter((b) => b.active !== false)
+      .map((banner) => ({
+        ...banner,
+        image: typeof banner.image === "string" ? banner.image.trim() : "",
+      })),
     faqs: doc.faqs || [],
     policies: doc.policies || {},
     paymentAccounts: (doc.paymentAccounts || [])

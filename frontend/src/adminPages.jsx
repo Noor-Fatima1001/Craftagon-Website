@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, asset, money, request } from "./api";
-import { useAuth } from "./context";
+import { useAuth, useStore } from "./context";
 import { Alert, CustomPreview, Field } from "./components";
 import { loadGoogleFonts } from "./googleFonts";
 
@@ -73,6 +73,53 @@ const helpText = "text-xs text-slate-500";
 
 function prettyLabel(k) {
   return k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
+}
+
+function decodeBannerRows(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .filter((line) => line.trim())
+    .map((line) => {
+      const fields = [];
+      let value = "";
+      let escaped = false;
+      for (const char of line) {
+        if (escaped) {
+          if (char === "n") value += "\n";
+          else if (char === "|" || char === "\\") value += char;
+          else value += `\\${char}`;
+          escaped = false;
+        } else if (char === "\\") {
+          escaped = true;
+        } else if (char === "|") {
+          fields.push(value);
+          value = "";
+        } else {
+          value += char;
+        }
+      }
+      if (escaped) value += "\\";
+      fields.push(value);
+      if (fields.length !== 6) {
+        throw new Error("Banner settings must have six fields per line.");
+      }
+      return fields;
+    });
+}
+
+function encodeBannerRows(rows) {
+  return rows
+    .map((row) =>
+      row
+        .map((value) =>
+          String(value ?? "")
+            .replace(/\\/g, "\\\\")
+            .replace(/\|/g, "\\|")
+            .replace(/\r\n?|\n/g, "\\n"),
+        )
+        .join("|"),
+    )
+    .join("\n");
 }
 
 export function Pagination({ page, pages, onChange }) {
@@ -1356,6 +1403,7 @@ function CouponHistory({ coupon }) {
 
 export function SettingsPage() {
   const [settings, setSettings] = useState(null);
+  const { refresh: refreshStore } = useStore();
   const [savedOrderNotificationEmail, setSavedOrderNotificationEmail] = useState("");
   const [email, setEmail] = useState(null);
   const [msg, setMsg] = useState("");
@@ -1372,11 +1420,37 @@ export function SettingsPage() {
     e.preventDefault();
     try {
       await api.saveSettings(settings);
+      await refreshStore();
       setSavedOrderNotificationEmail((settings.orderNotificationEmail || "").trim());
       setErr("");
       setMsg("Settings saved. Existing orders keep their original totals.");
     } catch (e) {
       setErr(e.message);
+    }
+  }
+
+  async function uploadBanner(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const input = e.target;
+    setErr("");
+    setMsg("");
+    try {
+      const data = new FormData();
+      data.append("image", file);
+      const result = await request("/api/admin/settings/banner-image", {
+        method: "POST",
+        body: data,
+      });
+      const rows = decodeBannerRows(settings.banners);
+      if (!rows.length) rows.push(["", "", "", "Shop now", "/products", "true"]);
+      rows[0][2] = result.url;
+      setSettings((current) => ({ ...current, banners: encodeBannerRows(rows) }));
+      setMsg("Banner uploaded. Save settings to publish it.");
+    } catch (e) {
+      setErr(e.message || "Banner upload failed. Use a JPG, PNG or WebP image.");
+    } finally {
+      input.value = "";
     }
   }
 
@@ -1396,6 +1470,52 @@ export function SettingsPage() {
             </Field>
           ))}
         </div>
+      </Section>
+
+      <Section title="Social media">
+        <Field label="Facebook">
+          <input
+            className="input"
+            type="url"
+            placeholder="https://facebook.com/yourpage"
+            value={settings.socialLinks?.facebook || ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                socialLinks: { ...settings.socialLinks, facebook: e.target.value },
+              })
+            }
+          />
+        </Field>
+        <Field label="Instagram">
+          <input
+            className="input"
+            type="url"
+            placeholder="https://instagram.com/yourpage"
+            value={settings.socialLinks?.instagram || ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                socialLinks: { ...settings.socialLinks, instagram: e.target.value },
+              })
+            }
+          />
+        </Field>
+        <Field label="TikTok">
+          <input
+            className="input"
+            type="url"
+            placeholder="https://tiktok.com/@yourpage"
+            value={settings.socialLinks?.tiktok || ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                socialLinks: { ...settings.socialLinks, tiktok: e.target.value },
+              })
+            }
+          />
+        </Field>
+        <p className={helpText}>Leave empty to hide the icon from the footer.</p>
       </Section>
 
       <Section title="Order Email Notification" hint="Send complete details for each new order to this address. Leave blank to disable order notifications.">
@@ -1460,6 +1580,10 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Banners / policies">
+        <Field label="Upload or replace homepage banner image">
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadBanner} />
+        </Field>
+        <p className={helpText}>Upload a JPG, PNG or WebP banner, then save settings to publish it.</p>
         <textarea className="input h-32 font-mono text-xs" value={settings.banners || ""} onChange={(e) => setSettings({ ...settings, banners: e.target.value })} />
         <p className={helpText}>Banners, one per line: title | subtitle | image | button text | button link | active (true/false). Use \| for a literal | and \n for a line break.</p>
         <textarea className="input h-32 font-mono text-xs" value={settings.faqs || ""} onChange={(e) => setSettings({ ...settings, faqs: e.target.value })} />

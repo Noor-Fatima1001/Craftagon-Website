@@ -69,6 +69,12 @@ export function StoreProvider({ children }) {
   }
   useEffect(() => {
     refresh();
+    const interval = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+    };
   }, []);
   return <StoreCtx.Provider value={{ ...data, refresh }}>{children}</StoreCtx.Provider>;
 }

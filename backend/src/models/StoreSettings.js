@@ -9,6 +9,11 @@ const storeSettingsSchema = new mongoose.Schema(
     orderNotificationEmail: { type: String, default: "" },
     phone: { type: String, default: "" },
     whatsappNumber: { type: String, default: "923000000000" },
+    socialLinks: {
+      facebook: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      tiktok: { type: String, default: "" },
+    },
     address: { type: String, default: "" },
     about: {
       title: { type: String, default: "About Craftagon" },
