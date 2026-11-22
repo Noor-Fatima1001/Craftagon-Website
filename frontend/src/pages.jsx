@@ -44,6 +44,8 @@ FiX,
 FiUser,
 FiHome,
 FiCalendar,
+ FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import { FaWhatsapp, FaFacebookF, FaInstagram } from "react-icons/fa";
 import { api, asset, money, statusLabel } from "./api";
@@ -965,7 +967,10 @@ export function ProductDetail() {
 const fontBoxRef = useRef(null);
   const [fontLabel, setFontLabel] = useState(CUSTOM_FONTS[0].label);
 
-  // Google Fonts (API fail ho to CUSTOM_FONTS fallback chalega)
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [colorImageActive, setColorImageActive] = useState(true);
+
   const [fonts, setFonts] = useState(CUSTOM_FONTS);
 
   useEffect(() => {
@@ -974,6 +979,8 @@ const fontBoxRef = useRef(null);
       .then((d) => {
         setProduct(d.product);
         setColorVariantId(d.product.colorVariants?.[0]?._id || "");
+        setActiveIndex(0);
+        setColorImageActive(true); 
       })
       .catch((e) => setProductError(e.message));
   }, [slug]);
@@ -1039,7 +1046,21 @@ useEffect(() => {
   const selectedColor = colorVariants.find(
     (variant) => variant._id === colorVariantId,
   );
-  const productImage = selectedColor?.image || product.images?.[0];
+
+
+  const gallery = product.images || [];
+  const galleryImage = gallery[activeIndex] || gallery[0];
+  const productImage =
+    colorImageActive && selectedColor?.image ? selectedColor.image : galleryImage;
+
+  function prevImage() {
+    setColorImageActive(false);
+    setActiveIndex((i) => (i - 1 + gallery.length) % gallery.length);
+  }
+  function nextImage() {
+    setColorImageActive(false);
+    setActiveIndex((i) => (i + 1) % gallery.length);
+  }
 
   function add() {
     const customText = text.trim();
@@ -1091,14 +1112,64 @@ useEffect(() => {
   return (
     <div className="space-y-10 sm:space-y-12">
       <div className="grid gap-6 sm:gap-10 md:grid-cols-2">
+
         <div
           className={`${ui.card} h-fit overflow-hidden p-3 md:sticky md:top-28`}
         >
-          <CustomPreview
-            product={product}
-            image={productImage}
-            fontFamily={selectedFont.value}
-          />
+          <div className="relative">
+            <CustomPreview
+              product={product}
+              image={productImage}
+              fontFamily={selectedFont.value}
+            />
+            {gallery.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={prevImage}
+                  aria-label="Previous image"
+                  className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow ring-1 ring-slate-200 hover:bg-white"
+                >
+                  <FiChevronLeft />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextImage}
+                  aria-label="Next image"
+                  className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow ring-1 ring-slate-200 hover:bg-white"
+                >
+                  <FiChevronRight />
+                </button>
+              </>
+            )}
+          </div>
+
+          {gallery.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto">
+              {gallery.map((img, i) => (
+                <button
+                  key={`${img}-${i}`}
+                  type="button"
+                  onClick={() => {
+                    setColorImageActive(false);
+                    setActiveIndex(i);
+                  }}
+                  aria-label={`Show image ${i + 1}`}
+                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
+                    !colorImageActive && i === activeIndex
+                      ? "border-[#000000]"
+                      : "border-slate-200"
+                  }`}
+                >
+                  <img
+                    src={asset(img)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className={`${ui.card} h-fit p-4 sm:p-6 md:p-8`}>
           {product.category?.name && (
@@ -1140,6 +1211,7 @@ useEffect(() => {
                       aria-pressed={variant._id === colorVariantId}
                       onClick={() => {
                         setColorVariantId(variant._id);
+                        setColorImageActive(true); // NEW
                         setErr("");
                       }}
                       className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
