@@ -70,7 +70,7 @@ app.use(
 
 app.use("/uploads/products", express.static(path.join(__dirname, "../uploads/products")));
 app.use("/uploads/banners", express.static(path.join(__dirname, "../uploads/banners")));
-
+app.get("/", (_req, res) => res.json({ ok: true }));
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", publicRoutes);
 app.use("/api/admin", adminRoutes);
