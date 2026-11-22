@@ -26,13 +26,15 @@ const dirs = {
   banners: path.join(root, "banners"),
 };
 
-Object.values(dirs).forEach((d) => {
-  try {
-    fs.mkdirSync(d, { recursive: true });
-  } catch (err) {
-    console.warn(`Could not create ${d}:`, err.message);
-  }
-});
+if (!useCloudinary) {
+  Object.values(dirs).forEach((d) => {
+    try {
+      fs.mkdirSync(d, { recursive: true });
+    } catch (err) {
+      console.warn(`Could not create ${d}:`, err.message);
+    }
+  });
+}
 
 const ALLOWED = {
   "image/jpeg": ".jpg",

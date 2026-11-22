@@ -51,14 +51,6 @@ const orderLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 20, standardHeader
 
 app.use('/api', generalLimit);
 
-const uploadsDir = path.join(__dirname, '../uploads');
-['products', 'banners', 'payments'].forEach((dir) => {
-  try {
-    fs.mkdirSync(path.join(uploadsDir, dir), { recursive: true });
-  } catch (err) {
-    console.warn(`Could not create uploads/${dir}:`, err.message);
-  }
-});
 
 app.use('/uploads/products', express.static(path.join(uploadsDir, 'products')));
 app.use('/uploads/banners', express.static(path.join(uploadsDir, 'banners')));
